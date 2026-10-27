@@ -54,10 +54,14 @@ public abstract class Task {
             _sub.tick(mod, parentChain);
         } else {
             // We are null
-            if (_sub != null && canBeInterrupted(mod, _sub, null)) {
-                // Our previous sub must be interrupted.
-                _sub.stop(mod);
-                _sub = null;
+            if (_sub != null) {
+                if (canBeInterrupted(mod, _sub, null)) {
+                    _sub.stop(mod);
+                    _sub = null;
+                } else {
+                    // The retained child must keep running so it can finish the protected action.
+                    _sub.tick(mod, parentChain);
+                }
             }
         }
     }
@@ -174,12 +178,7 @@ public abstract class Task {
      */
     private boolean canBeInterrupted(Vibrato mod, Task subTask, Task toInterruptWith) {
         if (subTask == null) return true;
-        // Our task can declare that is FORCES itself to be active NOW.
-        return (subTask.thisOrChildSatisfies(task -> {
-            if (task instanceof ITaskCanForce canForce) {
-                return !canForce.shouldForce(mod, toInterruptWith);
-            }
-            return true;
-        }));
+        return !subTask.thisOrChildSatisfies(task ->
+                task instanceof ITaskCanForce canForce && canForce.shouldForce(mod, toInterruptWith));
     }
 }
