@@ -129,7 +129,9 @@ public final class ClientProtocolScenarioTask extends Task {
     public static GameMode fixtureGameMode(String action) {
         requirement(action);
         return switch (action) {
-            case "inventory_click", "close_container", "place_recipe", "recipe_book", "recipe_seen", "boat", "select_trade", "rename_item", "container_button" -> GameMode.SURVIVAL;
+            case "inventory_click", "close_container", "place_recipe", "recipe_book", "recipe_seen", "boat", "select_trade", "rename_item", "container_button",
+                    "move_position", "move_rotation", "move_full", "player_command", "drop_item", "use_item", "use_block", "attack_block",
+                    "interact_entity", "attack_entity", "update_sign", "beacon", "crafter_slot", "book_edit", "book_sign" -> GameMode.SURVIVAL;
             case "spectator_teleport" -> GameMode.SPECTATOR;
             case "command_block", "command_minecart", "jigsaw", "jigsaw_generate", "structure", "creative_slot", "abilities" -> GameMode.CREATIVE;
             default -> null;
