@@ -73,3 +73,6 @@ With human aim and navigation safety enabled in the isolated world above:
 - Local completion and grouped/clickable help were exercised in the running client.
 
 These are controlled regression checks, rather than an exhaustive playthrough of every registered activity.
+
+The same collection fixture with `vibrato.human=off` finished with eight cobblestone in 7.162 seconds; the human-camera
+run took 7.916 seconds. The final `./gradlew test build` passed 351 tests with no failures, errors or skips.
