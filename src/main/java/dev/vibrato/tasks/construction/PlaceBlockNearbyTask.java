@@ -23,6 +23,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
@@ -167,7 +168,7 @@ public class PlaceBlockNearbyTask extends Task {
             if (MovementHelper.canPlaceAgainst(ctx, bpos)) {
                 BlockPos placePos = bhit.getBlockPos().add(bhit.getSide().getVector());
                 // Don't place inside the player.
-                if (WorldHelper.isInsidePlayer(mod, placePos)) {
+                if (overlapsPlayer(mod.getPlayer().getBoundingBox(), placePos)) {
                     return null;
                 }
                 //Debug.logMessage("TEMP: B (actual): " + placePos);
@@ -218,6 +219,10 @@ public class PlaceBlockNearbyTask extends Task {
         mod.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
+    static boolean overlapsPlayer(Box playerBounds, BlockPos target) {
+        return playerBounds.intersects(new Box(target));
+    }
+
     private BlockPos locateClosePlacePos(Vibrato mod) {
         int range = 7;
         BlockPos best = null;
@@ -228,6 +233,8 @@ public class PlaceBlockNearbyTask extends Task {
         for (BlockPos blockPos : WorldHelper.scanRegion(mod, start, end)) {
             boolean solid = WorldHelper.isSolid(mod, blockPos);
             boolean inside = WorldHelper.isInsidePlayer(mod, blockPos);
+            // A solid block cannot be placed in the player's collision volume.
+            if (overlapsPlayer(mod.getPlayer().getBoundingBox(), blockPos)) continue;
             // We can't break this block.
             if (solid && !WorldHelper.canBreak(mod, blockPos)) {
                 continue;
