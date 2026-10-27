@@ -26,6 +26,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.RaycastContext;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class CollectBucketLiquidTask extends ResourceTask {
@@ -33,6 +34,9 @@ public class CollectBucketLiquidTask extends ResourceTask {
     private final HashSet<BlockPos> _blacklist = new HashSet<>();
     private final TimerGame _tryImmediatePickupTimer = new TimerGame(3);
     private final TimerGame _pickedUpTimer = new TimerGame(0.5);
+    private final TimerGame _localSourceTimer = new TimerGame(0.5);
+    private Optional<BlockPos> _localSource = Optional.empty();
+    private boolean _localScanInitialized;
     private final int _count;
 
     //private IProgressChecker<Double> _checker = new LinearProgressChecker(5, 0.1);
@@ -74,6 +78,8 @@ public class CollectBucketLiquidTask extends ResourceTask {
         _wanderTask.resetWander();
 
         _progressChecker.reset();
+        _localSource = Optional.empty();
+        _localScanInitialized = false;
     }
 
 
@@ -147,7 +153,8 @@ public class CollectBucketLiquidTask extends ResourceTask {
         };
 
         // Find nearest water and right click it
-        if (mod.getBlockTracker().anyFound(isSourceLiquid, _toCollect)) {
+        if (localSource(mod, isSourceLiquid).isPresent()
+                || mod.getBlockTracker().anyFound(isSourceLiquid, _toCollect)) {
             // We want to MINIMIZE this distance to liquid.
             setDebugState("Trying to collect...");
             //Debug.logMessage("TEST: " + RayTraceUtils.fluidHandling);
@@ -177,7 +184,9 @@ public class CollectBucketLiquidTask extends ResourceTask {
                     wasWandering = true;
                 }
                 return new GetCloseToBlockTask(blockPos.up());
-            }, isSourceLiquid, _toCollect);
+            }, origin -> localSource(mod, isSourceLiquid)
+                    .or(() -> mod.getBlockTracker().getNearestTracking(origin, isSourceLiquid, _toCollect)),
+                    isSourceLiquid, _toCollect);
         }
 
         // Dimension
@@ -189,6 +198,20 @@ public class CollectBucketLiquidTask extends ResourceTask {
         setDebugState("Searching for liquid by wandering around aimlessly");
 
         return new TimeoutWanderTask(Float.POSITIVE_INFINITY);
+    }
+
+    private Optional<BlockPos> localSource(Vibrato mod, Predicate<BlockPos> isSourceLiquid) {
+        boolean invalid = _localSource.isPresent() && (!_localSource.get().isWithinDistance(mod.getPlayer().getPos(), 16)
+                || !mod.getChunkTracker().isChunkLoaded(_localSource.get())
+                || !mod.getBlockTracker().blockIsValid(_localSource.get(), _toCollect)
+                || !isSourceLiquid.test(_localSource.get()));
+        if (!_localScanInitialized || invalid || _localSourceTimer.elapsed()) {
+            _localSource = mod.getBlockTracker().getNearestWithinRange(mod.getPlayer().getPos(), 16,
+                    isSourceLiquid, _toCollect);
+            _localSourceTimer.reset();
+            _localScanInitialized = true;
+        }
+        return _localSource;
     }
 
     @Override

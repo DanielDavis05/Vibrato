@@ -23,8 +23,11 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.Vec3d;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Build a nether portal by casting each piece with water + lava.
@@ -293,7 +296,13 @@ public class ConstructNetherPortalBucketTask extends Task {
 
         double nearestSqDistance = Double.POSITIVE_INFINITY;
         BlockPos nearestLake = null;
-        for (BlockPos pos : mod.getBlockTracker().getKnownLocations(Blocks.LAVA)) {
+        // The global tracker cache is capped and may omit a visible surface lake.
+        // Seed it with the nearest loaded, non-blacklisted local source before flood checking.
+        List<BlockPos> candidates = new ArrayList<>();
+        mod.getBlockTracker().getNearestWithinRange(Vec3d.of(playerPos), 16,
+                pos -> WorldHelper.isSourceBlock(mod, pos, true), Blocks.LAVA).ifPresent(candidates::add);
+        candidates.addAll(mod.getBlockTracker().getKnownLocations(Blocks.LAVA));
+        for (BlockPos pos : candidates) {
             if (alreadyExplored.contains(pos)) continue;
             double sqDist = playerPos.getSquaredDistance(pos);
             if (sqDist < nearestSqDistance) {
