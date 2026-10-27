@@ -2,6 +2,8 @@ package dev.vibrato.chains;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.Settings;
+import dev.vibrato.director.DirectorTask;
+import dev.vibrato.tasksystem.Task;
 import dev.vibrato.chains.FoodChain.FoodChainConfig;
 import dev.vibrato.tasks.resources.CollectFoodTask;
 import dev.vibrato.tasksystem.TaskRunner;
@@ -32,6 +34,9 @@ public class FoodChain extends SingleTaskChain {
     private boolean _isTryingToEat = false;
     private boolean _requestFillup = false;
     private boolean _needsFood = false;
+    private final AutonomousFoodPolicy _autonomousFood = new AutonomousFoodPolicy();
+    private Task _foodDirector;
+    private CollectFoodTask _autonomousFoodTask;
 
     private int _cachedFoodScore;
     private Optional<Item> _cachedPerfectFood = Optional.empty();
@@ -73,6 +78,26 @@ public class FoodChain extends SingleTaskChain {
             return Float.NEGATIVE_INFINITY;
         }
 
+        Task director = mod.getUserTaskChain().getCurrentTask();
+        if (!(director instanceof DirectorTask)) director = null;
+        if (director != _foodDirector) {
+            _autonomousFood.reset();
+            _foodDirector = director;
+            if (_autonomousFoodTask != null && _mainTask == _autonomousFoodTask) setTask(null);
+            _autonomousFoodTask = null;
+        }
+        if (director != null) {
+            _autonomousFood.advance(mod.getTaskRunner().getCurrentTaskChain() == this && _autonomousFoodTask != null,
+                    mod.getTaskRunner().getCurrentTaskChain() == mod.getUserTaskChain());
+        }
+        // Completion must release CollectFoodTask's temporary food protection before
+        // calculating what can be eaten by the normal food-selection logic.
+        boolean forageCompleted = _autonomousFoodTask != null && _autonomousFoodTask.isFinished(mod);
+        if (forageCompleted && _mainTask == _autonomousFoodTask && _mainTask.canBeInterruptedBy(mod, null)) {
+            setTask(null);
+            _autonomousFoodTask = null;
+        }
+
         Pair<Integer, Optional<Item>> calculation = calculateFood(mod);
         _cachedFoodScore = calculation.getLeft();
         _cachedPerfectFood = calculation.getRight();
@@ -112,6 +137,23 @@ public class FoodChain extends SingleTaskChain {
             }
         }
 
+
+        if (director != null) {
+            ClientPlayerEntity player = mod.getPlayer();
+            boolean collect = _autonomousFood.shouldCollect(player.getHungerManager().getFoodLevel(),
+                    player.getHealth() / player.getMaxHealth(), _cachedFoodScore, forageCompleted);
+            if (collect) {
+                if (_autonomousFoodTask == null) _autonomousFoodTask = new CollectFoodTask(AutonomousFoodPolicy.TARGET_FOOD);
+                setTask(_autonomousFoodTask);
+                return 55f;
+            }
+        }
+        if (_autonomousFoodTask != null) {
+            // Do not abandon a protected child mid-action, even on timeout.
+            if (_mainTask == _autonomousFoodTask && !_mainTask.canBeInterruptedBy(mod, null)) return 55f;
+            if (_mainTask == _autonomousFoodTask) setTask(null);
+            _autonomousFoodTask = null;
+        }
 
         // Food eating is handled asynchronously.
         return Float.NEGATIVE_INFINITY;
@@ -217,8 +259,10 @@ public class FoodChain extends SingleTaskChain {
         // Get best food item + calculate food total
         for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
             if (ItemHelper.isFood(stack.getItem())) {
-                // Ignore protected items
-                if (!ItemHelper.canThrowAwayStack(mod, stack)) continue;
+                // The forage task temporarily protects its berries from disposal; they
+                // must still be edible when hunger or injury prompted this collection.
+                boolean forageBerries = _autonomousFoodTask != null && stack.getItem() == Items.SWEET_BERRIES;
+                if (!forageBerries && !ItemHelper.canThrowAwayStack(mod, stack)) continue;
 
                 // Ignore spider eyes
                 if (stack.getItem() == Items.SPIDER_EYE) {
