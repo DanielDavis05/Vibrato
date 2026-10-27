@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.vibrato.protocolfixture.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["LoginFixtureMixin", "ConfigurationFixtureMixin", "CommonFixtureMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

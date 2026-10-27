@@ -9,6 +9,7 @@
     "ClientBlockBreakAccessor",
     "ClientConnectionAccessor",
     "PacketCoverageConnectionMixin",
+    "PacketCoverageDecoderMixin",
     "PacketCoverageThreadMixin",
     "ClientInteractWithBlockMixin",
     "ClientUIMixin",

@@ -35,6 +35,16 @@ class PacketCoverageTest {
         data.success(data.capture(), "PLAY", "SERVERBOUND", "minecraft:test");
         assertEquals(1, data.snapshot().packets().getFirst().count());
     }
+    @Test void wireEvidenceIsSeparateAndResetInvalidatesPendingObservations() {
+        var data = new PacketCoverage.Accumulator();
+        var pending = data.capture();
+        data.wireSuccess(pending, "PLAY", "CLIENTBOUND", "minecraft:bundle_delimiter");
+        assertTrue(data.snapshot().packets().isEmpty());
+        assertEquals(1, data.snapshot().wirePackets().getFirst().count());
+        data.reset();
+        data.wireSuccess(pending, "PLAY", "CLIENTBOUND", "minecraft:bundle_delimiter");
+        assertTrue(data.snapshot().wirePackets().isEmpty());
+    }
     @Test void rejectsFreeFormLabels() {
         var data = new PacketCoverage.Accumulator();
         data.beginScenario("private text here");
