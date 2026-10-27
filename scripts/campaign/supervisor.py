@@ -125,6 +125,7 @@ def run(args):
             path = base / run_id
             path.mkdir(exist_ok=False)
             (path / 'mods').symlink_to(mods, target_is_directory=True)
+            (path / 'natives').mkdir()
             (path / 'options.txt').write_text('onboardAccessibility:false\nrenderDistance:5\nsimulationDistance:5\nmaxFps:30\nenableVsync:false\nsoundCategory_master:0.0\npauseOnLostFocus:false\n')
             script = path / 'campaign-script.txt'
             script.write_text('0 @gamer\n0 wait-idle ' + str(args.budget) + '\n0 exit\n')
@@ -134,7 +135,8 @@ def run(args):
                    f'-Dvibrato.world=world-{i+1:02d}', f'-Dvibrato.worldSeed={seed}',
                    '-Dvibrato.autostart=false', '-Dvibrato.perf=low', '-Dvibrato.campaignTelemetry=true', f'-Dvibrato.script={script}']
             options = {'username': bot, 'uuid': hashlib.md5(('OfflinePlayer:' + bot).encode()).hexdigest(),
-                       'token':'0', 'gameDirectory':str(path), 'executablePath':'java', 'jvmArguments':jvm,
+                       'token':'0', 'gameDirectory':str(path), 'nativesDirectory':str(path / 'natives'),
+                       'executablePath':'java', 'jvmArguments':jvm,
                        'customResolution':True, 'resolutionWidth':'640', 'resolutionHeight':'360'}
             cmd = mll.command.get_minecraft_command(version, str(mc), options)
             output = (path / 'client.log').open('w')
