@@ -1,6 +1,7 @@
 package dev.vibrato.human.record;
 
 import baritone.api.utils.BetterBlockPos;
+import baritone.api.utils.input.Input;
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.eventbus.EventBus;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 
 /**
  * Records player motion to {@code <game run directory>/traces/<name>-<source>.jsonl} for fitting the human motion model. Samples the
- * player once per client tick, emits key transitions by diffing the movement keys, and forwards raw mouse deltas from
+ * player once per client tick, emits key transitions by diffing the keys, and forwards raw mouse deltas from
  * {@link dev.vibrato.mixins.MouseRecorderMixin}. Everything runs on the client thread and never throws into the game
  * loop: an I/O or unexpected failure is logged and recording stops.
  */
@@ -42,16 +43,20 @@ public final class MotionRecorder {
     private final Vibrato mod;
     private final TraceWriter writer;
     private final Path file;
+    private final boolean bot;
     private final boolean[] keyDown = new boolean[KEY_NAMES.length];
-    private final KeyBinding[] keys;
+    private final KeyBinding attackKey;
+    private final KeyBinding useKey;
     private final Subscription<ClientTickEvent> subscription;
     private long tickCount;
 
-    private MotionRecorder(Vibrato mod, TraceWriter writer, Path file, KeyBinding[] keys) {
+    private MotionRecorder(Vibrato mod, TraceWriter writer, Path file, boolean bot, GameOptions options) {
         this.mod = mod;
         this.writer = writer;
         this.file = file;
-        this.keys = keys;
+        this.bot = bot;
+        this.attackKey = options.attackKey;
+        this.useKey = options.useKey;
         this.subscription = EventBus.subscribe(ClientTickEvent.class, event -> onTick());
     }
 
@@ -76,7 +81,7 @@ public final class MotionRecorder {
                     TRACE_VERSION, source, SharedConstants.getGameVersion().getName(),
                     options.getGuiScale().getValue(), options.getMouseSensitivity().getValue(),
                     options.getMaxFps().getValue(), name));
-            current = new MotionRecorder(mod, writer, file, keyBindings(options));
+            current = new MotionRecorder(mod, writer, file, source.equals("bot"), options);
             recording = true;
         } catch (IOException | RuntimeException e) {
             writer.close();
@@ -135,11 +140,11 @@ public final class MotionRecorder {
                     return;
                 }
                 long ms = nowMillis();
-                for (int i = 0; i < keys.length; i++) {
-                    boolean down = keys[i].isPressed();
-                    if (down != keyDown[i]) {
-                        keyDown[i] = down;
-                        emit(new TraceEvent.Key(ms, KEY_NAMES[i], down));
+                boolean[] down = pressedKeys(MinecraftClient.getInstance().player);
+                for (int i = 0; i < down.length; i++) {
+                    if (down[i] != keyDown[i]) {
+                        keyDown[i] = down[i];
+                        emit(new TraceEvent.Key(ms, KEY_NAMES[i], down[i]));
                     }
                 }
                 emit(sampleTick(ms));
@@ -148,6 +153,30 @@ public final class MotionRecorder {
             Debug.logError("Motion recording stopped after an error: " + e);
             stop();
         }
+    }
+
+    /**
+     * Key state in {@link #KEY_NAMES} order, read at the tick event. The tick event runs at the head of
+     * {@code MinecraftClient.tick()}, before the player's {@code tickMovement}, which is where {@code Input.tick} runs
+     * and {@link dev.vibrato.mixins.KeyShapeMixin} shapes the keys. So this reads the input that the previous tick's
+     * movement used, one tick behind the keys that will move the player next. The position and velocity in the tick
+     * sample are read at the same point, so keys and motion stay aligned.
+     * <p>
+     * Movement keys come from the effective {@code player.input} axes, which is what moved the player. That covers
+     * Baritone's {@code PlayerMovementInput} and the shaped keys, which a KeyBinding read would miss. Sprint comes
+     * from {@code isSprinting()}, since Baritone sets it outside {@code Input}. Attack and use are the KeyBinding
+     * state, plus Baritone's forced clicks for bot traces.
+     */
+    private boolean[] pressedKeys(ClientPlayerEntity player) {
+        InputKeys.Pressed axes = InputKeys.fromAxes(player.input.movementForward, player.input.movementSideways,
+                player.input.jumping, player.input.sneaking);
+        var baritone = bot ? mod.getClientBaritone().getInputOverrideHandler() : null;
+        boolean attack = attackKey.isPressed() || (baritone != null && baritone.isInputForcedDown(Input.CLICK_LEFT));
+        boolean use = useKey.isPressed() || (baritone != null && baritone.isInputForcedDown(Input.CLICK_RIGHT));
+        return new boolean[] {
+                axes.forward(), axes.back(), axes.left(), axes.right(), axes.jump(),
+                player.isSprinting(), axes.sneak(), attack, use
+        };
     }
 
     private TraceEvent.Tick sampleTick(long ms) {
@@ -226,10 +255,4 @@ public final class MotionRecorder {
         }
     }
 
-    private static KeyBinding[] keyBindings(GameOptions options) {
-        return new KeyBinding[] {
-                options.forwardKey, options.backKey, options.leftKey, options.rightKey, options.jumpKey,
-                options.sprintKey, options.sneakKey, options.attackKey, options.useKey
-        };
-    }
 }
