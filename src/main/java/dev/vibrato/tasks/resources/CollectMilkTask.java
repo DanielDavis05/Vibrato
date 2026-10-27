@@ -34,15 +34,22 @@ public class CollectMilkTask extends ResourceTask {
 
     @Override
     protected Task onResourceTick(Vibrato mod) {
-        // Make sure we have a bucket.
-        if (!mod.getItemStorage().hasItem(Items.BUCKET)) {
-            return TaskCatalogue.getItemTask(Items.BUCKET, 1);
+        // Prepare the remaining empty buckets in one batch, so each milk
+        // interaction can continue without another iron-gathering trip.
+        int remaining = requiredEmptyBuckets(_count,
+                mod.getItemStorage().getItemCountInventoryOnly(Items.MILK_BUCKET));
+        if (mod.getItemStorage().getItemCountInventoryOnly(Items.BUCKET) < remaining) {
+            return TaskCatalogue.getItemTask(Items.BUCKET, remaining);
         }
         // Dimension
         if (!mod.getEntityTracker().entityFound(CowEntity.class) && isInWrongDimension(mod)) {
             return getToCorrectDimensionTask(mod);
         }
         return new MilkCowTask();
+    }
+
+    static int requiredEmptyBuckets(int targetMilk, int heldMilk) {
+        return Math.max(0, targetMilk - heldMilk);
     }
 
     @Override
