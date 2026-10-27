@@ -156,6 +156,30 @@ class HumanLookTest {
     }
 
     @Test
+    void reversingTargetsAcrossYawWrapNeverSnaps() {
+        HumanLook look = new HumanLook(2, ALWAYS_OVERSHOOT);
+        Rotation current = new Rotation(179, 0);
+        for (int i = 0; i < 30; i++) {
+            Rotation target = new Rotation(i < 8 ? -90 : 90, 0);
+            Rotation next = look.smooth(current, target);
+            assertTrue(Math.abs(next.getYaw() - current.getYaw()) <= 40.0001);
+            look.onTick();
+            current = next;
+        }
+        assertTrue(Math.abs(Rotation.normalizeYaw(90 - current.getYaw())) < 1);
+    }
+
+    @Test
+    void idleTickResetsMomentumBeforeANewTurn() {
+        HumanLook look = new HumanLook(1, NO_OVERSHOOT);
+        Rotation current = look.smooth(new Rotation(0, 0), new Rotation(170, 0));
+        look.onTick();
+        look.onTick(); // no request
+        Rotation afterIdle = look.smooth(current, new Rotation(-90, 0));
+        assertTrue(afterIdle.getYaw() < current.getYaw());
+    }
+
+    @Test
     void forkCopiesPendingRequestAndMotionForDeterministicPrediction() {
         HumanLook live = new HumanLook(5, NO_OVERSHOOT);
         Rotation previous = new Rotation(0, 0);

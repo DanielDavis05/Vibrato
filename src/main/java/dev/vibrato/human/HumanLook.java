@@ -104,6 +104,7 @@ public final class HumanLook implements RotationSmoother {
         private double velocity;
         private double wind;
         private double overshoot;
+        private double overshootTarget;
         private boolean armed;
 
         Axis(double maxSpeed, double min, double max) {
@@ -117,6 +118,7 @@ public final class HumanLook implements RotationSmoother {
             velocity = source.velocity;
             wind = source.wind;
             overshoot = source.overshoot;
+            overshootTarget = source.overshootTarget;
             armed = source.armed;
         }
 
@@ -148,7 +150,7 @@ public final class HumanLook implements RotationSmoother {
         }
 
         private boolean overshooting(double current, double desired) {
-            if (overshoot == 0) {
+            if (overshoot == 0 || Math.abs(desired - overshootTarget) > 5) {
                 return false;
             }
             double remaining = limit(desired + overshoot) - current;
@@ -172,6 +174,7 @@ public final class HumanLook implements RotationSmoother {
                     armed = true;
                     if (rng.nextDouble() < cfg.overshootChance()) {
                         overshoot = Math.signum(error) * cfg.overshootMaxDeg() * (0.4 + 0.6 * rng.nextDouble());
+                        overshootTarget = desired;
                     }
                 }
             } else if (Math.abs(error) < REARM_DEG) {
