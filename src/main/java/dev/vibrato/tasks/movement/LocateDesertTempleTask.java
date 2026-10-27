@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -13,13 +13,13 @@ public class LocateDesertTempleTask extends Task {
     private BlockPos _finalPos;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         // Track desert pyramid blocks
         mod.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         BlockPos desertTemplePos = WorldHelper.getADesertTemple(mod);
         if (desertTemplePos != null) {
             _finalPos = desertTemplePos.up(14);
@@ -32,7 +32,7 @@ public class LocateDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
     }
 
@@ -47,7 +47,7 @@ public class LocateDesertTempleTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return mod.getPlayer().getBlockPos().equals(_finalPos);
     }
 }

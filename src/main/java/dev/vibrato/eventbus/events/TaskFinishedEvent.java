@@ -1,6 +1,6 @@
-package adris.altoclef.eventbus.events;
+package dev.vibrato.eventbus.events;
 
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.tasksystem.Task;
 
 public class TaskFinishedEvent {
     public double durationSeconds;

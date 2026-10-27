@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.progresscheck.IProgressChecker;
-import adris.altoclef.util.progresscheck.LinearProgressChecker;
-import adris.altoclef.util.progresscheck.ProgressCheckerRetry;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.progresscheck.IProgressChecker;
+import dev.vibrato.util.progresscheck.LinearProgressChecker;
+import dev.vibrato.util.progresscheck.ProgressCheckerRetry;
 import net.minecraft.entity.Entity;
 
 import java.util.Optional;
@@ -24,7 +24,7 @@ public class KillPlayerTask extends AbstractKillEntityTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // If we're closer to the player, our task isn't bad.
         Optional<Entity> player = getEntityTarget(mod);
         if (player.isEmpty()) {
@@ -51,7 +51,7 @@ public class KillPlayerTask extends AbstractKillEntityTask {
     }
 
     @Override
-    protected Optional<Entity> getEntityTarget(AltoClef mod) {
+    protected Optional<Entity> getEntityTarget(Vibrato mod) {
         if (mod.getEntityTracker().isPlayerLoaded(_playerName)) {
             return mod.getEntityTracker().getPlayerEntity(_playerName).map(Entity.class::cast);
         }

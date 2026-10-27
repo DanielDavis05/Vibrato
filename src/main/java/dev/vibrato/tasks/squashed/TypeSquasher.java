@@ -1,6 +1,6 @@
-package adris.altoclef.tasks.squashed;
+package dev.vibrato.tasks.squashed;
 
-import adris.altoclef.tasks.ResourceTask;
+import dev.vibrato.tasks.ResourceTask;
 
 import java.util.ArrayList;
 import java.util.Collections;

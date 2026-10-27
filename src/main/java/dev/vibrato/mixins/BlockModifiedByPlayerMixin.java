@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockBrokenEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockBrokenEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;

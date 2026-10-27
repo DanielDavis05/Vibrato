@@ -1,14 +1,14 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.tasks.*;
-import adris.altoclef.tasks.container.CraftInTableTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
-import adris.altoclef.tasks.resources.*;
-import adris.altoclef.tasks.resources.wood.*;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.util.*;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.tasks.*;
+import dev.vibrato.tasks.container.CraftInTableTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.container.UpgradeInSmithingTableTask;
+import dev.vibrato.tasks.resources.*;
+import dev.vibrato.tasks.resources.wood.*;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.util.*;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MapColor;

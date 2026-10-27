@@ -1,18 +1,18 @@
-package adris.altoclef.tasks.stupid;
+package dev.vibrato.tasks.stupid;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
-import adris.altoclef.tasks.construction.PlaceSignTask;
-import adris.altoclef.tasks.resources.MineAndCollectTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasks.stupid.BeeMovieTask.StreamedSignStringParser;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
+import dev.vibrato.tasks.construction.PlaceSignTask;
+import dev.vibrato.tasks.resources.MineAndCollectTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasks.stupid.BeeMovieTask.StreamedSignStringParser;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -74,7 +74,7 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         // Prevent mineshaft garbage
         mod.getBehaviour().setExclusivelyMineLogs(true);
@@ -95,7 +95,7 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_currentPlace != null && _currentPlace.isActive() && !_currentPlace.isFinished(mod)) {
             setDebugState("Placing...");
@@ -177,7 +177,7 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
     }
 
@@ -195,7 +195,7 @@ public class BeeMovieTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _finished;
     }
 

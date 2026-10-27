@@ -1,16 +1,16 @@
-package adris.altoclef.tasks.construction.compound;
+package dev.vibrato.tasks.construction.compound;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -64,7 +64,7 @@ public class ConstructNetherPortalObsidianTask extends Task {
 
     private BlockPos _destroyTarget;
 
-    private static BlockPos getBuildableAreaNearby(AltoClef mod) {
+    private static BlockPos getBuildableAreaNearby(Vibrato mod) {
         BlockPos checkOrigin = mod.getPlayer().getBlockPos();
         for (BlockPos toCheck : WorldHelper.scanRegion(mod, checkOrigin, checkOrigin.add(PORTALABLE_REGION_SIZE))) {
             if (MinecraftClient.getInstance().world == null) {
@@ -80,7 +80,7 @@ public class ConstructNetherPortalObsidianTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
 
         // Avoid breaking portal frame if we're obsidian.
@@ -100,7 +100,7 @@ public class ConstructNetherPortalObsidianTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         int neededObsidian = 10;
         BlockPos placeTarget = null;
@@ -161,7 +161,7 @@ public class ConstructNetherPortalObsidianTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
     }
 

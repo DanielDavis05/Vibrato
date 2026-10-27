@@ -1,19 +1,19 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
-import adris.altoclef.util.slots.SmithingTableSlot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasks.slot.MoveItemToSlotFromInventoryTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
+import dev.vibrato.util.slots.SmithingTableSlot;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -38,18 +38,18 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().markSlotAsConversionSlot(SmithingTableSlot.INPUT_SLOT_TOOL, stack -> _tool.matches(stack.getItem()));
         mod.getBehaviour().markSlotAsConversionSlot(SmithingTableSlot.INPUT_SLOT_MATERIALS, stack -> _material.matches(stack.getItem()));
     }
 
-    private int getItemsInSlot(AltoClef mod, Slot slot, ItemTarget match) {
+    private int getItemsInSlot(Vibrato mod, Slot slot, ItemTarget match) {
         ItemStack stack = StorageHelper.getItemStackInSlot(slot);
         if (!stack.isEmpty() && match.matches(stack.getItem())) {
             return stack.getCount();
@@ -58,7 +58,7 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // if we don't have tools + materials, get them.
 
         boolean inSmithingTable = (mod.getPlayer().currentScreenHandler instanceof SmithingScreenHandler);
@@ -100,7 +100,7 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().push();
     }
 
@@ -133,12 +133,12 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
         }
 
         @Override
-        protected boolean isContainerOpen(AltoClef mod) {
+        protected boolean isContainerOpen(Vibrato mod) {
             return (mod.getPlayer().currentScreenHandler instanceof SmithingScreenHandler);
         }
 
         @Override
-        protected Task containerSubTask(AltoClef mod) {
+        protected Task containerSubTask(Vibrato mod) {
             setDebugState("Smithing...");
             // We have our tools + materials. Now, do the thing.
             _invTimer.setInterval(mod.getModSettings().getContainerItemMoveDelay());
@@ -174,7 +174,7 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
         }
 
         @Override
-        protected double getCostToMakeNew(AltoClef mod) {
+        protected double getCostToMakeNew(Vibrato mod) {
             int price = 400;
             if (mod.getItemStorage().hasItem(ItemHelper.LOG) || mod.getItemStorage().getItemCount(ItemHelper.PLANKS) >= 4) {
                 price -= 125;

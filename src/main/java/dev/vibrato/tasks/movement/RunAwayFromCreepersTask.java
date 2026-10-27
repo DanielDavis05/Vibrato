@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.chains.MobDefenseChain;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.GoalRunAwayFromEntities;
+import dev.vibrato.Vibrato;
+import dev.vibrato.chains.MobDefenseChain;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.GoalRunAwayFromEntities;
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.CreeperEntity;
@@ -37,7 +37,7 @@ public class RunAwayFromCreepersTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         // We want to run away NOW
         mod.getClientBaritone().getPathingBehavior().forceCancel();
         return new GoalRunAwayFromCreepers(mod, _distanceToRun);
@@ -45,12 +45,12 @@ public class RunAwayFromCreepersTask extends CustomBaritoneGoalTask {
 
     private static class GoalRunAwayFromCreepers extends GoalRunAwayFromEntities {
 
-        public GoalRunAwayFromCreepers(AltoClef mod, double distance) {
+        public GoalRunAwayFromCreepers(Vibrato mod, double distance) {
             super(mod, distance, false, 10);
         }
 
         @Override
-        protected List<Entity> getEntities(AltoClef mod) {
+        protected List<Entity> getEntities(Vibrato mod) {
             return new ArrayList<>(mod.getEntityTracker().getTrackedEntities(CreeperEntity.class));
         }
 

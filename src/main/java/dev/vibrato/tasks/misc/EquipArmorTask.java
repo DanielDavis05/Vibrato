@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.slot.MoveItemToSlotFromInventoryTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -30,12 +30,12 @@ public class EquipArmorTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         ItemTarget[] armorsNotEquipped = Arrays.stream(_toEquip).filter(target -> !StorageHelper.itemTargetsMetInventory(mod, target) && !StorageHelper.isArmorEquipped(mod, target.getMatches())).toArray(ItemTarget[]::new);
         boolean armorMet = armorsNotEquipped.length == 0;
         if (!armorMet) {
@@ -68,12 +68,12 @@ public class EquipArmorTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return armorEquipped(mod);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -97,7 +97,7 @@ public class EquipArmorTask extends Task {
         );
     }
 
-    public boolean armorEquipped(AltoClef mod) {
+    public boolean armorEquipped(Vibrato mod) {
         return armorTestAll(item -> StorageHelper.isArmorEquipped(mod, item));
     }
 

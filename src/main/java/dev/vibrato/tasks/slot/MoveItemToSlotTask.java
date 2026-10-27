@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.slot;
+package dev.vibrato.tasks.slot;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StlHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StlHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -19,21 +19,21 @@ public class MoveItemToSlotTask extends Task {
 
     private final ItemTarget _toMove;
     private final Slot _destination;
-    private final Function<AltoClef, List<Slot>> _getMovableSlots;
+    private final Function<Vibrato, List<Slot>> _getMovableSlots;
 
-    public MoveItemToSlotTask(ItemTarget toMove, Slot destination, Function<AltoClef, List<Slot>> getMovableSlots) {
+    public MoveItemToSlotTask(ItemTarget toMove, Slot destination, Function<Vibrato, List<Slot>> getMovableSlots) {
         _toMove = toMove;
         _destination = destination;
         _getMovableSlots = getMovableSlots;
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (mod.getSlotHandler().canDoSlotAction()) {
             // Rough plan
             // - If empty slot or wrong item
@@ -84,12 +84,12 @@ public class MoveItemToSlotTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         ItemStack atDestination = StorageHelper.getItemStackInSlot(_destination);
         return (_toMove.matches(atDestination.getItem()) && atDestination.getCount() >= _toMove.getTargetCount());
     }
@@ -107,7 +107,7 @@ public class MoveItemToSlotTask extends Task {
         return "Moving " + _toMove + " to " + _destination;
     }
 
-    private Optional<Slot> getBestSlotToPickUp(AltoClef mod, Item[] validItems) {
+    private Optional<Slot> getBestSlotToPickUp(Vibrato mod, Item[] validItems) {
         Slot bestMatch = null;
         for (Slot slot : _getMovableSlots.apply(mod)) {
             if (Slot.isCursor(slot))

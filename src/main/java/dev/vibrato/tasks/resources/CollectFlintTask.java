@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceBlockNearbyTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -25,17 +25,17 @@ public class CollectFlintTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.GRAVEL);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // We might just want to mine the closest gravel.
         Optional<BlockPos> closest = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), validGravel -> WorldHelper.fallingBlockSafeToBreak(validGravel) && WorldHelper.canBreak(mod, validGravel), Blocks.GRAVEL);
@@ -54,7 +54,7 @@ public class CollectFlintTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.GRAVEL);
     }
 

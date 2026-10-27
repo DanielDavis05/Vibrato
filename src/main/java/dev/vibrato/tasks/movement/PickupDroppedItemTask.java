@@ -1,18 +1,18 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
-import adris.altoclef.tasks.resources.SatisfyMiningRequirementTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StlHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
+import dev.vibrato.tasks.resources.SatisfyMiningRequirementTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StlHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -26,7 +26,7 @@ import java.util.Set;
 public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEntity> implements ITaskRequiresGrounded {
 
     // Am starting to regret not making this a singleton
-    private AltoClef _mod;
+    private Vibrato _mod;
 
     private static final Task getPickaxeFirstTask = new SatisfyMiningRequirementTask(MiningRequirement.STONE);
     // Not clean practice, but it helps keep things self contained I think.
@@ -55,7 +55,7 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
         this(item, targetCount, true);
     }
 
-    public static boolean isIsGettingPickaxeFirst(AltoClef mod) {
+    public static boolean isIsGettingPickaxeFirst(Vibrato mod) {
         return isGettingPickaxeFirstFlag && mod.getModSettings().shouldCollectPickaxeFirst();
     }
 
@@ -64,17 +64,17 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         _mod = mod;
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             setDebugState("Wandering after blacklisting item...");
@@ -142,7 +142,7 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     }
 
     @Override
-    protected Vec3d getPos(AltoClef mod, ItemEntity obj) {
+    protected Vec3d getPos(Vibrato mod, ItemEntity obj) {
         if (!obj.isOnGround() && !obj.isTouchingWater()) {
             // Assume we'll land down one or two blocks from here. We could do this more advanced but whatever.
             BlockPos p = obj.getBlockPos();
@@ -155,14 +155,14 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     }
 
     @Override
-    protected Optional<ItemEntity> getClosestTo(AltoClef mod, Vec3d pos) {
+    protected Optional<ItemEntity> getClosestTo(Vibrato mod, Vec3d pos) {
         return mod.getEntityTracker().getClosestItemDrop(
                 pos,
                 _itemTargets);
     }
 
     @Override
-    protected Vec3d getOriginPos(AltoClef mod) {
+    protected Vec3d getOriginPos(Vibrato mod) {
         return mod.getPlayer().getPos();
     }
 
@@ -190,7 +190,7 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     }
 
     @Override
-    protected boolean isValid(AltoClef mod, ItemEntity obj) {
+    protected boolean isValid(Vibrato mod, ItemEntity obj) {
         return obj.isAlive() && !_blacklist.contains(obj);
     }
 

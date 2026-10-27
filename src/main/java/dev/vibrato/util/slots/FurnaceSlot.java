@@ -1,4 +1,4 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
 public class FurnaceSlot extends Slot {
     public static final FurnaceSlot INPUT_SLOT_FUEL = new FurnaceSlot(1);

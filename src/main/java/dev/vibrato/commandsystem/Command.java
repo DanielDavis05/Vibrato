@@ -1,11 +1,11 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
 
 public abstract class Command {
 
-    private AltoClef _mod;
+    private Vibrato _mod;
 
     private final ArgParser parser;
 
@@ -20,7 +20,7 @@ public abstract class Command {
         parser = new ArgParser(args);
     }
 
-    public void run(AltoClef mod, String line, Runnable onFinish) throws CommandException {
+    public void run(Vibrato mod, String line, Runnable onFinish) throws CommandException {
         _onFinish = onFinish;
         _mod = mod;
         parser.loadArgs(line, true);
@@ -50,7 +50,7 @@ public abstract class Command {
         Debug.logError(message.toString());
     }
 
-    protected abstract void call(AltoClef mod, ArgParser parser) throws CommandException;
+    protected abstract void call(Vibrato mod, ArgParser parser) throws CommandException;
 
     public String getName() {
         return _name;

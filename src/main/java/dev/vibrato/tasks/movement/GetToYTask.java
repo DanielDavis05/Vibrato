@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalYLevel;
 
@@ -21,7 +21,7 @@ public class GetToYTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_dimension != null && WorldHelper.getCurrentDimension() != _dimension) {
             return new DefaultGoToDimensionTask(_dimension);
         }
@@ -29,7 +29,7 @@ public class GetToYTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new GoalYLevel(_yLevel);
     }
 

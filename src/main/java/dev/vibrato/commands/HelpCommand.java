@@ -1,9 +1,9 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.ui.MessagePriority;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.ui.MessagePriority;
 
 public class HelpCommand extends Command {
 
@@ -12,7 +12,7 @@ public class HelpCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
+    protected void call(Vibrato mod, ArgParser parser) {
         mod.log("########## HELP: ##########", MessagePriority.OPTIONAL);
         int padSize = 10;
         for (Command c : mod.getCommandExecutor().allCommands()) {

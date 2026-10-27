@@ -1,4 +1,4 @@
-package adris.altoclef.util.progresscheck;
+package dev.vibrato.util.progresscheck;
 
 import net.minecraft.util.math.Vec3d;
 

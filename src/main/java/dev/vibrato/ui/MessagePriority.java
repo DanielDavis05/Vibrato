@@ -1,4 +1,4 @@
-package adris.altoclef.ui;
+package dev.vibrato.ui;
 
 public enum MessagePriority {
     ASAP(3),

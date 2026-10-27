@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
 import baritone.api.utils.input.Input;
 
 /**
@@ -23,12 +23,12 @@ public class SafeRandomShimmyTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _lookTimer.reset();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_lookTimer.elapsed()) {
             Debug.logMessage("Random Orientation");
@@ -42,7 +42,7 @@ public class SafeRandomShimmyTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
         mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.SNEAK, false);
     }

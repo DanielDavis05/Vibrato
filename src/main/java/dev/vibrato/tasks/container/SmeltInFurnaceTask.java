@@ -1,21 +1,21 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask.DoSmeltInFurnaceTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask.FurnaceCache;
-import adris.altoclef.tasks.resources.CollectFuelTask;
-import adris.altoclef.tasks.slot.*;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.SmeltTarget;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.FurnaceSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask.DoSmeltInFurnaceTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask.FurnaceCache;
+import dev.vibrato.tasks.resources.CollectFuelTask;
+import dev.vibrato.tasks.slot.*;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.SmeltTarget;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.FurnaceSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -67,12 +67,12 @@ public class SmeltInFurnaceTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         if (_targets.length != 1) {
             Debug.logWarning("Tried smelting multiple targets, only one target is supported at a time!");
         }
@@ -85,18 +85,18 @@ public class SmeltInFurnaceTask extends ResourceTask {
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         return _doTask;
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         // Close furnace screen
         StorageHelper.closeScreen();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return super.isFinished(mod) || _doTask.isFinished(mod);
     }
 
@@ -146,12 +146,12 @@ public class SmeltInFurnaceTask extends ResourceTask {
         }
 
         @Override
-        protected boolean isContainerOpen(AltoClef mod) {
+        protected boolean isContainerOpen(Vibrato mod) {
             return (mod.getPlayer().currentScreenHandler instanceof FurnaceScreenHandler);
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
+        protected Task onTick(Vibrato mod) {
             tryUpdateOpenFurnace(mod);
             // Include both regular + optional items
             ItemTarget materialTarget = _allMaterials;
@@ -207,7 +207,7 @@ public class SmeltInFurnaceTask extends ResourceTask {
         }
 
         @Override
-        protected Task containerSubTask(AltoClef mod) {
+        protected Task containerSubTask(Vibrato mod) {
             // We have appropriate materials/fuel.
             /*
              * - If output slot has something, receive it.
@@ -297,7 +297,7 @@ public class SmeltInFurnaceTask extends ResourceTask {
         }
 
         @Override
-        protected double getCostToMakeNew(AltoClef mod) {
+        protected double getCostToMakeNew(Vibrato mod) {
             if (_furnaceCache != null) {
                 // TODO: If we're already smelting, get cost for materials (for now just set to really high number or something)
                 return 9999999;
@@ -316,12 +316,12 @@ public class SmeltInFurnaceTask extends ResourceTask {
         }
 
         @Override
-        protected BlockPos overrideContainerPosition(AltoClef mod) {
+        protected BlockPos overrideContainerPosition(Vibrato mod) {
             // If we have a valid container position, KEEP it.
             return getTargetContainerPosition();
         }
 
-        private void tryUpdateOpenFurnace(AltoClef mod) {
+        private void tryUpdateOpenFurnace(Vibrato mod) {
             if (isContainerOpen(mod)) {
                 // Update current furnace cache
                 _furnaceCache.burnPercentage = StorageHelper.getFurnaceCookPercent();

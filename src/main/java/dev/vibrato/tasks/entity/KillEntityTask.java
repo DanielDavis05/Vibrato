@@ -1,6 +1,6 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
+import dev.vibrato.Vibrato;
 import net.minecraft.entity.Entity;
 
 import java.util.Objects;
@@ -23,7 +23,7 @@ public class KillEntityTask extends AbstractKillEntityTask {
     }
 
     @Override
-    protected Optional<Entity> getEntityTarget(AltoClef mod) {
+    protected Optional<Entity> getEntityTarget(Vibrato mod) {
         return Optional.of(_target);
     }
 

@@ -1,16 +1,16 @@
-package adris.altoclef.butler;
+package dev.vibrato.butler;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.helpers.ConfigHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.helpers.ConfigHelper;
 
 public class UserAuth {
-    private static final String BLACKLIST_PATH = "altoclef_butler_blacklist.txt";
-    private static final String WHITELIST_PATH = "altoclef_butler_whitelist.txt";
-    private final AltoClef _mod;
+    private static final String BLACKLIST_PATH = "vibrato_butler_blacklist.txt";
+    private static final String WHITELIST_PATH = "vibrato_butler_whitelist.txt";
+    private final Vibrato _mod;
     private UserListFile _blacklist;
     private UserListFile _whitelist;
 
-    public UserAuth(AltoClef mod) {
+    public UserAuth(Vibrato mod) {
         _mod = mod;
 
         ConfigHelper.ensureCommentedListFileExists(BLACKLIST_PATH, """

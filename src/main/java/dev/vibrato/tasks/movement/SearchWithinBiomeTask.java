@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.ChunkPos;
@@ -20,7 +20,7 @@ public class SearchWithinBiomeTask extends SearchChunksExploreTask {
     }
 
     @Override
-    protected boolean isChunkWithinSearchSpace(AltoClef mod, ChunkPos pos) {
+    protected boolean isChunkWithinSearchSpace(Vibrato mod, ChunkPos pos) {
         RegistryEntry<Biome> b = mod.getWorld().getBiome(pos.getStartPos().add(1, 1, 1));
         return b.matchesKey(_toSearch);
     }

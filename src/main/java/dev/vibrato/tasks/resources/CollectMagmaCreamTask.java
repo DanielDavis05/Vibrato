@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.entity.mob.MagmaCubeEntity;
 import net.minecraft.item.Items;
 
@@ -20,17 +20,17 @@ public class CollectMagmaCreamTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         /*
          * If in nether:
          *      If magma cube located, hunt magma cube.
@@ -78,7 +78,7 @@ public class CollectMagmaCreamTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 

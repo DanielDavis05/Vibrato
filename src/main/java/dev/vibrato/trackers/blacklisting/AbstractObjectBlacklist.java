@@ -1,9 +1,9 @@
-package adris.altoclef.trackers.blacklisting;
+package dev.vibrato.trackers.blacklisting;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
@@ -17,7 +17,7 @@ public abstract class AbstractObjectBlacklist<T> {
 
     private final HashMap<T, BlacklistEntry> _entries = new HashMap<>();
 
-    public void blackListItem(AltoClef mod, T item, int numberOfFailuresAllowed) {
+    public void blackListItem(Vibrato mod, T item, int numberOfFailuresAllowed) {
         if (!_entries.containsKey(item)) {
             BlacklistEntry entry = new BlacklistEntry();
             entry.numberOfFailuresAllowed = numberOfFailuresAllowed;

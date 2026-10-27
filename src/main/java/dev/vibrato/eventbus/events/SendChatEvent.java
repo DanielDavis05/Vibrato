@@ -1,4 +1,4 @@
-package adris.altoclef.eventbus.events;
+package dev.vibrato.eventbus.events;
 
 public class SendChatEvent {
     public String message;

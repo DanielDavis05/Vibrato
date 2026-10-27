@@ -1,4 +1,4 @@
-package adris.altoclef.eventbus;
+package dev.vibrato.eventbus;
 
 public class EventBusTest {
 

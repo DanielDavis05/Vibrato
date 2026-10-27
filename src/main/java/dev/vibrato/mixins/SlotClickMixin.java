@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.SlotClickChangedEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.SlotClickChangedEvent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
@@ -39,7 +39,7 @@ public class SlotClickMixin {
             ItemStack before = beforeStacks.get(i);
             ItemStack after = afterSlots.get(i).getStack();
             if (!ItemStack.areEqual(before, after)) {
-                adris.altoclef.util.slots.Slot slot = adris.altoclef.util.slots.Slot.getFromCurrentScreen(i);
+                dev.vibrato.util.slots.Slot slot = dev.vibrato.util.slots.Slot.getFromCurrentScreen(i);
                 EventBus.publish(new SlotClickChangedEvent(slot, before, after));
             }
         }

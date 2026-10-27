@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.resources.GetBuildingMaterialsTask;
-import adris.altoclef.tasks.speedrun.BeatMinecraft2Task;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.baritone.GoalAnd;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.resources.GetBuildingMaterialsTask;
+import dev.vibrato.tasks.speedrun.BeatMinecraft2Task;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.baritone.GoalAnd;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 
 import baritone.api.pathing.goals.GoalComposite;
 import baritone.api.pathing.goals.GoalGetToBlock;
@@ -40,14 +40,14 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(Blocks.END_GATEWAY);
         _beatTheGame = new BeatMinecraft2Task();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (mod.getBlockTracker().anyFound(Blocks.END_GATEWAY)) {
             if (!mod.getItemStorage().hasItemInventoryOnly(Items.ENDER_PEARL)) {
                 setDebugState("Getting an ender pearl");
@@ -79,7 +79,7 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.END_GATEWAY);
         mod.getBehaviour().pop();
     }
@@ -90,7 +90,7 @@ public class GetToOuterEndIslandsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return WorldHelper.getCurrentDimension() == Dimension.END &&
                 !WorldHelper.inRangeXZ(new Vec3d(0, 64, 0), mod.getPlayer().getPos(), END_ISLAND_START_RADIUS);
     }

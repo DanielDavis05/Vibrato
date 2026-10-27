@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.examples;
+package dev.vibrato.tasks.examples;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -15,7 +15,7 @@ public class ExampleTask2 extends Task {
     private BlockPos _target = null;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.OAK_LOG);
 
         // Extra credit: Bot will NOT damage trees.
@@ -27,7 +27,7 @@ public class ExampleTask2 extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         /*
          * Find a tree
@@ -59,7 +59,7 @@ public class ExampleTask2 extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.OAK_LOG);
         mod.getBehaviour().pop();
     }
@@ -70,7 +70,7 @@ public class ExampleTask2 extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         if (_target != null) {
             return mod.getPlayer().getBlockPos().equals(_target);
         }

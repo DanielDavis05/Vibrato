@@ -1,7 +1,7 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.util.ItemTarget;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.util.ItemTarget;
 
 import java.util.HashMap;
 

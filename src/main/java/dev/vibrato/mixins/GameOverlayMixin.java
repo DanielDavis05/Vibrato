@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.GameOverlayEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.GameOverlayEvent;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;

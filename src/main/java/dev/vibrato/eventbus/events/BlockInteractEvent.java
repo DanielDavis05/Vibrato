@@ -1,4 +1,4 @@
-package adris.altoclef.eventbus.events;
+package dev.vibrato.eventbus.events;
 
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.hit.BlockHitResult;

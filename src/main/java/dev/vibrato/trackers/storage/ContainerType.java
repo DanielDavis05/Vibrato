@@ -1,8 +1,8 @@
-package adris.altoclef.trackers.storage;
+package dev.vibrato.trackers.storage;
 
-import adris.altoclef.util.slots.ChestSlot;
-import adris.altoclef.util.slots.FurnaceSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.util.slots.ChestSlot;
+import dev.vibrato.util.slots.FurnaceSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.screen.*;

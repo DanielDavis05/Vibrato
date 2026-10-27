@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalBlock;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +32,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
         this(position, false);
     }
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_dimension != null && WorldHelper.getCurrentDimension() != _dimension) {
             return new DefaultGoToDimensionTask(_dimension);
         }
@@ -40,7 +40,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         if (_preferStairs) {
             mod.getBehaviour().push();
             mod.getBehaviour().setPreferredStairs(true);
@@ -50,7 +50,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
 
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         if (_preferStairs) {
             mod.getBehaviour().pop();
         }
@@ -66,7 +66,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return super.isFinished(mod) && (_dimension == null || _dimension == WorldHelper.getCurrentDimension());
     }
 
@@ -77,12 +77,12 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
 
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new GoalBlock(_position);
     }
 
     @Override
-    protected void onWander(AltoClef mod) {
+    protected void onWander(Vibrato mod) {
         mod.getBlockTracker().requestBlockUnreachable(_position);
         super.onWander(mod);
     }

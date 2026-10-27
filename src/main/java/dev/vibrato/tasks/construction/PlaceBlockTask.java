@@ -1,15 +1,15 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.schematic.AbstractSchematic;
 import baritone.api.schematic.ISchematic;
 import baritone.api.utils.BlockOptionalMeta;
@@ -51,7 +51,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         this(target, toPlace, false, false);
     }
 
-    public static int getMaterialCount(AltoClef mod) {
+    public static int getMaterialCount(Vibrato mod) {
         return mod.getItemStorage().getItemCount(Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK);
     }
 
@@ -60,14 +60,14 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _progressChecker.reset();
         // If we get interrupted by another task, this might cause problems...
         //_wanderTask.resetWander();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // Perform timeout wander
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
@@ -127,7 +127,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
@@ -142,7 +142,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         assert MinecraftClient.getInstance().world != null;
         if (_useThrowaways) {
             return WorldHelper.isSolid(mod, _target);
@@ -162,11 +162,11 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
     private class PlaceStructureSchematic extends AbstractSchematic {
 
-        private final AltoClef _mod;
+        private final Vibrato _mod;
         // Baritone queries this many times per tick, only complain once.
         private boolean _warnedNoThrowaway = false;
 
-        public PlaceStructureSchematic(AltoClef mod) {
+        public PlaceStructureSchematic(Vibrato mod) {
             super(1, 1, 1);
             _mod = mod;
         }

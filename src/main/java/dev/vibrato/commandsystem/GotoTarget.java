@@ -1,6 +1,6 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
-import adris.altoclef.util.Dimension;
+import dev.vibrato.util.Dimension;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -25,7 +25,7 @@ public class ShearAndCollectBlockTask extends MineAndCollectTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().forceUseTool((blockState, itemStack) ->
                 itemStack.getItem() == Items.SHEARS && ItemHelper.areShearsEffective(blockState.getBlock())
@@ -34,13 +34,13 @@ public class ShearAndCollectBlockTask extends MineAndCollectTask {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
         super.onStop(mod, interruptTask);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         if (!mod.getItemStorage().hasItem(Items.SHEARS)) {
             return TaskCatalogue.getItemTask(Items.SHEARS, 1);
         }

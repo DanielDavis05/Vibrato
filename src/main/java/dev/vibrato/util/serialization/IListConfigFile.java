@@ -1,4 +1,4 @@
-package adris.altoclef.util.serialization;
+package dev.vibrato.util.serialization;
 
 public interface IListConfigFile {
     void onLoadStart();

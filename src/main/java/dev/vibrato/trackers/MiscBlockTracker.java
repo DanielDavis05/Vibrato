@@ -1,8 +1,8 @@
-package adris.altoclef.trackers;
+package dev.vibrato.trackers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +17,7 @@ import java.util.Optional;
  */
 public class MiscBlockTracker {
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
     private final Map<Dimension, BlockPos> _lastNetherPortalsUsed = new HashMap<>();
 
@@ -25,7 +25,7 @@ public class MiscBlockTracker {
     private Dimension _lastDimension;
     private boolean _newDimensionTriggered;
 
-    public MiscBlockTracker(AltoClef mod) {
+    public MiscBlockTracker(Vibrato mod) {
         _mod = mod;
     }
 
@@ -35,7 +35,7 @@ public class MiscBlockTracker {
             _newDimensionTriggered = true;
         }
 
-        if (AltoClef.inGame() && _newDimensionTriggered) {
+        if (Vibrato.inGame() && _newDimensionTriggered) {
             for (BlockPos check : WorldHelper.scanRegion(_mod, _mod.getPlayer().getBlockPos().add(-1, -1, -1), _mod.getPlayer().getBlockPos().add(1, 1, 1))) {
                 Block currentBlock = _mod.getWorld().getBlockState(check).getBlock();
                 if (currentBlock == Blocks.NETHER_PORTAL) {

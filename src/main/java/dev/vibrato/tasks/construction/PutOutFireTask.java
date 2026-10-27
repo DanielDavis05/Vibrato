@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -22,22 +22,22 @@ public class PutOutFireTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         return new InteractWithBlockTask(ItemTarget.EMPTY, Direction.UP, _firePosition.down(), Input.CLICK_LEFT, false, false);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         BlockState s = mod.getWorld().getBlockState(_firePosition);
         return (s.getBlock() != Blocks.FIRE && s.getBlock() != Blocks.SOUL_FIRE);
     }

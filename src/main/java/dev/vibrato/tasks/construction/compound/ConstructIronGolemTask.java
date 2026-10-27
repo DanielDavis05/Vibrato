@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.construction.compound;
+package dev.vibrato.tasks.construction.compound;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceBlockTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceBlockTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.IronGolemEntity;
@@ -30,14 +30,14 @@ public class ConstructIronGolemTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().addProtectedItems(Items.IRON_BLOCK, Items.CARVED_PUMPKIN);
         mod.getClientBaritoneSettings().blocksToAvoidBreaking.value.add(Blocks.IRON_BLOCK);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (!StorageHelper.itemTargetsMetInventory(mod, golemMaterials(mod))) {
             setDebugState("Getting materials for the iron golem");
             return new CataloguedResourceTask(golemMaterials(mod));
@@ -106,7 +106,7 @@ public class ConstructIronGolemTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritoneSettings().blocksToAvoidBreaking.value.remove(Blocks.IRON_BLOCK);
         mod.getBehaviour().pop();
     }
@@ -117,7 +117,7 @@ public class ConstructIronGolemTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         if (_position == null) return false;
         Optional<Entity> closestIronGolem = mod.getEntityTracker().getClosestEntity(new Vec3d(_position.getX(), _position.getY(), _position.getZ()), IronGolemEntity.class);
         return closestIronGolem.isPresent() && closestIronGolem.get().getBlockPos().isWithinDistance(_position, 2) && _canBeFinished;
@@ -128,7 +128,7 @@ public class ConstructIronGolemTask extends Task {
         return "Construct Iron Golem";
     }
 
-    private int ironBlocksNeeded(AltoClef mod) {
+    private int ironBlocksNeeded(Vibrato mod) {
         if (_position == null) {
             return 4;
         }
@@ -144,7 +144,7 @@ public class ConstructIronGolemTask extends Task {
         return needed;
     }
 
-    private ItemTarget[] golemMaterials(AltoClef mod) {
+    private ItemTarget[] golemMaterials(Vibrato mod) {
         if (_position == null || mod.getWorld().getBlockState(_position.up(2)).getBlock() != Blocks.CARVED_PUMPKIN) return new ItemTarget[]{
                 new ItemTarget(Items.IRON_BLOCK, ironBlocksNeeded(mod)),
                 new ItemTarget(Items.CARVED_PUMPKIN, 1)

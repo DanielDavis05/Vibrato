@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.GoalChunk;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.GoalChunk;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.util.math.ChunkPos;
 
@@ -18,7 +18,7 @@ public class GetToChunkTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new GoalChunk(_pos);
     }
 

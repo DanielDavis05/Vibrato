@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.squashed;
+package dev.vibrato.tasks.squashed;
 
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
-import adris.altoclef.util.slots.SmithingTableSlot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.container.UpgradeInSmithingTableTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
+import dev.vibrato.util.slots.SmithingTableSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.SmithingScreenHandler;
 
@@ -40,16 +40,16 @@ public class SmithingSquasher extends TypeSquasher<UpgradeInSmithingTableTask> {
         }
 
         @Override
-        protected boolean shouldAvoidPickingUp(AltoClef mod) {
+        protected boolean shouldAvoidPickingUp(Vibrato mod) {
             return false;
         }
 
         @Override
-        protected void onResourceStart(AltoClef mod) {
+        protected void onResourceStart(Vibrato mod) {
 
         }
 
-        private int getItemsInSlot(AltoClef mod, Slot slot, ItemTarget match) {
+        private int getItemsInSlot(Vibrato mod, Slot slot, ItemTarget match) {
             ItemStack stack = StorageHelper.getItemStackInSlot(slot);
             if (!stack.isEmpty() && match.matches(stack.getItem())) {
                 return stack.getCount();
@@ -58,7 +58,7 @@ public class SmithingSquasher extends TypeSquasher<UpgradeInSmithingTableTask> {
         }
 
         @Override
-        protected Task onResourceTick(AltoClef mod) {
+        protected Task onResourceTick(Vibrato mod) {
             List<ItemTarget> resultingTargets = Arrays.asList(_itemTargets);
 
             // Subtract required counts if we're in a smithing table, so putting items in the table doesn't remove them.
@@ -76,7 +76,7 @@ public class SmithingSquasher extends TypeSquasher<UpgradeInSmithingTableTask> {
         }
 
         @Override
-        protected void onResourceStop(AltoClef mod, Task interruptTask) {
+        protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
         }
 

@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.KillEntitiesTask;
-import adris.altoclef.tasks.construction.PutOutFireTask;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.SearchChunkForBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.KillEntitiesTask;
+import dev.vibrato.tasks.construction.PutOutFireTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.SearchChunkForBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.BlazeEntity;
@@ -41,7 +41,7 @@ public class CollectBlazeRodsTask extends ResourceTask {
         _count = count;
     }
 
-    private static boolean isHoveringAboveLavaOrTooHigh(AltoClef mod, Entity entity) {
+    private static boolean isHoveringAboveLavaOrTooHigh(Vibrato mod, Entity entity) {
         int MAX_HEIGHT = 23;
         for (BlockPos check = entity.getBlockPos(); entity.getBlockPos().getY() - check.getY() < MAX_HEIGHT; check = check.down()) {
             if (mod.getWorld().getBlockState(check).getBlock() == Blocks.LAVA) return true;
@@ -51,12 +51,12 @@ public class CollectBlazeRodsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.SPAWNER);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // We must go to the nether.
         if (WorldHelper.getCurrentDimension() != Dimension.NETHER) {
@@ -136,7 +136,7 @@ public class CollectBlazeRodsTask extends ResourceTask {
         return _searcher;
     }
 
-    private boolean isValidBlazeSpawner(AltoClef mod, BlockPos pos) {
+    private boolean isValidBlazeSpawner(Vibrato mod, BlockPos pos) {
         if (!mod.getChunkTracker().isChunkLoaded(pos)) {
             // If unloaded, go to it. Unless it's super far away.
             return false;
@@ -146,7 +146,7 @@ public class CollectBlazeRodsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.SPAWNER);
     }
 
@@ -161,7 +161,7 @@ public class CollectBlazeRodsTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 }

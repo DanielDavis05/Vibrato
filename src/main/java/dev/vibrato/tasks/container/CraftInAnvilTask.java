@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import org.apache.commons.lang3.NotImplementedException;
@@ -18,17 +18,17 @@ public class CraftInAnvilTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected boolean isContainerOpen(AltoClef mod) {
+    protected boolean isContainerOpen(Vibrato mod) {
         throw new NotImplementedException("Anvil Not Implemented, whoops");
     }
 
     @Override
-    protected Task containerSubTask(AltoClef mod) {
+    protected Task containerSubTask(Vibrato mod) {
         throw new NotImplementedException("Anvil Not Implemented, whoops");
     }
 
     @Override
-    protected double getCostToMakeNew(AltoClef mod) {
+    protected double getCostToMakeNew(Vibrato mod) {
         throw new NotImplementedException("Anvil Not Implemented, whoops");
     }
 }

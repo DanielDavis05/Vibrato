@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.movement.GetToEntityTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.movement.GetToEntityTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.hit.EntityHitResult;
@@ -46,14 +46,14 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _wanderTask.resetWander();
         _progress.reset();
         StorageHelper.closeScreen(); // Kinda duct tape but it should be future proof ish
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             _progress.reset();
@@ -138,14 +138,14 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
     protected abstract boolean isSubEqual(AbstractDoToEntityTask other);
 
-    protected abstract Task onEntityInteract(AltoClef mod, Entity entity);
+    protected abstract Task onEntityInteract(Vibrato mod, Entity entity);
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getMobDefenseChain().setTargetEntity(null);
         mod.getMobDefenseChain().resetForceField();
     }
 
-    protected abstract Optional<Entity> getEntityTarget(AltoClef mod);
+    protected abstract Optional<Entity> getEntityTarget(Vibrato mod);
 
 }

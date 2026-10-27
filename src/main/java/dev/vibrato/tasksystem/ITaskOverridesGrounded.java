@@ -1,4 +1,4 @@
-package adris.altoclef.tasksystem;
+package dev.vibrato.tasksystem;
 
 /**
  * If this is found on a task, it will interrupt tasks that require grounded.

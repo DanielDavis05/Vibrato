@@ -1,12 +1,12 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.movement.MLGBucketTask;
-import adris.altoclef.tasksystem.ITaskOverridesGrounded;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.movement.MLGBucketTask;
+import dev.vibrato.tasksystem.ITaskOverridesGrounded;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
 import net.minecraft.entity.effect.StatusEffects;
@@ -31,13 +31,13 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish(Vibrato mod) {
         //_lastMLG = null;
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
-        if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
+    public float getPriority(Vibrato mod) {
+        if (!Vibrato.inGame()) return Float.NEGATIVE_INFINITY;
 
         if (isFallingOhNo(mod)) {
             _tryCollectWaterTimer.reset();
@@ -118,7 +118,7 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
         return _doingChorusFruit;
     }
 
-    public boolean isFallingOhNo(AltoClef mod) {
+    public boolean isFallingOhNo(Vibrato mod) {
         if (!mod.getModSettings().shouldAutoMLGBucket()) {
             return false;
         }

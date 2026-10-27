@@ -1,6 +1,6 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
-import adris.altoclef.Debug;
+import dev.vibrato.Debug;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.CraftingScreen;

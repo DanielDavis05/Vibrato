@@ -1,21 +1,21 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.entity.AbstractKillEntityTask;
-import adris.altoclef.tasks.entity.DoToClosestEntityTask;
-import adris.altoclef.tasks.misc.EquipArmorTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasks.resources.MineAndCollectTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.entity.AbstractKillEntityTask;
+import dev.vibrato.tasks.entity.DoToClosestEntityTask;
+import dev.vibrato.tasks.misc.EquipArmorTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.resources.MineAndCollectTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.pathing.goals.GoalGetToBlock;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.RotationUtils;
@@ -56,7 +56,7 @@ public class KillEnderDragonTask extends Task {
     private final PunkEnderDragonTask _punkTask = new PunkEnderDragonTask();
     private BlockPos _exitPortalTop;
 
-    private static Task getPickupTaskIfAny(AltoClef mod, Item... itemsToPickup) {
+    private static Task getPickupTaskIfAny(Vibrato mod, Item... itemsToPickup) {
         for (Item check : itemsToPickup) {
             if (mod.getEntityTracker().itemDropped(check)) {
                 return new PickupDroppedItemTask(new ItemTarget(check), true);
@@ -66,7 +66,7 @@ public class KillEnderDragonTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(Blocks.END_PORTAL);
         // Don't forcefield endermen.
@@ -75,7 +75,7 @@ public class KillEnderDragonTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_exitPortalTop == null) {
             _exitPortalTop = locateExitPortalTop(mod);
         }
@@ -168,7 +168,7 @@ public class KillEnderDragonTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
         mod.getBlockTracker().stopTracking(Blocks.END_PORTAL);
     }
@@ -187,7 +187,7 @@ public class KillEnderDragonTask extends Task {
         return _punkTask.getMode() == Mode.RAILING;
     }
 
-    private BlockPos locateExitPortalTop(AltoClef mod) {
+    private BlockPos locateExitPortalTop(Vibrato mod) {
         if (!mod.getChunkTracker().isChunkLoaded(new BlockPos(0, 64, 0))) return null;
         int height = WorldHelper.getGroundHeight(mod, 0, 0, Blocks.BEDROCK);
         if (height != -1) return new BlockPos(0, height, 0);
@@ -218,7 +218,7 @@ public class KillEnderDragonTask extends Task {
             return _mode;
         }
 
-        private void hit(AltoClef mod) {
+        private void hit(Vibrato mod) {
             mod.getExtraBaritoneSettings().setInteractionPaused(true);
             if (!_wasHitting) {
                 _wasHitting = true;
@@ -245,7 +245,7 @@ public class KillEnderDragonTask extends Task {
             }
         }
 
-        private void stopHitting(AltoClef mod) {
+        private void stopHitting(Vibrato mod) {
             if (_wasHitting) {
                 //MinecraftClient.getInstance().options.keyAttack.setPressed(false);
                 if (!_wasReleased) {
@@ -259,12 +259,12 @@ public class KillEnderDragonTask extends Task {
 
 
         @Override
-        protected void onStart(AltoClef mod) {
+        protected void onStart(Vibrato mod) {
             mod.getClientBaritone().getCustomGoalProcess().onLostControl();
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
+        protected Task onTick(Vibrato mod) {
 
             if (!mod.getEntityTracker().entityFound(EnderDragonEntity.class)) {
                 setDebugState("No dragon found.");
@@ -364,7 +364,7 @@ public class KillEnderDragonTask extends Task {
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
+        protected void onStop(Vibrato mod, Task interruptTask) {
             mod.getClientBaritone().getCustomGoalProcess().onLostControl();
             mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.MOVE_FORWARD, false);
             //mod.getControllerExtras().mouseClickOverride(0, false);
@@ -381,7 +381,7 @@ public class KillEnderDragonTask extends Task {
             return "Punking the dragon";
         }
 
-        private BlockPos getRandomWanderPos(AltoClef mod) {
+        private BlockPos getRandomWanderPos(Vibrato mod) {
             double RADIUS_RANGE = 45;
             double MIN_RADIUS = 7;
             BlockPos pos = null;

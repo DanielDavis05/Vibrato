@@ -1,6 +1,6 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.AltoClef;
+import dev.vibrato.Vibrato;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.Enchantment;
@@ -30,7 +30,7 @@ public class EntityHelper {
 
     public static final double ENTITY_GRAVITY = 0.08; // per second
 
-    public static boolean isAngryAtPlayer(AltoClef mod, Entity mob) {
+    public static boolean isAngryAtPlayer(Vibrato mod, Entity mob) {
         boolean hostile = isGenerallyHostileToPlayer(mod, mob);
         if (mob instanceof LivingEntity entity) {
             return hostile && entity.canSee(mod.getPlayer());
@@ -38,7 +38,7 @@ public class EntityHelper {
         return hostile;
     }
 
-    public static boolean isGenerallyHostileToPlayer(AltoClef mod, Entity hostile) {
+    public static boolean isGenerallyHostileToPlayer(Vibrato mod, Entity hostile) {
         // TODO: Ignore on Peaceful difficulty.
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         // NOTE: These do not work.

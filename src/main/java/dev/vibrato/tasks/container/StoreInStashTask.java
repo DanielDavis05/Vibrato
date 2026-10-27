@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.movement.GetToXZTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerCache;
-import adris.altoclef.util.BlockRange;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.movement.GetToXZTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerCache;
+import dev.vibrato.util.BlockRange;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -37,7 +37,7 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(TO_SCAN);
         if (_storedItems == null) {
             _storedItems = new ContainerStoredTracker(slot -> {
@@ -49,7 +49,7 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Get more if we don't have & "get if not present" is true.
         if (_getIfNotPresent) {
             for (ItemTarget target : _toStore) {
@@ -84,13 +84,13 @@ public class StoreInStashTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(TO_SCAN);
         _storedItems.stopTracking();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
     }
 

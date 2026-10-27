@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -23,12 +23,12 @@ public class GetCloseToBlockTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _currentRange = Integer.MAX_VALUE;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Always bump the range down if we've met it.
         // We have a strictly decreasing range, which means we will eventualy get
         // as close as we can.
@@ -39,15 +39,15 @@ public class GetCloseToBlockTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
-    private int getCurrentDistance(AltoClef mod) {
+    private int getCurrentDistance(Vibrato mod) {
         return (int) Math.sqrt(mod.getPlayer().getBlockPos().getSquaredDistance(_toApproach));
     }
 
-    private boolean inRange(AltoClef mod) {
+    private boolean inRange(Vibrato mod) {
         return mod.getPlayer().getBlockPos().getSquaredDistance(_toApproach) <= _currentRange * _currentRange;
     }
 

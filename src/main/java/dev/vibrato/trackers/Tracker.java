@@ -1,10 +1,10 @@
-package adris.altoclef.trackers;
+package dev.vibrato.trackers;
 
-import adris.altoclef.AltoClef;
+import dev.vibrato.Vibrato;
 
 public abstract class Tracker {
 
-    protected AltoClef _mod;
+    protected Vibrato _mod;
     // Needs to update
     private boolean _dirty = true;
 

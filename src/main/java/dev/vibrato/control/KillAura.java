@@ -1,8 +1,8 @@
-package adris.altoclef.control;
+package dev.vibrato.control;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.StlHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.StlHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.projectile.FireballEntity;
@@ -24,18 +24,18 @@ public class KillAura {
     private double _forceFieldRange = Double.POSITIVE_INFINITY;
     private Entity _forceHit = null;
 
-    public void tickStart(AltoClef mod) {
+    public void tickStart(Vibrato mod) {
         _targets.clear();
         _forceHit = null;
     }
 
-    public void applyAura(AltoClef mod, Entity entity) {
+    public void applyAura(Vibrato mod, Entity entity) {
         _targets.add(entity);
         // Always hit ghast balls.
         if (entity instanceof FireballEntity) _forceHit = entity;
     }
 
-    public void tickEnd(AltoClef mod) {
+    public void tickEnd(Vibrato mod) {
         // Run force field on map
         switch (mod.getModSettings().getForceFieldStrategy()) {
             case FASTEST:
@@ -72,7 +72,7 @@ public class KillAura {
         _forceFieldRange = range;
     }
 
-    private void performDelayedAttack(AltoClef mod) {
+    private void performDelayedAttack(Vibrato mod) {
         // wait for the attack delay
         if (_targets.isEmpty()) {
             return;
@@ -87,17 +87,17 @@ public class KillAura {
         toHit.ifPresent(entity -> attack(mod, entity, true));
     }
 
-    private void performFastestAttack(AltoClef mod) {
+    private void performFastestAttack(Vibrato mod) {
         // Just attack whenever you can
         for (Entity entity : _targets) {
             attack(mod, entity);
         }
     }
 
-    private void attack(AltoClef mod, Entity entity) {
+    private void attack(Vibrato mod, Entity entity) {
         attack(mod, entity, false);
     }
-    private void attack(AltoClef mod, Entity entity, boolean equipSword) {
+    private void attack(Vibrato mod, Entity entity, boolean equipSword) {
         if (entity == null) return;
         if (Double.isInfinite(_forceFieldRange) || entity.squaredDistanceTo(mod.getPlayer()) < _forceFieldRange * _forceFieldRange) {
             boolean canAttack;

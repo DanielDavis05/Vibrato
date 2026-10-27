@@ -1,6 +1,6 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.AltoClef;
+import dev.vibrato.Vibrato;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.RayTraceUtils;
@@ -135,7 +135,7 @@ public interface LookHelper {
         }
         return isSneaking ? RayTraceUtils.inferSneakingEyePosition(entity) : entity.getCameraPosVec(1.0F);
     }
-    static Vec3d getCameraPos(AltoClef mod) {
+    static Vec3d getCameraPos(Vibrato mod) {
         IPlayerContext ctx = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
         return ctx.player().getCameraPosVec(1);
     }
@@ -151,7 +151,7 @@ public interface LookHelper {
         return rotDirection.dotProduct(deltaDirection);
     }
 
-    static boolean tryAvoidingInteractable(AltoClef mod) {
+    static boolean tryAvoidingInteractable(Vibrato mod) {
         if (isCollidingInteractable(mod)) {
             randomOrientation(mod);
             return false;
@@ -165,7 +165,7 @@ public interface LookHelper {
         return cleanLineOfSight(entity, start, end, maxRange);
     }
 
-    private static boolean isCollidingInteractable(AltoClef mod) {
+    private static boolean isCollidingInteractable(Vibrato mod) {
 
         if (!(mod.getPlayer().currentScreenHandler instanceof PlayerScreenHandler)) {
             StorageHelper.closeScreen();
@@ -185,42 +185,42 @@ public interface LookHelper {
         return false;
     }
 
-    static void randomOrientation(AltoClef mod) {
+    static void randomOrientation(Vibrato mod) {
         Rotation r = new Rotation((float) Math.random() * 360f, -90 + (float) Math.random() * 180f);
         lookAt(mod, r);
     }
 
-    static boolean isLookingAt(AltoClef mod, Rotation rotation) {
+    static boolean isLookingAt(Vibrato mod, Rotation rotation) {
         return rotation.isReallyCloseTo(getLookRotation());
     }
-    static boolean isLookingAt(AltoClef mod, BlockPos blockPos) {
+    static boolean isLookingAt(Vibrato mod, BlockPos blockPos) {
         return mod.getClientBaritone().getPlayerContext().isLookingAt(blockPos);
     }
 
-    static void lookAt(AltoClef mod, Rotation rotation) {
+    static void lookAt(Vibrato mod, Rotation rotation) {
         mod.getClientBaritone().getLookBehavior().updateTarget(rotation, true);
         mod.getPlayer().setYaw(rotation.getYaw());
         mod.getPlayer().setPitch(rotation.getPitch());
     }
-    static void lookAt(AltoClef mod, Vec3d toLook) {
+    static void lookAt(Vibrato mod, Vec3d toLook) {
         Rotation targetRotation = getLookRotation(mod, toLook);
         lookAt(mod, targetRotation);
     }
-    static void lookAt(AltoClef mod, BlockPos toLook, Direction side) {
+    static void lookAt(Vibrato mod, BlockPos toLook, Direction side) {
         Vec3d target = new Vec3d(toLook.getX() + 0.5, toLook.getY() + 0.5, toLook.getZ() + 0.5);
         if (side != null) {
             target.add(side.getVector().getX() * 0.5, side.getVector().getY() * 0.5, side.getVector().getZ() * 0.5);
         }
         lookAt(mod, target);
     }
-    static void lookAt(AltoClef mod, BlockPos toLook) {
+    static void lookAt(Vibrato mod, BlockPos toLook) {
         lookAt(mod, toLook, null);
     }
 
-    static Rotation getLookRotation(AltoClef mod, Vec3d toLook) {
+    static Rotation getLookRotation(Vibrato mod, Vec3d toLook) {
         return RotationUtils.calcRotationFromVec3d(mod.getClientBaritone().getPlayerContext().playerHead(), toLook, mod.getClientBaritone().getPlayerContext().playerRotations());
     }
-    static Rotation getLookRotation(AltoClef mod, BlockPos toLook) {
+    static Rotation getLookRotation(Vibrato mod, BlockPos toLook) {
         return getLookRotation(mod, WorldHelper.toVec3d(toLook));
     }
 

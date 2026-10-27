@@ -1,7 +1,7 @@
-package adris.altoclef.util.progresscheck;
+package dev.vibrato.util.progresscheck;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -29,7 +29,7 @@ public class MovementProgressChecker {
         this(1);
     }
 
-    public boolean check(AltoClef mod) {
+    public boolean check(Vibrato mod) {
 
         // Allow pause on eat
         if (mod.getFoodChain().isTryingToEat()) {

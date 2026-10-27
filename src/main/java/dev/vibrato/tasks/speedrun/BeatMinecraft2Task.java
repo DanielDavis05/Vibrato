@@ -1,30 +1,30 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.container.DoStuffInContainerTask;
-import adris.altoclef.tasks.container.LootContainerTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.misc.EquipArmorTask;
-import adris.altoclef.tasks.misc.LootDesertTempleTask;
-import adris.altoclef.tasks.misc.PlaceBedAndSetSpawnTask;
-import adris.altoclef.tasks.misc.SleepThroughNightTask;
-import adris.altoclef.tasks.movement.*;
-import adris.altoclef.tasks.resources.*;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.SmeltTarget;
-import adris.altoclef.util.helpers.ConfigHelper;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.container.DoStuffInContainerTask;
+import dev.vibrato.tasks.container.LootContainerTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.misc.EquipArmorTask;
+import dev.vibrato.tasks.misc.LootDesertTempleTask;
+import dev.vibrato.tasks.misc.PlaceBedAndSetSpawnTask;
+import dev.vibrato.tasks.misc.SleepThroughNightTask;
+import dev.vibrato.tasks.movement.*;
+import dev.vibrato.tasks.resources.*;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.SmeltTarget;
+import dev.vibrato.util.helpers.ConfigHelper;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -144,10 +144,10 @@ public class BeatMinecraft2Task extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
         // Add a warning to make sure the user at least knows to change the settings.
-        String settingsWarningTail = "in \".minecraft/altoclef_settings.json\". @gamer may break if you don't add this! (sorry!)";
+        String settingsWarningTail = "in \".minecraft/vibrato_settings.json\". @gamer may break if you don't add this! (sorry!)";
         if (!ArrayUtils.contains(mod.getModSettings().getThrowawayItems(mod), Items.END_STONE)) {
             Debug.logWarning("\"end_stone\" is not part of your \"throwawayItems\" list " + settingsWarningTail);
         }
@@ -178,7 +178,7 @@ public class BeatMinecraft2Task extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         /*
         if in the overworld:
           if end portal found:
@@ -414,11 +414,11 @@ public class BeatMinecraft2Task extends Task {
         return null;
     }
 
-    private boolean needsBuildingMaterials(AltoClef mod) {
+    private boolean needsBuildingMaterials(Vibrato mod) {
         return StorageHelper.getBuildingMaterialCount(mod) < _config.minBuildMaterialCount || shouldForce(mod, _buildMaterialsTask);
     }
 
-    private void updateCachedEndItems(AltoClef mod) {
+    private void updateCachedEndItems(Vibrato mod) {
         List<ItemEntity> droppedItems = mod.getEntityTracker().getDroppedItems();
         // If we have no items, it COULD be because we're dead. Wait a little.
         if (droppedItems.isEmpty()) {
@@ -441,11 +441,11 @@ public class BeatMinecraft2Task extends Task {
     private boolean droppedInEnd(Item item) {
         return getEndCachedCount(item) > 0;
     }
-    private boolean hasItemOrDroppedInEnd(AltoClef mod, Item item) {
+    private boolean hasItemOrDroppedInEnd(Vibrato mod, Item item) {
         return mod.getItemStorage().hasItem(item) || droppedInEnd(item);
     }
 
-    private List<Item> lootableItems(AltoClef mod) {
+    private List<Item> lootableItems(Vibrato mod) {
         List<Item> lootable = new ArrayList<>();
         lootable.add(Items.GOLDEN_APPLE);
         lootable.add(Items.ENCHANTED_GOLDEN_APPLE);
@@ -477,7 +477,7 @@ public class BeatMinecraft2Task extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(TRACK_BLOCKS);
         mod.getBlockTracker().stopTracking(ItemHelper.itemsToBlocks(ItemHelper.BED));
         mod.getBehaviour().pop();
@@ -493,7 +493,7 @@ public class BeatMinecraft2Task extends Task {
         return "Beating the Game.";
     }
 
-    private boolean endPortalFound(AltoClef mod, BlockPos endPortalCenter) {
+    private boolean endPortalFound(Vibrato mod, BlockPos endPortalCenter) {
         if (endPortalCenter == null) {
             return false;
         }
@@ -502,13 +502,13 @@ public class BeatMinecraft2Task extends Task {
         }
         return getFrameBlocks(endPortalCenter).stream().allMatch(frame -> mod.getBlockTracker().blockIsValid(frame, Blocks.END_PORTAL_FRAME));
     }
-    private boolean endPortalOpened(AltoClef mod, BlockPos endPortalCenter) {
+    private boolean endPortalOpened(Vibrato mod, BlockPos endPortalCenter) {
         return _endPortalOpened && endPortalCenter != null && mod.getBlockTracker().blockIsValid(endPortalCenter, Blocks.END_PORTAL);
     }
-    private boolean spawnSetNearPortal(AltoClef mod, BlockPos endPortalCenter) {
+    private boolean spawnSetNearPortal(Vibrato mod, BlockPos endPortalCenter) {
         return _bedSpawnLocation != null && mod.getBlockTracker().blockIsValid(_bedSpawnLocation, ItemHelper.itemsToBlocks(ItemHelper.BED));
     }
-    private int getFilledPortalFrames(AltoClef mod, BlockPos endPortalCenter) {
+    private int getFilledPortalFrames(Vibrato mod, BlockPos endPortalCenter) {
         // If we have our end portal, this doesn't matter.
         if (endPortalFound(mod, endPortalCenter)) {
             return END_PORTAL_FRAME_COUNT;
@@ -526,7 +526,7 @@ public class BeatMinecraft2Task extends Task {
         return 0;
     }
 
-    private boolean canBeLootablePortalChest(AltoClef mod, BlockPos blockPos) {
+    private boolean canBeLootablePortalChest(Vibrato mod, BlockPos blockPos) {
         if (mod.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
             return false;
         }
@@ -539,7 +539,7 @@ public class BeatMinecraft2Task extends Task {
         return false;
     }
 
-    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(AltoClef mod) {
+    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(Vibrato mod) {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             return Optional.empty();
         }
@@ -564,7 +564,7 @@ public class BeatMinecraft2Task extends Task {
         return Arrays.stream(frameOffsets).map(endPortalCenter::add).toList();
     }
 
-    private Task getEyesOfEnderTask(AltoClef mod, int targetEyes) {
+    private Task getEyesOfEnderTask(Vibrato mod, int targetEyes) {
         if (mod.getEntityTracker().itemDropped(Items.ENDER_EYE)) {
             setDebugState("Picking up Dropped Eyes");
             return new PickupDroppedItemTask(Items.ENDER_EYE, targetEyes);
@@ -685,7 +685,7 @@ public class BeatMinecraft2Task extends Task {
         return null;
     }
 
-    private Task setSpawnNearPortalTask(AltoClef mod) {
+    private Task setSpawnNearPortalTask(Vibrato mod) {
         if (_setBedSpawnTask.isSpawnSet()) {
             _bedSpawnLocation = _setBedSpawnTask.getBedSleptPos();
         } else {
@@ -705,13 +705,13 @@ public class BeatMinecraft2Task extends Task {
         }
     }
 
-    private Task getBlazeRodsTask(AltoClef mod, int count) {
+    private Task getBlazeRodsTask(Vibrato mod, int count) {
         if (mod.getEntityTracker().itemDropped(Items.BLAZE_POWDER)) {
             return new PickupDroppedItemTask(Items.BLAZE_POWDER, 1);
         }
         return new CollectBlazeRodsTask(count);
     }
-    private Task getEnderPearlTask(AltoClef mod, int count) {
+    private Task getEnderPearlTask(Vibrato mod, int count) {
         if (_config.barterPearlsInsteadOfEndermanHunt) {
             // Equip golden boots before trading...
             if (!StorageHelper.isArmorEquipped(mod, Items.GOLDEN_BOOTS)) {
@@ -728,7 +728,7 @@ public class BeatMinecraft2Task extends Task {
         }
     }
 
-    private int getTargetBeds(AltoClef mod) {
+    private int getTargetBeds(Vibrato mod) {
         boolean needsToSetSpawn = _config.placeSpawnNearEndPortal &&
                 (
                         !spawnSetNearPortal(mod, _endPortalCenterLocation)
@@ -741,14 +741,14 @@ public class BeatMinecraft2Task extends Task {
 
         return _config.requiredBeds + (needsToSetSpawn ? 1 : 0) - bedsInEnd;
     }
-    private boolean needsBeds(AltoClef mod) {
+    private boolean needsBeds(Vibrato mod) {
         int inEnd = 0;
         for (Item item : ItemHelper.BED) {
             inEnd += _cachedEndItemDrops.getOrDefault(item, 0);
         }
         return (mod.getItemStorage().getItemCount(ItemHelper.BED) + inEnd) < getTargetBeds(mod);
     }
-    private Task getBedTask(AltoClef mod) {
+    private Task getBedTask(Vibrato mod) {
         int targetBeds = getTargetBeds(mod);
         // Collect beds. If we want to set our spawn, collect 1 more.
         setDebugState("Collecting " + targetBeds + " beds");
@@ -757,11 +757,11 @@ public class BeatMinecraft2Task extends Task {
         }
         return TaskCatalogue.getItemTask("bed", targetBeds);
     }
-    private boolean anyBedsFound(AltoClef mod) {
+    private boolean anyBedsFound(Vibrato mod) {
         return mod.getBlockTracker().anyFound(ItemHelper.itemsToBlocks(ItemHelper.BED));
     }
 
-    private BlockPos doSimpleSearchForEndPortal(AltoClef mod) {
+    private BlockPos doSimpleSearchForEndPortal(Vibrato mod) {
         List<BlockPos> frames = mod.getBlockTracker().getKnownLocations(Blocks.END_PORTAL_FRAME);
         if (frames.size() >= END_PORTAL_FRAME_COUNT) {
             // Get the center of the frames.
@@ -773,7 +773,7 @@ public class BeatMinecraft2Task extends Task {
         return null;
     }
 
-    private static boolean isEndPortalFrameFilled(AltoClef mod, BlockPos pos) {
+    private static boolean isEndPortalFrameFilled(Vibrato mod, BlockPos pos) {
         if (!mod.getChunkTracker().isChunkLoaded(pos))
             return false;
         BlockState state = mod.getWorld().getBlockState(pos);
@@ -785,12 +785,12 @@ public class BeatMinecraft2Task extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return MinecraftClient.getInstance().currentScreen instanceof CreditsScreen;
     }
 
     // Just a helpful utility to reduce reuse recycle.
-    private static boolean shouldForce(AltoClef mod, Task task) {
+    private static boolean shouldForce(Vibrato mod, Task task) {
         return task != null && task.isActive() && !task.isFinished(mod);
     }
     private static ItemTarget[] toItemTargets(Item ...items) {

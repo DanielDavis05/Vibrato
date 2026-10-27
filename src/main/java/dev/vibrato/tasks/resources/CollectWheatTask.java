@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.RecipeTarget;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.RecipeTarget;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
@@ -22,17 +22,17 @@ public class CollectWheatTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.HAY_BLOCK);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // We may have enough hay blocks to meet our needs.
         int potentialCount = mod.getItemStorage().getItemCount(Items.WHEAT) + 9 * mod.getItemStorage().getItemCount(Items.HAY_BLOCK);
         if (potentialCount >= _count) {
@@ -47,7 +47,7 @@ public class CollectWheatTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.HAY_BLOCK);
     }
 

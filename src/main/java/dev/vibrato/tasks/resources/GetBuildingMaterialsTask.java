@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.item.Item;
 
 public class GetBuildingMaterialsTask extends Task {
@@ -14,18 +14,18 @@ public class GetBuildingMaterialsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         Item[] throwaways = mod.getModSettings().getThrowawayItems(mod, true);
         return new MineAndCollectTask(new ItemTarget[] {new ItemTarget(throwaways, _count)}, MiningRequirement.WOOD);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -38,7 +38,7 @@ public class GetBuildingMaterialsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return StorageHelper.getBuildingMaterialCount(mod) >= _count;
     }
 

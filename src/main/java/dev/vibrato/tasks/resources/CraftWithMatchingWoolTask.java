@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
 
 import java.util.function.Function;

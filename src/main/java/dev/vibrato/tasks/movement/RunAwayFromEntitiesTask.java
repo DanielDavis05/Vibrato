@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.baritone.GoalRunAwayFromEntities;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.baritone.GoalRunAwayFromEntities;
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.entity.Entity;
 
@@ -30,19 +30,19 @@ public abstract class RunAwayFromEntitiesTask extends CustomBaritoneGoalTask {
 
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new GoalRunAwayStuff(mod, _distanceToRun, _xz);
     }
 
 
     private class GoalRunAwayStuff extends GoalRunAwayFromEntities {
 
-        public GoalRunAwayStuff(AltoClef mod, double distance, boolean xz) {
+        public GoalRunAwayStuff(Vibrato mod, double distance, boolean xz) {
             super(mod, distance, xz, _penalty);
         }
 
         @Override
-        protected List<net.minecraft.entity.Entity> getEntities(AltoClef mod) {
+        protected List<net.minecraft.entity.Entity> getEntities(Vibrato mod) {
             return _runAwaySupplier.get();
         }
     }

@@ -1,8 +1,8 @@
-package adris.altoclef.ui;
+package dev.vibrato.ui;
 
-import adris.altoclef.Debug;
-import adris.altoclef.util.time.BaseTimer;
-import adris.altoclef.util.time.TimerReal;
+import dev.vibrato.Debug;
+import dev.vibrato.util.time.BaseTimer;
+import dev.vibrato.util.time.TimerReal;
 import net.minecraft.client.MinecraftClient;
 
 import java.util.Comparator;

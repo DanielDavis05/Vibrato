@@ -1,12 +1,12 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.GetToXZTask;
-import adris.altoclef.tasks.movement.GetToYTask;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.*;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.GetToXZTask;
+import dev.vibrato.tasks.movement.GetToYTask;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -36,7 +36,7 @@ public class GotoCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         GotoTarget target = parser.get(GotoTarget.class);
         mod.runUserTask(getMovementTaskFor(target), this::finish);
     }

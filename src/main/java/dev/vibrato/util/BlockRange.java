@@ -1,6 +1,6 @@
-package adris.altoclef.util;
+package dev.vibrato.util;
 
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import net.minecraft.util.math.BlockPos;
 

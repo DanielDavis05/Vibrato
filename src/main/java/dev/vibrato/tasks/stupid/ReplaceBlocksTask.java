@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.stupid;
+package dev.vibrato.tasks.stupid;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.BlockBrokenEvent;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.construction.PlaceBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.BlockBrokenEvent;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.construction.PlaceBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -49,7 +49,7 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().addProtectedItems(_toReplace.getMatches());
         // TODO: Bug: We may want to replace a block that's considered a CONSTRUCTION block.
@@ -78,7 +78,7 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_collectMaterialsTask != null && _collectMaterialsTask.isActive() && !_collectMaterialsTask.isFinished(mod)) {
             setDebugState("Collecting materials...");
@@ -127,7 +127,7 @@ public class ReplaceBlocksTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         EventBus.unsubscribe(_blockBrokenSubscription);
         mod.getBehaviour().pop();
     }

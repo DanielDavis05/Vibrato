@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.MiningRequirement;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.MiningRequirement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
@@ -18,22 +18,22 @@ public class CollectCobbledDeepslateTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         return new MineAndCollectTask(Items.COBBLED_DEEPSLATE, 1, new Block[]{Blocks.DEEPSLATE, Blocks.COBBLED_DEEPSLATE}, MiningRequirement.WOOD);
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 

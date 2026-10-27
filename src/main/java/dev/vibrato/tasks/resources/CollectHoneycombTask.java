@@ -1,15 +1,15 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.PlaceBlockTask;
-import adris.altoclef.tasks.movement.GetCloseToBlockTask;
-import adris.altoclef.tasks.movement.SearchChunkForBlockTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.PlaceBlockTask;
+import dev.vibrato.tasks.movement.GetCloseToBlockTask;
+import dev.vibrato.tasks.movement.SearchChunkForBlockTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.state.property.Properties;
@@ -34,13 +34,13 @@ public class CollectHoneycombTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(Blocks.BEE_NEST);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         if (_nest == null) {
             Optional<BlockPos> getNearestNest = mod.getBlockTracker().getNearestTracking(Blocks.BEE_NEST);
             if (getNearestNest.isPresent()) _nest = getNearestNest.get();
@@ -79,7 +79,7 @@ public class CollectHoneycombTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.BEE_NEST);
         mod.getBehaviour().pop();
     }
@@ -95,11 +95,11 @@ public class CollectHoneycombTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
-    private boolean isCampfireUnderNest(AltoClef mod, BlockPos pos) {
+    private boolean isCampfireUnderNest(Vibrato mod, BlockPos pos) {
         for(BlockPos underPos : WorldHelper.scanRegion(mod, pos.down(6), pos.down())) {
             if (mod.getWorld().getBlockState(underPos).getBlock() == Blocks.CAMPFIRE)
                 return true;

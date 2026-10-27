@@ -1,6 +1,6 @@
-package adris.altoclef.util.serialization;
+package dev.vibrato.util.serialization;
 
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.ItemHelper;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;

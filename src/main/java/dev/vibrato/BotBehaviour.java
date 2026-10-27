@@ -1,7 +1,7 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.util.slots.Slot;
-import baritone.altoclef.AltoClefSettings;
+import dev.vibrato.util.slots.Slot;
+import baritone.vibrato.VibratoSettings;
 import baritone.api.Settings;
 import baritone.api.utils.RayTraceUtils;
 import net.minecraft.block.BlockState;
@@ -28,9 +28,9 @@ import java.util.function.Predicate;
 public class BotBehaviour {
 
     Deque<State> _states = new ArrayDeque<>();
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
-    public BotBehaviour(AltoClef mod) {
+    public BotBehaviour(Vibrato mod) {
         _mod = mod;
 
         // Start with one state.
@@ -260,7 +260,7 @@ public class BotBehaviour {
         public double blockPlacePenalty;
         public double blockBreakAdditionalPenalty;
 
-        // Alto Clef params
+        // Vibrato params
         public boolean exclusivelyMineLogs;
         public boolean forceFieldPlayers;
         public List<Predicate<Entity>> avoidDodgingProjectile = new ArrayList<>();
@@ -329,7 +329,7 @@ public class BotBehaviour {
             //preferredStairs = s.allowDownward.value;
         }
 
-        private void readExtraState(AltoClefSettings settings) {
+        private void readExtraState(VibratoSettings settings) {
             synchronized (settings.getBreakMutex()) {
                 synchronized (settings.getPlaceMutex()) {
                     blocksToAvoidBreaking = new HashSet<>(settings.getBlocksToAvoidBreaking());
@@ -358,7 +358,7 @@ public class BotBehaviour {
         /**
          * Make the current state match our copy
          */
-        private void applyState(Settings s, AltoClefSettings sa) {
+        private void applyState(Settings s, VibratoSettings sa) {
             s.followOffsetDistance.value = followOffsetDistance;
             s.mineScanDroppedItems.value = mineScanDroppedItems;
             s.allowDiagonalAscend.value = allowDiagonalAscend;

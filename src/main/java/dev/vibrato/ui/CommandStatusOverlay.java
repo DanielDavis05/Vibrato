@@ -1,8 +1,8 @@
-package adris.altoclef.ui;
+package dev.vibrato.ui;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -20,7 +20,7 @@ public class CommandStatusOverlay {
     private long _timeRunning;
     private long _lastTime = 0;
 
-    public void render(AltoClef mod, DrawContext context) {
+    public void render(Vibrato mod, DrawContext context) {
         if (mod.getModSettings().shouldShowTaskChain()) {
             List<Task> tasks = Collections.emptyList();
             if (mod.getTaskRunner().getCurrentTaskChain() != null) {
@@ -32,7 +32,7 @@ public class CommandStatusOverlay {
         }
     }
     private DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.from(ZoneOffset.of("+00:00"))); // The date formatter
-    private void drawTaskChain(TextRenderer renderer, DrawContext context, float dx, float dy, int color, int maxLines, List<Task> tasks, AltoClef mod) {
+    private void drawTaskChain(TextRenderer renderer, DrawContext context, float dx, float dy, int color, int maxLines, List<Task> tasks, Vibrato mod) {
         if (tasks.size() == 0) {
             context.drawText(renderer, " (no task running) ", (int) dx, (int) dy, color, false);
             if (_lastTime+10000 < Instant.now().toEpochMilli() && mod.getModSettings().shouldShowTimer()) {//if it doesn't run any task in 10 secs

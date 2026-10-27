@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.*;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.*;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
 
 import java.util.ArrayList;
@@ -40,17 +40,17 @@ public class CollectPlanksTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // Craft when we can
         int totalInventoryPlankCount = mod.getItemStorage().getItemCount(_planks);
@@ -90,7 +90,7 @@ public class CollectPlanksTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 

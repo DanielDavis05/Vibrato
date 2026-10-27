@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.container.LootContainerTask;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.container.LootContainerTask;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -29,12 +29,12 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getClientBaritoneSettings().blocksToAvoid.value.add(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_lootTask != null) {
             if (!_lootTask.isFinished(mod)) {
                 setDebugState("Looting a desert temple chest");
@@ -56,7 +56,7 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
+    protected void onStop(Vibrato mod, Task task) {
         mod.getClientBaritoneSettings().blocksToAvoid.value.remove(Blocks.STONE_PRESSURE_PLATE);
     }
 
@@ -66,7 +66,7 @@ public class LootDesertTempleTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _looted == 4;
     }
 

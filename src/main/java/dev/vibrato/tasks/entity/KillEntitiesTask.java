@@ -1,4 +1,4 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
 import net.minecraft.entity.Entity;
 

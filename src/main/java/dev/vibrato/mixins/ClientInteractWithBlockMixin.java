@@ -1,9 +1,9 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
 // ActionResult ClientPlayerInteractionManager.interactBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult);
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockInteractEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockInteractEvent;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.world.ClientWorld;

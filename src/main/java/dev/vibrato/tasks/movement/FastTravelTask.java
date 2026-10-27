@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.item.Item;
@@ -59,7 +59,7 @@ public class FastTravelTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _goToOverworldTask = new EnterNetherPortalTask(new ConstructNetherPortalObsidianTask(), Dimension.OVERWORLD, checkPos -> {
             // Make sure the portal we enter is NOT close to our exit portal...
             Optional<BlockPos> lastPortal = mod.getMiscBlockTracker().getLastUsedNetherPortal(Dimension.NETHER);
@@ -68,7 +68,7 @@ public class FastTravelTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         BlockPos netherTarget = new BlockPos(_target.getX() / 8, _target.getY(), _target.getZ() / 8);
 
@@ -177,7 +177,7 @@ public class FastTravelTask extends Task {
 
     }
 
-    private int getOverworldThreshold(AltoClef mod) {
+    private int getOverworldThreshold(Vibrato mod) {
         int threshold;
         //noinspection ReplaceNullCheck
         if (_threshold == null) {
@@ -193,7 +193,7 @@ public class FastTravelTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 

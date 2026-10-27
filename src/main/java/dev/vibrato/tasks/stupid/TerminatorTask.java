@@ -1,27 +1,27 @@
-package adris.altoclef.tasks.stupid;
+package dev.vibrato.tasks.stupid;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.construction.PlaceBlockTask;
-import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.entity.DoToClosestEntityTask;
-import adris.altoclef.tasks.misc.EquipArmorTask;
-import adris.altoclef.tasks.entity.KillPlayerTask;
-import adris.altoclef.tasks.movement.RunAwayFromEntitiesTask;
-import adris.altoclef.tasks.movement.SearchChunksExploreTask;
-import adris.altoclef.tasks.resources.CollectFoodTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.ui.MessagePriority;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.SmeltTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.BaritoneHelper;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.construction.PlaceBlockTask;
+import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.entity.DoToClosestEntityTask;
+import dev.vibrato.tasks.misc.EquipArmorTask;
+import dev.vibrato.tasks.entity.KillPlayerTask;
+import dev.vibrato.tasks.movement.RunAwayFromEntitiesTask;
+import dev.vibrato.tasks.movement.SearchChunksExploreTask;
+import dev.vibrato.tasks.resources.CollectFoodTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.ui.MessagePriority;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.SmeltTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.BaritoneHelper;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -78,13 +78,13 @@ public class TerminatorTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().setForceFieldPlayers(true);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         Optional<Entity> closest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class);
 
@@ -233,7 +233,7 @@ public class TerminatorTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
     }
 
@@ -247,18 +247,18 @@ public class TerminatorTask extends Task {
         return "Terminator Task";
     }
 
-    private boolean isReadyToPunk(AltoClef mod) {
+    private boolean isReadyToPunk(Vibrato mod) {
         if (mod.getPlayer().getHealth() <= 5) return false; // We need to heal.
         return StorageHelper.isArmorEquippedAll(mod, ItemHelper.DIAMOND_ARMORS) && mod.getItemStorage().hasItem(Items.DIAMOND_SWORD);
     }
 
-    private boolean shouldPunk(AltoClef mod, PlayerEntity player) {
+    private boolean shouldPunk(Vibrato mod, PlayerEntity player) {
         if (player == null || player.isDead()) return false;
         if (player.isCreative() || player.isSpectator()) return false;
         return !mod.getButler().isUserAuthorized(player.getName().getString()) && _canTerminate.test(player);
     }
 
-    private void tryDoFunnyMessageTo(AltoClef mod, PlayerEntity player) {
+    private void tryDoFunnyMessageTo(Vibrato mod, PlayerEntity player) {
         if (_funnyMessageTimer.elapsed()) {
             if (LookHelper.seesPlayer(player, mod.getPlayer(), 80)) {
                 String name = player.getName().getString();
@@ -287,7 +287,7 @@ public class TerminatorTask extends Task {
         }
 
         @Override
-        protected boolean isChunkWithinSearchSpace(AltoClef mod, ChunkPos pos) {
+        protected boolean isChunkWithinSearchSpace(Vibrato mod, ChunkPos pos) {
             double cx = (pos.getStartX() + pos.getEndX()) / 2.0;
             double cz = (pos.getStartZ() + pos.getEndZ()) / 2.0;
             double dx = _center.getX() - cx,
@@ -296,7 +296,7 @@ public class TerminatorTask extends Task {
         }
 
         @Override
-        protected ChunkPos getBestChunkOverride(AltoClef mod, List<ChunkPos> chunks) {
+        protected ChunkPos getBestChunkOverride(Vibrato mod, List<ChunkPos> chunks) {
             // Prioritise the chunk we last saw a player in.
             if (_closestPlayerLastPos != null) {
                 double lowestScore = Double.POSITIVE_INFINITY;

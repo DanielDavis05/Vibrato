@@ -1,17 +1,17 @@
-package adris.altoclef.tasks;
+package dev.vibrato.tasks;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
-import adris.altoclef.tasks.slot.ThrowCursorTask;
-import adris.altoclef.tasksystem.ITaskUsesCraftingGrid;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.RecipeTarget;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.CraftingTableSlot;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.ReceiveCraftingOutputSlotTask;
+import dev.vibrato.tasks.slot.ThrowCursorTask;
+import dev.vibrato.tasksystem.ITaskUsesCraftingGrid;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.RecipeTarget;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.CraftingTableSlot;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 
 import java.util.Arrays;
@@ -26,12 +26,12 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         
 
@@ -90,7 +90,7 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 

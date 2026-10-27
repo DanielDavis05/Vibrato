@@ -1,9 +1,9 @@
-package adris.altoclef.tasks;
+package dev.vibrato.tasks;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
@@ -24,18 +24,18 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
     private boolean _wasWandering;
     private Task _goalTask = null;
 
-    protected abstract Vec3d getPos(AltoClef mod, T obj);
+    protected abstract Vec3d getPos(Vibrato mod, T obj);
 
-    protected abstract Optional<T> getClosestTo(AltoClef mod, Vec3d pos);
+    protected abstract Optional<T> getClosestTo(Vibrato mod, Vec3d pos);
 
-    protected abstract Vec3d getOriginPos(AltoClef mod);
+    protected abstract Vec3d getOriginPos(Vibrato mod);
 
     protected abstract Task getGoalTask(T obj);
 
-    protected abstract boolean isValid(AltoClef mod, T obj);
+    protected abstract boolean isValid(Vibrato mod, T obj);
 
     // Virtual
-    protected Task getWanderTask(AltoClef mod) {
+    protected Task getWanderTask(Vibrato mod) {
         return new TimeoutWanderTask(true);
     }
 
@@ -49,17 +49,17 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
         return _wasWandering;
     }
 
-    private double getCurrentCalculatedHeuristic(AltoClef mod) {
+    private double getCurrentCalculatedHeuristic(Vibrato mod) {
         Optional<Double> ticksRemainingOp = mod.getClientBaritone().getPathingBehavior().ticksRemainingInSegment();
         return ticksRemainingOp.orElse(Double.POSITIVE_INFINITY);
     }
 
-    private boolean isMovingToClosestPos(AltoClef mod) {
+    private boolean isMovingToClosestPos(Vibrato mod) {
         return _goalTask != null;// && _goalTask.isActive() && !_goalTask.isFinished(mod);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         _wasWandering = false;
 

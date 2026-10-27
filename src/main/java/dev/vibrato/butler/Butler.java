@@ -1,11 +1,11 @@
-package adris.altoclef.butler;
+package dev.vibrato.butler;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.ChatMessageEvent;
-import adris.altoclef.eventbus.events.TaskFinishedEvent;
-import adris.altoclef.ui.MessagePriority;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.ChatMessageEvent;
+import dev.vibrato.eventbus.events.TaskFinishedEvent;
+import dev.vibrato.ui.MessagePriority;
 import net.minecraft.client.MinecraftClient;
 
 /**
@@ -13,14 +13,14 @@ import net.minecraft.client.MinecraftClient;
  * <p>
  * This effectively makes the bot function as a servant, or butler.
  * <p>
- * Authorization is defined in "altoclef_butler_whitelist.txt" and "altoclef_butler_blacklist.txt"
- * and depends on the "useButlerWhitelist" and "useButlerBlacklist" settings in "altoclef_settings.json"
+ * Authorization is defined in "vibrato_butler_whitelist.txt" and "vibrato_butler_blacklist.txt"
+ * and depends on the "useButlerWhitelist" and "useButlerBlacklist" settings in "vibrato_settings.json"
  */
 public class Butler {
 
     private static final String BUTLER_MESSAGE_START = "` ";
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
     private final WhisperChecker _whisperChecker = new WhisperChecker();
 
@@ -32,7 +32,7 @@ public class Butler {
     private boolean _commandInstantRan = false;
     private boolean _commandFinished = false;
 
-    public Butler(AltoClef mod) {
+    public Butler(Vibrato mod) {
         _mod = mod;
         _userAuth = new UserAuth(mod);
 
@@ -125,7 +125,7 @@ public class Butler {
         _currentUser = username;
         sendWhisper("Command Executing: " + message, MessagePriority.TIMELY);
         String prefix = ButlerConfig.getInstance().requirePrefixMsg ? _mod.getModSettings().getCommandPrefix() : "";
-        AltoClef.getCommandExecutor().execute(prefix+message, () -> {
+        Vibrato.getCommandExecutor().execute(prefix+message, () -> {
             // On finish
             sendWhisper("Command Finished: " + message, MessagePriority.TIMELY);
             if (!_commandInstantRan) {

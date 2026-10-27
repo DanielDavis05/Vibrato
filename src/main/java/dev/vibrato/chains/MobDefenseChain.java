@@ -1,20 +1,20 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.entity.KillEntitiesTask;
-import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
-import adris.altoclef.tasks.movement.DodgeProjectilesTask;
-import adris.altoclef.tasks.movement.RunAwayFromCreepersTask;
-import adris.altoclef.tasks.movement.RunAwayFromHostilesTask;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.control.KillAura;
-import adris.altoclef.util.helpers.BaritoneHelper;
-import adris.altoclef.util.baritone.CachedProjectile;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.EntityHelper;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.ProjectileHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.entity.KillEntitiesTask;
+import dev.vibrato.tasks.movement.CustomBaritoneGoalTask;
+import dev.vibrato.tasks.movement.DodgeProjectilesTask;
+import dev.vibrato.tasks.movement.RunAwayFromCreepersTask;
+import dev.vibrato.tasks.movement.RunAwayFromHostilesTask;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.control.KillAura;
+import dev.vibrato.util.helpers.BaritoneHelper;
+import dev.vibrato.util.baritone.CachedProjectile;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.EntityHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.ProjectileHelper;
 import baritone.Baritone;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.Rotation;
@@ -71,12 +71,12 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority(Vibrato mod) {
         _cachedLastPriority = getPriorityInner(mod);
         return _cachedLastPriority;
     }
-    private float getPriorityInner(AltoClef mod) {
-        if (!AltoClef.inGame()) {
+    private float getPriorityInner(Vibrato mod) {
+        if (!Vibrato.inGame()) {
             return Float.NEGATIVE_INFINITY;
         }
 
@@ -90,7 +90,7 @@ public class MobDefenseChain extends SingleTaskChain {
 
 
         // Pause if we're not loaded into a world.
-        if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
+        if (!Vibrato.inGame()) return Float.NEGATIVE_INFINITY;
 
         // Put out fire if we're standing on one like an idiot
         BlockPos fireBlock = isInsideFireAndOnFire(mod);
@@ -261,7 +261,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return 0;
     }
 
-    private BlockPos isInsideFireAndOnFire(AltoClef mod) {
+    private BlockPos isInsideFireAndOnFire(Vibrato mod) {
         boolean onFire = mod.getPlayer().isOnFire();
         if (!onFire) return null;
         BlockPos p = mod.getPlayer().getBlockPos();
@@ -284,7 +284,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return null;
     }
 
-    private void putOutFire(AltoClef mod, BlockPos pos) {
+    private void putOutFire(Vibrato mod, BlockPos pos) {
         Baritone b = mod.getClientBaritone();
         IPlayerContext ctx = b.getPlayerContext();
         Optional<Rotation> reachable = RotationUtils.reachableOffset(ctx.player(), pos, new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5), ctx.playerController().getBlockReachDistance(), false);
@@ -297,11 +297,11 @@ public class MobDefenseChain extends SingleTaskChain {
         }
     }
 
-    private boolean prioritizeEating(AltoClef mod) {
+    private boolean prioritizeEating(Vibrato mod) {
         return mod.getFoodChain().needsToEatCritical(mod);
     }
 
-    private void doForceField(AltoClef mod) {
+    private void doForceField(Vibrato mod) {
 
         _killAura.tickStart(mod);
 
@@ -340,12 +340,12 @@ public class MobDefenseChain extends SingleTaskChain {
         _killAura.tickEnd(mod);
     }
 
-    private void applyForceField(AltoClef mod, Entity entity) {
+    private void applyForceField(Vibrato mod, Entity entity) {
         if (_targetEntity != null && _targetEntity.equals(entity)) return;
         _killAura.applyAura(mod, entity);
     }
 
-    private CreeperEntity getClosestFusingCreeper(AltoClef mod) {
+    private CreeperEntity getClosestFusingCreeper(Vibrato mod) {
         double worstSafety = Float.POSITIVE_INFINITY;
         CreeperEntity target = null;
         try {
@@ -370,7 +370,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return target;
     }
 
-    private boolean isProjectileClose(AltoClef mod) {
+    private boolean isProjectileClose(Vibrato mod) {
         List<CachedProjectile> projectiles = mod.getEntityTracker().getProjectiles();
 
         try {
@@ -404,7 +404,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return false;
     }
 
-    private Optional<Entity> getUniversallyDangerousMob(AltoClef mod) {
+    private Optional<Entity> getUniversallyDangerousMob(Vibrato mod) {
         // Wither skeletons are dangerous because of the wither effect. Oof kinda obvious.
         // If we merely force field them, we will run into them and get the wither effect which will kill us.
         if (mod.getEntityTracker().entityFound(WitherSkeletonEntity.class)) {
@@ -432,7 +432,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return Optional.empty();
     }
 
-    private boolean isInDanger(AltoClef mod) {
+    private boolean isInDanger(Vibrato mod) {
 
         if (isVulnurable(mod)) {
             // If hostile mobs are nearby...
@@ -454,7 +454,7 @@ public class MobDefenseChain extends SingleTaskChain {
         return false;
     }
 
-    private boolean isVulnurable(AltoClef mod) {
+    private boolean isVulnurable(Vibrato mod) {
         int armor = mod.getPlayer().getArmor();
         float health = mod.getPlayer().getHealth();
         if (armor <= 15 && health < 3) return true;
@@ -488,7 +488,7 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish(Vibrato mod) {
         // Task is done, so I guess we move on?
     }
 

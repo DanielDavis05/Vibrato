@@ -1,8 +1,8 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.ChunkLoadEvent;
-import adris.altoclef.eventbus.events.ChunkUnloadEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.ChunkLoadEvent;
+import dev.vibrato.eventbus.events.ChunkUnloadEvent;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;

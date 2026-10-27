@@ -1,8 +1,8 @@
-package adris.altoclef.tasks;
+package dev.vibrato.tasks;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -46,12 +46,12 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     }
 
     @Override
-    protected Vec3d getPos(AltoClef mod, BlockPos obj) {
+    protected Vec3d getPos(Vibrato mod, BlockPos obj) {
         return WorldHelper.toVec3d(obj);
     }
 
     @Override
-    protected Optional<BlockPos> getClosestTo(AltoClef mod, Vec3d pos) {
+    protected Optional<BlockPos> getClosestTo(Vibrato mod, Vec3d pos) {
         if (_getClosest != null) {
             return _getClosest.apply(pos);
         }
@@ -59,7 +59,7 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     }
 
     @Override
-    protected Vec3d getOriginPos(AltoClef mod) {
+    protected Vec3d getOriginPos(Vibrato mod) {
         if (_getOriginPos != null) {
             return _getOriginPos.get();
         }
@@ -72,7 +72,7 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     }
 
     @Override
-    protected boolean isValid(AltoClef mod, BlockPos obj) {
+    protected boolean isValid(Vibrato mod, BlockPos obj) {
         // Assume we're valid since we're in the same chunk.
         if (!mod.getChunkTracker().isChunkLoaded(obj)) return true;
         // Our valid predicate
@@ -82,12 +82,12 @@ public class DoToClosestBlockTask extends AbstractDoToClosestObjectTask<BlockPos
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(_targetBlocks);
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_targetBlocks);
     }
 

@@ -1,22 +1,22 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
-import adris.altoclef.util.slots.CursorSlot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.util.slots.CursorSlot;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.ItemEntity;
@@ -72,7 +72,7 @@ public class MineAndCollectTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(_blocksToMine);
 
@@ -83,13 +83,13 @@ public class MineAndCollectTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         // Picking up is controlled by a separate task here.
         return true;
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         if (!StorageHelper.miningRequirementMet(mod, _requirement)) {
             return new SatisfyMiningRequirementTask(_requirement);
@@ -108,7 +108,7 @@ public class MineAndCollectTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_blocksToMine);
         mod.getBehaviour().pop();
     }
@@ -126,7 +126,7 @@ public class MineAndCollectTask extends ResourceTask {
         return "Mine And Collect";
     }
 
-    private void makeSureToolIsEquipped(AltoClef mod) {
+    private void makeSureToolIsEquipped(Vibrato mod) {
         if (_cursorStackTimer.elapsed() && !mod.getFoodChain().isTryingToEat()) {
             assert MinecraftClient.getInstance().player != null;
             ItemStack cursorStack = StorageHelper.getItemStackInCursorSlot();
@@ -162,7 +162,7 @@ public class MineAndCollectTask extends ResourceTask {
         private final MovementProgressChecker _progressChecker = new MovementProgressChecker(1);
         private final Task _pickupTask;
         private BlockPos _miningPos;
-        private AltoClef _mod;
+        private Vibrato _mod;
 
         public MineOrCollectTask(Block[] blocks, ItemTarget[] targets) {
             _blocks = blocks;
@@ -171,7 +171,7 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected Vec3d getPos(AltoClef mod, Object obj) {
+        protected Vec3d getPos(Vibrato mod, Object obj) {
             if (obj instanceof BlockPos b) {
                 return WorldHelper.toVec3d(b);
             }
@@ -182,7 +182,7 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected Optional<Object> getClosestTo(AltoClef mod, Vec3d pos) {
+        protected Optional<Object> getClosestTo(Vibrato mod, Vec3d pos) {
             Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
                 if (_blacklist.contains(check)) return false;
                 return WorldHelper.canBreak(mod, check);
@@ -209,12 +209,12 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected Vec3d getOriginPos(AltoClef mod) {
+        protected Vec3d getOriginPos(Vibrato mod) {
             return mod.getPlayer().getPos();
         }
 
         @Override
-        protected Task onTick(AltoClef mod) {
+        protected Task onTick(Vibrato mod) {
             _mod = mod;
             if (_miningPos != null && !_progressChecker.check(mod)) {
                 Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
@@ -248,7 +248,7 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected boolean isValid(AltoClef mod, Object obj) {
+        protected boolean isValid(Vibrato mod, Object obj) {
             if (obj instanceof BlockPos b) {
                 if (!mod.getBlockTracker().blockIsValid(b, _blocks)) return false;
                 if (WorldHelper.canBreak(mod, b)) return true;
@@ -270,13 +270,13 @@ public class MineAndCollectTask extends ResourceTask {
         }
 
         @Override
-        protected void onStart(AltoClef mod) {
+        protected void onStart(Vibrato mod) {
             _progressChecker.reset();
             _miningPos = null;
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
+        protected void onStop(Vibrato mod, Task interruptTask) {
 
         }
 

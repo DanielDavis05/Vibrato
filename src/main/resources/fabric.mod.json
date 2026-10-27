@@ -1,27 +1,33 @@
 {
   "schemaVersion": 1,
-  "id": "altoclef",
-  "version": "0.4.1a",
-  "name": "Alto Clef",
-  "description": "Plays Block Game",
+  "id": "vibrato",
+  "version": "${version}",
+  "name": "Vibrato",
+  "description": "Autonomous human-like Minecraft bots",
   "authors": [
     "TacoTechnica",
     "James Green"
   ],
-  "contact": {
-    "homepage": "https://fabricc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  "contributors": {
+    "Adris Jautakas": "Original AltoClef author (MIT)"
   },
-  "license": "CC0-1.0",
-  "icon": "assets/altoclef/icon.png",
+  "custom": {
+    "credits": "Based on AltoClef by Adris Jautakas (MIT)"
+  },
+  "contact": {
+    "homepage": "https://github.com/DanielDavis05/Vibrato",
+    "sources": "https://github.com/DanielDavis05/Vibrato"
+  },
+  "license": "MIT",
+  "icon": "assets/vibrato/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "adris.altoclef.AltoClef"
+      "dev.vibrato.Vibrato"
     ]
   },
   "mixins": [
-    "altoclef.mixins.json"
+    "vibrato.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.0",

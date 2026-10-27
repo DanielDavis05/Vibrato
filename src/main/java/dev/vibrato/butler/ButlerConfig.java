@@ -1,6 +1,6 @@
-package adris.altoclef.butler;
+package dev.vibrato.butler;
 
-import adris.altoclef.util.helpers.ConfigHelper;
+import dev.vibrato.util.helpers.ConfigHelper;
 
 public class ButlerConfig {
 

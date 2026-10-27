@@ -1,4 +1,4 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
 import net.minecraft.screen.AbstractFurnaceScreenHandler;
 import net.minecraft.screen.PropertyDelegate;

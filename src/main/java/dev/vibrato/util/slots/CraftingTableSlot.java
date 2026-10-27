@@ -1,4 +1,4 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
 import java.util.stream.IntStream;
 

@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.GetToXZTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.GetToXZTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
@@ -30,12 +30,12 @@ public class KillEnderDragonWithBedsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         /*
             If dragon is perching:
                 If we're not in position (XZ):
@@ -153,12 +153,12 @@ public class KillEnderDragonWithBedsTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return super.isFinished(mod);
     }
 
@@ -172,7 +172,7 @@ public class KillEnderDragonWithBedsTask extends Task {
         return "Bedding the Ender Dragon";
     }
 
-    private static BlockPos locateExitPortalTop(AltoClef mod) {
+    private static BlockPos locateExitPortalTop(Vibrato mod) {
         if (!mod.getChunkTracker().isChunkLoaded(new BlockPos(0, 64, 0))) return null;
         int height = WorldHelper.getGroundHeight(mod, 0, 0, Blocks.BEDROCK);
         if (height != -1) return new BlockPos(0, height, 0);

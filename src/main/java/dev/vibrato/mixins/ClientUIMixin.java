@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.ClientRenderEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.ClientRenderEvent;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;

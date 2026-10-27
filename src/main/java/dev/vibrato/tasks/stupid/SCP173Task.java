@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.stupid;
+package dev.vibrato.tasks.stupid;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.entity.AbstractKillEntityTask;
-import adris.altoclef.tasks.entity.DoToClosestEntityTask;
-import adris.altoclef.tasks.movement.GetToEntityTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.LookHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.entity.AbstractKillEntityTask;
+import dev.vibrato.tasks.entity.DoToClosestEntityTask;
+import dev.vibrato.tasks.movement.GetToEntityTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.LookHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
@@ -32,12 +32,12 @@ public class SCP173Task extends Task {
     private Vec3d _lastWalkVelocity = Vec3d.ZERO;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _lastLookCloseness.clear();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // FREEZE when nobody is looking.
         boolean seen = isSeenByPlayer(mod);
@@ -82,7 +82,7 @@ public class SCP173Task extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -96,7 +96,7 @@ public class SCP173Task extends Task {
         return "Acting like SCP 173";
     }
 
-    private boolean isSeenByPlayer(AltoClef mod) {
+    private boolean isSeenByPlayer(Vibrato mod) {
         if (mod.getEntityTracker().entityFound(PlayerEntity.class)) {
             for (PlayerEntity player : mod.getEntityTracker().getTrackedEntities(PlayerEntity.class)) {
                 // Player must be NOT looking in our general direction OR NOT have line of sight.
@@ -113,7 +113,7 @@ public class SCP173Task extends Task {
     // We consider if the player is looking in the general direction
     // but we ALSO consider when the player is ALMOST looking in the general direction and
     // is ROTATING TORWARDS US to try and mitigate the look delay.
-    private boolean entityIsLookingInOurGeneralDirection(AltoClef mod, PlayerEntity other) {
+    private boolean entityIsLookingInOurGeneralDirection(Vibrato mod, PlayerEntity other) {
         double lookCloseness = LookHelper.getLookCloseness(other, mod.getPlayer().getPos());
         double last = _lastLookCloseness.getOrDefault(other, lookCloseness);
         double delta = lookCloseness - last;
@@ -122,7 +122,7 @@ public class SCP173Task extends Task {
         return lookCloseness > LOOK_CLOSENESS_THRESHOLD || predicted > LOOK_CLOSENESS_THRESHOLD;
     }
 
-    private boolean entityHasLineOfSightToUs(AltoClef mod, PlayerEntity other) {
+    private boolean entityHasLineOfSightToUs(Vibrato mod, PlayerEntity other) {
         if (LookHelper.seesPlayer(mod.getPlayer(), other, MAX_RANGE)) {
             return true;
         }

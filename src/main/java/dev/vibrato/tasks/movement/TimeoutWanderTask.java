@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.block.Block;
@@ -91,7 +91,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _origin = mod.getPlayer().getPos();
         _progressChecker.reset();
         _failCounter = 0;
@@ -99,7 +99,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
             setDebugState("Getting unstuck from block.");
@@ -150,13 +150,13 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         return null;
     }
 
-    private Goal getRandomDirectionGoal(AltoClef mod) {
+    private Goal getRandomDirectionGoal(Vibrato mod) {
         double distance = Float.isInfinite(_distanceToWander) ? _distanceToWander : _distanceToWander + _wanderDistanceExtension;
         return new GoalRunAway(distance, mod.getPlayer().getBlockPos());
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getExploreProcess().onLostControl();
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
         if (isFinished(mod)) {
@@ -168,7 +168,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         // Why the heck did I add this in?
         //if (_origin == null) return true;
 
@@ -205,7 +205,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     // This happens all the time in mineshafts and swamps/jungles
-    private BlockPos stuckInBlock(AltoClef mod) {
+    private BlockPos stuckInBlock(Vibrato mod) {
         BlockPos p = mod.getPlayer().getBlockPos();
         if (isAnnoying(mod, p)) return p;
         if (isAnnoying(mod, p.up())) return p.up();
@@ -224,12 +224,12 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         return null;
     }
 
-    private boolean isAnnoying(AltoClef mod, BlockPos pos) {
+    private boolean isAnnoying(Vibrato mod, BlockPos pos) {
         return ANNOYING_STUCK_BLOCKS.contains(mod.getWorld().getBlockState(pos).getBlock());
         //mod.getWorld().getBlockState(pos).getBlock() instanceof FenceBlock;
     }
 
-    private Task getFenceUnstuckTask(AltoClef mod, BlockPos fencePos) {
+    private Task getFenceUnstuckTask(Vibrato mod, BlockPos fencePos) {
         return new SafeRandomShimmyTask();
     }
 }

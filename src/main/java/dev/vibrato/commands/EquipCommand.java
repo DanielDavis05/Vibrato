@@ -1,9 +1,9 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
-import adris.altoclef.tasks.misc.EquipArmorTask;
-import adris.altoclef.util.ItemTarget;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.*;
+import dev.vibrato.tasks.misc.EquipArmorTask;
+import dev.vibrato.util.ItemTarget;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -15,7 +15,7 @@ public class EquipCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         ItemTarget[] items;
         if(parser.getArgUnits().length == 1) {
             switch (parser.getArgUnits()[0].toLowerCase()) { //Hot commands for the default full armor sets

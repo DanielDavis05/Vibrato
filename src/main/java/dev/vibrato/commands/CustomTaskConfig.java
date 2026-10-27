@@ -1,4 +1,4 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

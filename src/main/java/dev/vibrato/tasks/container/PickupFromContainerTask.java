@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerCache;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerCache;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -48,7 +48,7 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Free inventory while we're doing it.
         if (_freeInventoryTask.isActive() && !_freeInventoryTask.isFinished(mod) && !mod.getItemStorage().hasEmptyInventorySlot()) {
             setDebugState("Freeing inventory.");
@@ -58,11 +58,11 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return Arrays.stream(_targets).allMatch(target -> mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
     }
 
-    public static Optional<Slot> getBestSlotToTransfer(AltoClef mod, ItemTarget itemToMove, int currentItemQuantity, List<Slot> grabPotentials, Function<ItemStack, Boolean> canStackFit) {
+    public static Optional<Slot> getBestSlotToTransfer(Vibrato mod, ItemTarget itemToMove, int currentItemQuantity, List<Slot> grabPotentials, Function<ItemStack, Boolean> canStackFit) {
         Slot bestPotential = null;
         int leftNeeded = itemToMove.getTargetCount() - currentItemQuantity;
         for (Slot slot : grabPotentials) {
@@ -98,7 +98,7 @@ public class PickupFromContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected Task onContainerOpenSubtask(AltoClef mod, ContainerCache containerCache) {
+    protected Task onContainerOpenSubtask(Vibrato mod, ContainerCache containerCache) {
         for (ItemTarget target : _targets) {
             // Go through each item
             int count = mod.getItemStorage().getItemCountInventoryOnly(target.getMatches());

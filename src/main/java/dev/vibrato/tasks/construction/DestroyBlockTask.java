@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.movement.RunAwayFromPositionTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.PlaceBlockSchematic;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.movement.RunAwayFromPositionTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.PlaceBlockSchematic;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalNear;
 import baritone.api.utils.Rotation;
@@ -40,7 +40,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _tryToMineTimer.forceElapse();
         _wanderTask.resetWander();
         StorageHelper.closeScreen();
@@ -51,7 +51,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // Wander and check
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
@@ -118,8 +118,8 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
-        if (!AltoClef.inGame())
+    protected void onStop(Vibrato mod, Task interruptTask) {
+        if (!Vibrato.inGame())
             return;
         mod.getBehaviour().pop();
         mod.getClientBaritone().getBuilderProcess().onLostControl();
@@ -130,7 +130,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return WorldHelper.isAir(mod, _pos);//;
     }
 

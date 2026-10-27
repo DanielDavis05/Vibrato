@@ -1,12 +1,12 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.commandsystem.Arg;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.CommandException;
-import adris.altoclef.mixins.SimpleOptionAccessor;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.commandsystem.Arg;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.commandsystem.CommandException;
+import dev.vibrato.mixins.SimpleOptionAccessor;
 import net.minecraft.client.MinecraftClient;
 
 public class SetGammaCommand extends Command {
@@ -16,7 +16,7 @@ public class SetGammaCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         double gammaValue = parser.get(Double.class);
         Debug.logMessage("Gamma set to " + gammaValue);
         // Set the raw value so gammas outside the slider range (fullbright) are accepted.

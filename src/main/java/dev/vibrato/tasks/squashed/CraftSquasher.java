@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.squashed;
+package dev.vibrato.tasks.squashed;
 
-import adris.altoclef.tasks.container.CraftInTableTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.util.RecipeTarget;
+import dev.vibrato.tasks.container.CraftInTableTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.util.RecipeTarget;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,20 +1,20 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.PlaceBlockNearbyTask;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.BaritoneHelper;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.BaritoneHelper;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -51,7 +51,7 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         if (_openTableTask == null) {
             _openTableTask = new DoToClosestBlockTask(InteractWithBlockTask::new, _containerBlocks);
         }
@@ -64,7 +64,7 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // If we're placing, keep on placing.
         if (mod.getItemStorage().hasItem(ItemHelper.blocksToItems(_containerBlocks)) && _placeTask.isActive() && !_placeTask.isFinished(mod)) {
@@ -157,7 +157,7 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     // Virtual
-    protected BlockPos overrideContainerPosition(AltoClef mod) {
+    protected BlockPos overrideContainerPosition(Vibrato mod) {
         return null;
     }
 
@@ -166,7 +166,7 @@ public abstract class DoStuffInContainerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_containerBlocks);
         mod.getBehaviour().pop();
     }
@@ -188,9 +188,9 @@ public abstract class DoStuffInContainerTask extends Task {
 
     protected abstract boolean isSubTaskEqual(DoStuffInContainerTask other);
 
-    protected abstract boolean isContainerOpen(AltoClef mod);
+    protected abstract boolean isContainerOpen(Vibrato mod);
 
-    protected abstract Task containerSubTask(AltoClef mod);
+    protected abstract Task containerSubTask(Vibrato mod);
 
-    protected abstract double getCostToMakeNew(AltoClef mod);
+    protected abstract double getCostToMakeNew(Vibrato mod);
 }

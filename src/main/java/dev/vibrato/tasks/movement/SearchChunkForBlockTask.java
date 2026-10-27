@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.ChunkPos;
 import org.apache.commons.lang3.ArrayUtils;
@@ -18,7 +18,7 @@ public class SearchChunkForBlockTask extends SearchChunksExploreTask {
     }
 
     @Override
-    protected boolean isChunkWithinSearchSpace(AltoClef mod, ChunkPos pos) {
+    protected boolean isChunkWithinSearchSpace(Vibrato mod, ChunkPos pos) {
         return mod.getChunkTracker().scanChunk(pos, block -> {
                 return _toSearchFor.contains(mod.getWorld().getBlockState(block).getBlock());
             }

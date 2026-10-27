@@ -1,7 +1,7 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,9 +10,9 @@ import java.util.function.Consumer;
 public class CommandExecutor {
 
     private final HashMap<String, Command> _commandSheet = new HashMap<>();
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
-    public CommandExecutor(AltoClef mod) {
+    public CommandExecutor(Vibrato mod) {
         _mod = mod;
     }
 

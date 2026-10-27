@@ -1,13 +1,13 @@
-package adris.altoclef.trackers.storage;
+package dev.vibrato.trackers.storage;
 
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockInteractEvent;
-import adris.altoclef.eventbus.events.ScreenOpenEvent;
-import adris.altoclef.trackers.Tracker;
-import adris.altoclef.trackers.TrackerManager;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockInteractEvent;
+import dev.vibrato.eventbus.events.ScreenOpenEvent;
+import dev.vibrato.trackers.Tracker;
+import dev.vibrato.trackers.TrackerManager;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

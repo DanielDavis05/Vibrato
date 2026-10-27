@@ -1,4 +1,4 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
 public class BeatMinecraftConfig {
     public int targetEyes = 14; // how many eyes of ender to collect

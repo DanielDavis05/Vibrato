@@ -1,4 +1,4 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
 import baritone.api.pathing.goals.GoalBlock;
 import net.minecraft.util.math.Vec3d;

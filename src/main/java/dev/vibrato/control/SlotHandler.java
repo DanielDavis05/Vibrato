@@ -1,14 +1,14 @@
-package adris.altoclef.control;
+package dev.vibrato.control;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.CursorSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.CursorSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.*;
@@ -22,12 +22,12 @@ import java.util.function.Predicate;
 
 public class SlotHandler {
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
     private final TimerGame _slotActionTimer = new TimerGame(0);
     private boolean _overrideTimerOnce = false;
 
-    public SlotHandler(AltoClef mod) {
+    public SlotHandler(Vibrato mod) {
         _mod = mod;
     }
 

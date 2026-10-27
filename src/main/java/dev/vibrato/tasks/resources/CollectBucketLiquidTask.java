@@ -1,20 +1,20 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.movement.*;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.movement.*;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -53,13 +53,13 @@ public class CollectBucketLiquidTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         // Track fluids
         mod.getBehaviour().push();
         mod.getBehaviour().setRayTracingFluidHandling(RaycastContext.FluidHandling.SOURCE_ONLY);
@@ -78,7 +78,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         Task result = super.onTick(mod);
         // Reset our "first time" timeout/wander flag.
         if (!thisOrChildAreTimedOut()) {
@@ -88,7 +88,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // Run one update to prevent the false fail bug?
         _progressChecker.check(mod);
@@ -192,7 +192,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_toCollect);
         mod.getBehaviour().pop();
         //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);

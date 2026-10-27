@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
 
 import java.util.function.Function;
@@ -25,13 +25,13 @@ public class CraftWithMatchingPlanksTask extends CraftWithMatchingMaterialsTask 
 
 
     @Override
-    protected int getExpectedTotalCountOfSameItem(AltoClef mod, Item sameItem) {
+    protected int getExpectedTotalCountOfSameItem(Vibrato mod, Item sameItem) {
         // Include logs
         return mod.getItemStorage().getItemCount(sameItem) + mod.getItemStorage().getItemCount(ItemHelper.planksToLog(sameItem)) * 4;
     }
 
     @Override
-    protected Task getSpecificSameResourceTask(AltoClef mod, Item[] toGet) {
+    protected Task getSpecificSameResourceTask(Vibrato mod, Item[] toGet) {
         for (Item plankToGet : toGet) {
             Item log = ItemHelper.planksToLog(plankToGet);
             // Convert logs to planks
@@ -69,7 +69,7 @@ public class CraftWithMatchingPlanksTask extends CraftWithMatchingMaterialsTask 
 
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 

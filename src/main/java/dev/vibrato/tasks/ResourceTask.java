@@ -1,23 +1,23 @@
-package adris.altoclef.tasks;
+package dev.vibrato.tasks;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.container.PickupFromContainerTask;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasks.resources.MineAndCollectTask;
-import adris.altoclef.tasks.slot.*;
-import adris.altoclef.tasksystem.ITaskCanForce;
-import adris.altoclef.tasksystem.ITaskUsesCraftingGrid;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerCache;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StlHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.container.PickupFromContainerTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.resources.MineAndCollectTask;
+import dev.vibrato.tasks.slot.*;
+import dev.vibrato.tasksystem.ITaskCanForce;
+import dev.vibrato.tasksystem.ITaskUsesCraftingGrid;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerCache;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StlHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.block.Block;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
@@ -61,12 +61,12 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return StorageHelper.itemTargetsMetInventoryNoCursor(mod, _itemTargets);
     }
 
     @Override
-    public boolean shouldForce(AltoClef mod, Task interruptingCandidate) {
+    public boolean shouldForce(Vibrato mod, Task interruptingCandidate) {
         // We have an important item target in our cursor.
         return StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && !isFinished(mod)
                 // This _should_ be redundant, but it'll be a guard just to make 100% sure.
@@ -74,7 +74,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().addProtectedItems(ItemTarget.getMatches(_itemTargets));//removeThrowawayItems(_itemTargets);
         if (_mineIfPresent != null) {
@@ -84,7 +84,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // If we have an item in an INACCESSIBLE inventory slot
 
         for (ItemTarget target : _itemTargets) {
@@ -191,7 +191,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
         if (_mineIfPresent != null) {
             mod.getBlockTracker().stopTracking(_mineIfPresent);
@@ -224,14 +224,14 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         return result.toString();
     }
 
-    protected boolean isInWrongDimension(AltoClef mod) {
+    protected boolean isInWrongDimension(Vibrato mod) {
         if (_forceDimension) {
             return WorldHelper.getCurrentDimension() != _targetDimension;
         }
         return false;
     }
 
-    protected Task getToCorrectDimensionTask(AltoClef mod) {
+    protected Task getToCorrectDimensionTask(Vibrato mod) {
         return new DefaultGoToDimensionTask(_targetDimension);
     }
 
@@ -246,13 +246,13 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         return this;
     }
 
-    protected abstract boolean shouldAvoidPickingUp(AltoClef mod);
+    protected abstract boolean shouldAvoidPickingUp(Vibrato mod);
 
-    protected abstract void onResourceStart(AltoClef mod);
+    protected abstract void onResourceStart(Vibrato mod);
 
-    protected abstract Task onResourceTick(AltoClef mod);
+    protected abstract Task onResourceTick(Vibrato mod);
 
-    protected abstract void onResourceStop(AltoClef mod, Task interruptTask);
+    protected abstract void onResourceStop(Vibrato mod, Task interruptTask);
 
     protected abstract boolean isEqualResource(ResourceTask other);
 

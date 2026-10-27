@@ -1,28 +1,28 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.ChatMessageEvent;
-import adris.altoclef.eventbus.events.GameOverlayEvent;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasks.resources.CollectBedTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.ChatMessageEvent;
+import dev.vibrato.eventbus.events.GameOverlayEvent;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.resources.CollectBedTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.util.time.TimerGame;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.Block;
@@ -78,7 +78,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _currentBedRegion = null;
 
         // Don't break our bed thing.
@@ -137,7 +137,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Summary:
         // If we find a bed nearby, sleep in it.
         // Otherwise, place bed:
@@ -309,7 +309,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
         mod.getBlockTracker().stopTracking(BEDS);
         EventBus.unsubscribe(_respawnPointSetMessageCheck);
@@ -327,7 +327,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             Debug.logWarning("Can't place spawnpoint/sleep in a bed unless we're in the overworld!");
             return true;
@@ -343,7 +343,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
         return _spawnSet;
     }
 
-    private BlockPos locateBedRegion(AltoClef mod, BlockPos origin) {
+    private BlockPos locateBedRegion(Vibrato mod, BlockPos origin) {
         final int SCAN_RANGE = 10;
 
         BlockPos closestGood = null;
@@ -375,7 +375,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
         return closestGood;
     }
 
-    private boolean isGoodToPlaceInsideOrClear(AltoClef mod, BlockPos pos) {
+    private boolean isGoodToPlaceInsideOrClear(Vibrato mod, BlockPos pos) {
         final Vec3i[] CHECK = new Vec3i[]{
                 new Vec3i(0, 0, 0),
                 new Vec3i(-1, 0, 0),
@@ -391,7 +391,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
         return true;
     }
 
-    private boolean isGoodAsBorder(AltoClef mod, BlockPos pos) {
+    private boolean isGoodAsBorder(Vibrato mod, BlockPos pos) {
         if (WorldHelper.isSolid(mod, pos)) {
             return WorldHelper.canBreak(mod, pos);
         } else return (WorldHelper.isAir(mod, pos));

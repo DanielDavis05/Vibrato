@@ -1,8 +1,8 @@
-package adris.altoclef.tasksystem;
+package dev.vibrato.tasksystem;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
 
 import java.util.function.Predicate;
 
@@ -19,7 +19,7 @@ public abstract class Task {
 
     private boolean _active = false;
 
-    public void tick(AltoClef mod, TaskChain parentChain) {
+    public void tick(Vibrato mod, TaskChain parentChain) {
         parentChain.addTaskToChain(this);
         if (_first) {
             Debug.logInternal("Task START: " + this);
@@ -68,14 +68,14 @@ public abstract class Task {
         _stopped = false;
     }
 
-    public void stop(AltoClef mod) {
+    public void stop(Vibrato mod) {
         stop(mod, null);
     }
 
     /**
      * Stops the task. Next time it's run it will run `onStart`
      */
-    public void stop(AltoClef mod, Task interruptTask) {
+    public void stop(Vibrato mod, Task interruptTask) {
         if (!_active) return;
         Debug.logInternal("Task STOP: " + this + ", interrupted by " + interruptTask);
         if (!_first) {
@@ -98,7 +98,7 @@ public abstract class Task {
      *
      * Doesn't stop it all-together (meaning `isActive` still returns true)
      */
-    public void interrupt(AltoClef mod, Task interruptTask) {
+    public void interrupt(Vibrato mod, Task interruptTask) {
         if (!_active) return;
         if (!_first) {
             onStop(mod, interruptTask);
@@ -119,7 +119,7 @@ public abstract class Task {
     }
 
     // Virtual
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return false;
     }
 
@@ -131,12 +131,12 @@ public abstract class Task {
         return _stopped;
     }
 
-    protected abstract void onStart(AltoClef mod);
+    protected abstract void onStart(Vibrato mod);
 
-    protected abstract Task onTick(AltoClef mod);
+    protected abstract Task onTick(Vibrato mod);
 
     // interruptTask = null if the task stopped cleanly
-    protected abstract void onStop(AltoClef mod, Task interruptTask);
+    protected abstract void onStop(Vibrato mod, Task interruptTask);
 
     protected abstract boolean isEqual(Task other);
 
@@ -172,7 +172,7 @@ public abstract class Task {
      * Sometimes a task just can NOT be bothered to be interrupted right now.
      * For instance, if we're in mid air and MUST complete the parkour movement.
      */
-    private boolean canBeInterrupted(AltoClef mod, Task subTask, Task toInterruptWith) {
+    private boolean canBeInterrupted(Vibrato mod, Task subTask, Task toInterruptWith) {
         if (subTask == null) return true;
         // Our task can declare that is FORCES itself to be active NOW.
         return (subTask.thisOrChildSatisfies(task -> {

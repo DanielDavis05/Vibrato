@@ -1,12 +1,12 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.mixins.AbstractFurnaceScreenHandlerAccessor;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.util.*;
-import adris.altoclef.util.slots.*;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.mixins.AbstractFurnaceScreenHandlerAccessor;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.util.*;
+import dev.vibrato.util.slots.*;
 import baritone.utils.ToolSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -80,7 +80,7 @@ public class StorageHelper {
         }
     }
 
-    public static MiningRequirement getCurrentMiningRequirement(AltoClef mod) {
+    public static MiningRequirement getCurrentMiningRequirement(Vibrato mod) {
         MiningRequirement[] order = new MiningRequirement[]{
                 MiningRequirement.DIAMOND, MiningRequirement.IRON, MiningRequirement.STONE, MiningRequirement.WOOD
         };
@@ -91,13 +91,13 @@ public class StorageHelper {
         }
         return MiningRequirement.HAND;
     }
-    private static boolean h(AltoClef mod, boolean inventoryOnly, Item ...items) {
+    private static boolean h(Vibrato mod, boolean inventoryOnly, Item ...items) {
         if (inventoryOnly) {
             return mod.getItemStorage().hasItemInventoryOnly(items);
         }
         return mod.getItemStorage().hasItem(items);
     }
-    private static boolean miningRequirementMetInner(AltoClef mod, boolean inventoryOnly, MiningRequirement requirement) {
+    private static boolean miningRequirementMetInner(Vibrato mod, boolean inventoryOnly, MiningRequirement requirement) {
         switch (requirement) {
             case HAND:
                 return true;
@@ -114,14 +114,14 @@ public class StorageHelper {
                 return false;
         }
     }
-    public static boolean miningRequirementMet(AltoClef mod, MiningRequirement requirement) {
+    public static boolean miningRequirementMet(Vibrato mod, MiningRequirement requirement) {
         return miningRequirementMetInner(mod, false, requirement);
     }
-    public static boolean miningRequirementMetInventory(AltoClef mod, MiningRequirement requirement) {
+    public static boolean miningRequirementMetInventory(Vibrato mod, MiningRequirement requirement) {
         return miningRequirementMetInner(mod, true, requirement);
     }
 
-    public static Optional<Slot> getBestToolSlot(AltoClef mod, BlockState state) {
+    public static Optional<Slot> getBestToolSlot(Vibrato mod, BlockState state) {
         // TODO: mod.configState.silkTouchOverrideMode {
         //      DONT_CARE (Default)
         //      PREFER (Always use silk touch if we have)
@@ -155,7 +155,7 @@ public class StorageHelper {
     }
 
     // Gets a slot with an item we can throw away
-    public static Optional<Slot> getGarbageSlot(AltoClef mod) {
+    public static Optional<Slot> getGarbageSlot(Vibrato mod) {
         // Throwaway items, but keep a few for building.
         final List<Slot> throwawayBlockItems = new ArrayList<>();
         int totalBlockThrowaways = 0;
@@ -287,7 +287,7 @@ public class StorageHelper {
     /**
      * @return whether EVERY item target in {@code targetsToMeet} is met in our inventory or conversion slots.
      */
-    public static boolean itemTargetsMet(AltoClef mod, ItemTarget ...targetsToMeet) {
+    public static boolean itemTargetsMet(Vibrato mod, ItemTarget ...targetsToMeet) {
         return Arrays.stream(targetsToMeet).allMatch(target -> mod.getItemStorage().getItemCount(target.getMatches()) >= target.getTargetCount());
     }
 
@@ -295,14 +295,14 @@ public class StorageHelper {
      * AVOID using this unless it's the end goal to keep an item in our inventory.
      * @return whether EVERY item target in {@code targetsToMeet} is strictly in our inventory.
      */
-    public static boolean itemTargetsMetInventory(AltoClef mod, ItemTarget ...targetsToMeet) {
+    public static boolean itemTargetsMetInventory(Vibrato mod, ItemTarget ...targetsToMeet) {
         return Arrays.stream(targetsToMeet).allMatch(target -> mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()) >= target.getTargetCount());
     }
 
     /**
      * Same as {@code itemTargetsMetInventory} but it ignores the cursor slot.
      */
-    public static boolean itemTargetsMetInventoryNoCursor(AltoClef mod, ItemTarget ...targetsToMeet) {
+    public static boolean itemTargetsMetInventoryNoCursor(Vibrato mod, ItemTarget ...targetsToMeet) {
         ItemStack cursorStack = getItemStackInCursorSlot();
         return Arrays.stream(targetsToMeet).allMatch(target -> {
             int count = mod.getItemStorage().getItemCountInventoryOnly(target.getMatches());
@@ -312,7 +312,7 @@ public class StorageHelper {
         });
     }
 
-    public static boolean isArmorEquipped(AltoClef mod, Item ...any) {
+    public static boolean isArmorEquipped(Vibrato mod, Item ...any) {
         for (Item item : any) {
             if (item instanceof ArmorItem armor) {
                 ItemStack equippedStack = mod.getPlayer().getInventory().getArmorStack(armor.getSlotType().getEntitySlotId());
@@ -324,7 +324,7 @@ public class StorageHelper {
     }
 
 
-    public static int getBuildingMaterialCount(AltoClef mod) {
+    public static int getBuildingMaterialCount(Vibrato mod) {
         return mod.getItemStorage().getItemCount(Arrays.stream(mod.getModSettings().getThrowawayItems(mod, true)).filter(item -> item instanceof BlockItem).toArray(Item[]::new));
     }
 
@@ -345,15 +345,15 @@ public class StorageHelper {
         return isScreenOpenInner(screen -> screen instanceof FurnaceScreenHandler);
     }
 
-    public static boolean isArmorEquippedAll(AltoClef mod, Item ...items) {
+    public static boolean isArmorEquippedAll(Vibrato mod, Item ...items) {
         return Arrays.stream(items).allMatch(item -> isArmorEquipped(mod, item));
     }
 
-    public static boolean isEquipped(AltoClef mod, Item ...items) {
+    public static boolean isEquipped(Vibrato mod, Item ...items) {
         return ArrayUtils.contains(items, StorageHelper.getItemStackInSlot(PlayerSlot.getEquipSlot()).getItem());
     }
 
-    public static int calculateInventoryFoodScore(AltoClef mod) {
+    public static int calculateInventoryFoodScore(Vibrato mod) {
         int result = 0;
         for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
             if (ItemHelper.isFood(stack.getItem()))
@@ -361,7 +361,7 @@ public class StorageHelper {
         }
         return result;
     }
-    public static double calculateInventoryFuelCount(AltoClef mod) {
+    public static double calculateInventoryFuelCount(Vibrato mod) {
         double result = 0;
         for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
             if (mod.getModSettings().isSupportedFuel(stack.getItem())) {
@@ -375,7 +375,7 @@ public class StorageHelper {
      * Returns whether we have the items in our inventory (or currently crafting)
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean hasRecipeMaterialsOrTarget(AltoClef mod, RecipeTarget... targets) {
+    public static boolean hasRecipeMaterialsOrTarget(Vibrato mod, RecipeTarget... targets) {
         HashMap<Integer, Integer> slotUsedCounts = new HashMap<>();
         for (RecipeTarget target : targets) {
             CraftingRecipe recipe = target.getRecipe();
@@ -441,7 +441,7 @@ public class StorageHelper {
         return true;
     }
 
-    public static boolean hasCataloguedItem(AltoClef mod, String cataloguedName) {
+    public static boolean hasCataloguedItem(Vibrato mod, String cataloguedName) {
         return mod.getItemStorage().hasItem(TaskCatalogue.getItemMatches(cataloguedName));
     }
 
@@ -453,7 +453,7 @@ public class StorageHelper {
      * @return A slot of {@code withItem} that is inaccessible to open containers, or {@code Optional.empty} if there
      * are none.
      */
-    public static Optional<Slot> getFilledInventorySlotInaccessibleToContainer(AltoClef mod, ItemTarget withItem) {
+    public static Optional<Slot> getFilledInventorySlotInaccessibleToContainer(Vibrato mod, ItemTarget withItem) {
         // First check if we have anything within our regular inventory.
         if (!StorageHelper.isPlayerInventoryOpen() || withItem.isEmpty() || itemTargetsMetInventory(mod, withItem)) {
             return Optional.empty();
@@ -477,7 +477,7 @@ public class StorageHelper {
         }
         return Optional.empty();
     }
-    public static boolean isItemInaccessibleToContainer(AltoClef mod, ItemTarget item) {
+    public static boolean isItemInaccessibleToContainer(Vibrato mod, ItemTarget item) {
         return getFilledInventorySlotInaccessibleToContainer(mod, item).isPresent();
     }
 
@@ -536,7 +536,7 @@ public class StorageHelper {
         return results;
     }
 
-    public static void instantFillRecipeViaBook(AltoClef mod, CraftingRecipe recipe, Item output, boolean craftAll) {
+    public static void instantFillRecipeViaBook(Vibrato mod, CraftingRecipe recipe, Item output, boolean craftAll) {
         Optional<RecipeEntry<?>> recipeToSend = JankCraftingRecipeMapping.getMinecraftMappedRecipe(recipe, output);
         if (recipeToSend.isPresent()) {
             mod.getController().clickRecipe(MinecraftClient.getInstance().player.currentScreenHandler.syncId, recipeToSend.get(), craftAll);

@@ -1,6 +1,6 @@
-package adris.altoclef.trackers.storage;
+package dev.vibrato.trackers.storage;
 
-import adris.altoclef.util.Dimension;
+import dev.vibrato.util.Dimension;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.FurnaceScreenHandler;

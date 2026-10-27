@@ -1,4 +1,4 @@
-package adris.altoclef.util.progresscheck;
+package dev.vibrato.util.progresscheck;
 
 /**
  * A progress checker that can fail a few times before it "actually" fails.

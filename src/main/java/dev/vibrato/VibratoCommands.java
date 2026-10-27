@@ -1,16 +1,16 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.commands.*;
-import adris.altoclef.commandsystem.CommandException;
+import dev.vibrato.commands.*;
+import dev.vibrato.commandsystem.CommandException;
 
 /**
- * Initializes altoclef's built in commands.
+ * Initializes vibrato's built in commands.
  */
-public class AltoClefCommands {
+public class VibratoCommands {
 
-    public AltoClefCommands() throws CommandException {
+    public VibratoCommands() throws CommandException {
         // List commands here
-        AltoClef.getCommandExecutor().registerNewCommand(
+        Vibrato.getCommandExecutor().registerNewCommand(
                 new HelpCommand(),
                 new GetCommand(),
                 new FollowCommand(),

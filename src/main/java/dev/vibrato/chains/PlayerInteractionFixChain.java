@@ -1,15 +1,15 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.TaskChain;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.TaskChain;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.BlockState;
@@ -40,23 +40,23 @@ public class PlayerInteractionFixChain extends TaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop(Vibrato mod) {
 
     }
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(Vibrato mod, TaskChain other) {
 
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick(Vibrato mod) {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority(Vibrato mod) {
 
-        if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
+        if (!Vibrato.inGame()) return Float.NEGATIVE_INFINITY;
 
         if (mod.getUserTaskChain().isActive() && _betterToolTimer.elapsed()) {
             // Equip the right tool for the job if we're not using one.
@@ -141,7 +141,7 @@ public class PlayerInteractionFixChain extends TaskChain {
         return Float.NEGATIVE_INFINITY;
     }
 
-    private boolean shouldCloseOpenScreen(AltoClef mod) {
+    private boolean shouldCloseOpenScreen(Vibrato mod) {
         if (!mod.getModSettings().shouldCloseScreenWhenLookingOrMining())
             return false;
         // Only check look if we've had the same screen open for a while

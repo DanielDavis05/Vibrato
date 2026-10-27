@@ -1,15 +1,15 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.commandsystem.Arg;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.CommandException;
-import adris.altoclef.tasks.entity.GiveItemToPlayerTask;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.commandsystem.Arg;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.commandsystem.CommandException;
+import dev.vibrato.tasks.entity.GiveItemToPlayerTask;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.ItemStack;
 
 public class GiveCommand extends Command {
@@ -18,7 +18,7 @@ public class GiveCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         String username = parser.get(String.class);
         if (username == null) {
             if (mod.getButler().hasCurrentUser()) {

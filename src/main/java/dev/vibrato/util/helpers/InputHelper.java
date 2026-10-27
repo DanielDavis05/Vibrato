@@ -1,4 +1,4 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;

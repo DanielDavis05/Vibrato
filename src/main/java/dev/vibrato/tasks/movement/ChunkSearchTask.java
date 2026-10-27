@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.ChunkLoadEvent;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.ChunkLoadEvent;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
@@ -56,7 +56,7 @@ abstract class ChunkSearchTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
         //Debug.logMessage("(deleteme) start. Finished: " + _finished);
         if (_first) {
@@ -80,7 +80,7 @@ abstract class ChunkSearchTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // WTF This is a horrible idea.
         // Backup in case if chunk search fails?
@@ -113,7 +113,7 @@ abstract class ChunkSearchTask extends Task {
     }
 
     // Virtual
-    protected ChunkPos getBestChunk(AltoClef mod, List<ChunkPos> chunks) {
+    protected ChunkPos getBestChunk(Vibrato mod, List<ChunkPos> chunks) {
         double lowestScore = Double.POSITIVE_INFINITY;
         ChunkPos bestChunk = null;
         for (ChunkPos toSearch : chunks) {
@@ -131,12 +131,12 @@ abstract class ChunkSearchTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         EventBus.unsubscribe(_onChunkLoad);
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _searchLater.size() == 0;
     }
 
@@ -149,7 +149,7 @@ abstract class ChunkSearchTask extends Task {
         return false;
     }
 
-    private void searchChunkOrQueueSearch(AltoClef mod, ChunkPos pos) {
+    private void searchChunkOrQueueSearch(Vibrato mod, ChunkPos pos) {
         // Don't search/consider this chunk again.
         if (_consideredAlready.contains(pos)) {
             return;
@@ -171,7 +171,7 @@ abstract class ChunkSearchTask extends Task {
      * @return true if we're DONE searching this chunk
      * false if we need to SEARCH IT IN PERSON
      */
-    private boolean trySearchChunk(AltoClef mod, ChunkPos pos) {
+    private boolean trySearchChunk(Vibrato mod, ChunkPos pos) {
         // Do NOT search later.
         if (_searchedAlready.contains(pos)) {
             return true;
@@ -190,7 +190,7 @@ abstract class ChunkSearchTask extends Task {
         return false;
     }
 
-    protected abstract boolean isChunkPartOfSearchSpace(AltoClef mod, ChunkPos pos);
+    protected abstract boolean isChunkPartOfSearchSpace(Vibrato mod, ChunkPos pos);
 
     protected abstract boolean isChunkSearchEqual(ChunkSearchTask other);
 }

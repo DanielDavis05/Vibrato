@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.slot.MoveItemToSlotFromInventoryTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerCache;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.slot.MoveItemToSlotFromInventoryTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerCache;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -38,7 +38,7 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         super.onStart(mod);
         if (_storedItems == null) {
             // Only consider transfers to the container we wish
@@ -51,7 +51,7 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Get more if we don't have & "get if not present" is true.
         if (_getIfNotPresent) {
             for (ItemTarget target : _toStore) {
@@ -65,13 +65,13 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         super.onStop(mod, interruptTask);
         _storedItems.stopTracking();
     }
 
     @Override
-    protected Task onContainerOpenSubtask(AltoClef mod, ContainerCache containerCache) {
+    protected Task onContainerOpenSubtask(Vibrato mod, ContainerCache containerCache) {
         // Move all items that aren't in the container
         for (ItemTarget target : _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore)) {
                 setDebugState("Dumping " + target);
@@ -102,7 +102,7 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         // We've stored all items
         return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
     }

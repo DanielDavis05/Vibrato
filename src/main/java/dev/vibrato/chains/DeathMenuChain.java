@@ -1,11 +1,11 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.TaskChain;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.time.TimerReal;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.TaskChain;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.time.TimerReal;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.*;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
@@ -29,31 +29,31 @@ public class DeathMenuChain extends TaskChain {
         super(runner);
     }
 
-    private boolean shouldAutoRespawn(AltoClef mod) {
+    private boolean shouldAutoRespawn(Vibrato mod) {
         return mod.getModSettings().isAutoRespawn();
     }
 
-    private boolean shouldAutoReconnect(AltoClef mod) {
+    private boolean shouldAutoReconnect(Vibrato mod) {
         return mod.getModSettings().isAutoReconnect();
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop(Vibrato mod) {
 
     }
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(Vibrato mod, TaskChain other) {
 
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick(Vibrato mod) {
 
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority(Vibrato mod) {
         //MinecraftClient.getInstance().getCurrentServerEntry().address;
 //        MinecraftClient.getInstance().
         Screen screen = MinecraftClient.getInstance().currentScreen;
@@ -69,7 +69,7 @@ public class DeathMenuChain extends TaskChain {
             _deathRetryTimer.reset();
         }
         // Keep track of the last server we were on so we can re-connect.
-        if (AltoClef.inGame()) {
+        if (Vibrato.inGame()) {
             _prevServerEntry = MinecraftClient.getInstance().getCurrentServerEntry();
         }
 

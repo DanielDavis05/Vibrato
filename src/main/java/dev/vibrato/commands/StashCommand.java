@@ -1,11 +1,11 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
-import adris.altoclef.tasks.container.StoreInStashTask;
-import adris.altoclef.util.BlockRange;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.*;
+import dev.vibrato.tasks.container.StoreInStashTask;
+import dev.vibrato.util.BlockRange;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.util.math.BlockPos;
 
 public class StashCommand extends Command {
@@ -22,7 +22,7 @@ public class StashCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         BlockPos start = new BlockPos(
                 parser.get(Integer.class),
                 parser.get(Integer.class),

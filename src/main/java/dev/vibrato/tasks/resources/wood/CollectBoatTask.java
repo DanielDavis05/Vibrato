@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.resources.wood;
+package dev.vibrato.tasks.resources.wood;
 
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.resources.CraftWithMatchingPlanksTask;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.resources.CraftWithMatchingPlanksTask;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
 
 public class CollectBoatTask extends CraftWithMatchingPlanksTask {

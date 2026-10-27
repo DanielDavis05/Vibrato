@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.GoalFollowEntity;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.GoalFollowEntity;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.entity.Entity;
 
 public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
@@ -26,13 +26,13 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
         _wanderTask.resetWander();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             _progress.reset();
@@ -57,7 +57,7 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
     }
 

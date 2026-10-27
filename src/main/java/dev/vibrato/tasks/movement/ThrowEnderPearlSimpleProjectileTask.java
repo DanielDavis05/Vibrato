@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.ProjectileHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.ProjectileHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
@@ -25,13 +25,13 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _thrownTimer.forceElapse();
         _thrown = false;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // TODO: Unlikely/minor nitpick, but there could be other people throwing ender pearls, which would delay the bot.
         if (mod.getEntityTracker().entityFound(EnderPearlEntity.class)) {
             _thrownTimer.reset();
@@ -51,12 +51,12 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _thrown && _thrownTimer.elapsed() || (!_thrown && !mod.getItemStorage().hasItem(Items.ENDER_PEARL));
     }
 
@@ -73,7 +73,7 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
         return "Simple Ender Pearling to " + _target;
     }
 
-    private static boolean cleanThrow(AltoClef mod, float yaw, float pitch) {
+    private static boolean cleanThrow(Vibrato mod, float yaw, float pitch) {
         Rotation rotation = new Rotation(yaw, -1 * pitch);
         float range = 3f;
         Vec3d delta = LookHelper.toVec3d(rotation).multiply(range);
@@ -81,7 +81,7 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
         return LookHelper.cleanLineOfSight(start.add(delta), range);
     }
 
-    private static Rotation calculateThrowLook(AltoClef mod, BlockPos end) {
+    private static Rotation calculateThrowLook(Vibrato mod, BlockPos end) {
         Vec3d start = ProjectileHelper.getThrowOrigin(mod.getPlayer());
         Vec3d endCenter = WorldHelper.toVec3d(end);
         double gravity = ProjectileHelper.THROWN_ENTITY_GRAVITY_ACCEL;

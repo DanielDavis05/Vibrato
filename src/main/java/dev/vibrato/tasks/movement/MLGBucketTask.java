@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.movement.MLGBucketTask.ConeClutchContext;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.*;
-import adris.altoclef.util.serialization.ItemDeserializer;
-import adris.altoclef.util.serialization.ItemSerializer;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.movement.MLGBucketTask.ConeClutchContext;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.*;
+import dev.vibrato.util.serialization.ItemDeserializer;
+import dev.vibrato.util.serialization.ItemSerializer;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.RotationUtils;
@@ -74,7 +74,7 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _placedPos = null;
         // hold shift while falling.
         // Look down at first, might help
@@ -82,7 +82,7 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // ALWAYS faster
         mod.getInputControls().hold(Input.SPRINT);
         // Check AROUND player instead of directly under.
@@ -97,7 +97,7 @@ public class MLGBucketTask extends Task {
         return result;
     }
 
-    private Task onTickInternal(AltoClef mod, BlockPos oldMovingTorwards) {
+    private Task onTickInternal(Vibrato mod, BlockPos oldMovingTorwards) {
         Optional<BlockPos> willLandOn = getBlockWeWillLandOn(mod);
         Optional<BlockPos> bestClutchPos = getBestConeClutchBlock(mod, oldMovingTorwards);
         // Move torwards our best "clutch" position
@@ -123,7 +123,7 @@ public class MLGBucketTask extends Task {
         }
     }
 
-    private Task placeMLGBucketTask(AltoClef mod, BlockPos toPlaceOn) {
+    private Task placeMLGBucketTask(Vibrato mod, BlockPos toPlaceOn) {
         if (!hasClutchItem(mod)) {
             setDebugState("No clutch item");
             return null;
@@ -179,7 +179,7 @@ public class MLGBucketTask extends Task {
      *
      * Twisted vines require we press space ONLY when we're inside the vines
      */
-    private void handleJumpForLand(AltoClef mod, BlockPos willLandOn) {
+    private void handleJumpForLand(Vibrato mod, BlockPos willLandOn) {
         BlockPos willLandIn = WorldHelper.isSolid(mod, willLandOn) ? willLandOn.up() : willLandOn;
         BlockState s = mod.getWorld().getBlockState(willLandIn);
         if (s.getBlock() == Blocks.LAVA) {
@@ -200,7 +200,7 @@ public class MLGBucketTask extends Task {
             mod.getInputControls().release(Input.JUMP);
     }
 
-    private void handleForwardVelocity(AltoClef mod, boolean newForwardTarget) {
+    private void handleForwardVelocity(Vibrato mod, boolean newForwardTarget) {
         if (mod.getPlayer().isOnGround() || _movingTorwards == null || WorldHelper.inRangeXZ(mod.getPlayer(), _movingTorwards, 0.05f)) {
             moveForwardBack(mod, 0);
             return;
@@ -226,7 +226,7 @@ public class MLGBucketTask extends Task {
      *
      * This will nudge the bot left/right so we're no longer "slipping" to the side.
      */
-    private void handleCancellingSidewaysVelocity(AltoClef mod) {
+    private void handleCancellingSidewaysVelocity(Vibrato mod) {
         if (_movingTorwards == null) {
             moveLeftRight(mod, 0);
             return;
@@ -252,7 +252,7 @@ public class MLGBucketTask extends Task {
         }
     }
 
-    private static void moveLeftRight(AltoClef mod, int delta) {
+    private static void moveLeftRight(Vibrato mod, int delta) {
         if (delta == 0) {
             mod.getInputControls().release(Input.MOVE_LEFT);
             mod.getInputControls().release(Input.MOVE_RIGHT);
@@ -264,7 +264,7 @@ public class MLGBucketTask extends Task {
             mod.getInputControls().release(Input.MOVE_RIGHT);
         }
     }
-    private static void moveForwardBack(AltoClef mod, int delta) {
+    private static void moveForwardBack(Vibrato mod, int delta) {
         if (delta == 0) {
             mod.getInputControls().release(Input.MOVE_FORWARD);
             mod.getInputControls().release(Input.MOVE_BACK);
@@ -295,7 +295,7 @@ public class MLGBucketTask extends Task {
         return new RaycastContext(origin, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, player);
     }
 
-    private Optional<BlockPos> getBlockWeWillLandOn(AltoClef mod) {
+    private Optional<BlockPos> getBlockWeWillLandOn(Vibrato mod) {
         Vec3d velCheck = mod.getPlayer().getVelocity();
         // Flatten and slightly exaggerate the velocity
         velCheck.multiply(10,0,10);
@@ -336,10 +336,10 @@ public class MLGBucketTask extends Task {
         private boolean bestBlockIsLava = false;
         public BlockPos bestBlock = null;
         private final boolean hasClutchItem;
-        public ConeClutchContext(AltoClef mod) {
+        public ConeClutchContext(Vibrato mod) {
             hasClutchItem = hasClutchItem(mod);
         }
-        public void checkBlock(AltoClef mod, BlockPos check) {
+        public void checkBlock(Vibrato mod, BlockPos check) {
             // Already checked
             if (Objects.equals(bestBlock, check))
                 return;
@@ -380,7 +380,7 @@ public class MLGBucketTask extends Task {
                 }
             }
         }
-        public void checkRay(AltoClef mod, RaycastContext rctx) {
+        public void checkRay(Vibrato mod, RaycastContext rctx) {
             BlockHitResult hit = mod.getWorld().raycast(rctx);
             if (hit.getType() == HitResult.Type.BLOCK) {
                 BlockPos check = hit.getBlockPos();
@@ -392,7 +392,7 @@ public class MLGBucketTask extends Task {
         }
     }
 
-    private Optional<BlockPos> getBestConeClutchBlock(AltoClef mod, BlockPos oldClutchTarget) {
+    private Optional<BlockPos> getBestConeClutchBlock(Vibrato mod, BlockPos oldClutchTarget) {
         double pitchHalfWidth = _config.epicClutchConePitchAngle;
         double dpitchStart = pitchHalfWidth / _config.epicClutchConePitchResolution;
 
@@ -469,7 +469,7 @@ public class MLGBucketTask extends Task {
         return EntityHelper.calculateResultingPlayerDamage(player, player.getWorld().getDamageSources().fall(), baseFallDamage);
     }
 
-    private boolean hasClutchItem(AltoClef mod) {
+    private boolean hasClutchItem(Vibrato mod) {
         if (!mod.getWorld().getDimension().ultrawarm() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
             return true;
         }
@@ -477,7 +477,7 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         _movingTorwards = null;
         mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
 
@@ -488,7 +488,7 @@ public class MLGBucketTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return mod.getPlayer().isSwimming() || mod.getPlayer().isTouchingWater() || mod.getPlayer().isOnGround() || mod.getPlayer().isClimbing();
     }
 

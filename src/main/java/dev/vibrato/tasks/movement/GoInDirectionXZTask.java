@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.GoalDirectionXZ;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.GoalDirectionXZ;
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.util.math.Vec3d;
 
@@ -24,7 +24,7 @@ public class GoInDirectionXZTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         try {
             return new GoalDirectionXZ(_origin, _delta, _sidePenalty);
         } catch (Exception e) {

@@ -1,6 +1,6 @@
 # Usage Guide
 
-Alto Clef has a variety of commands, settings and modes. This will give users an overview on how to use the bot.
+Vibrato has a variety of commands, settings and modes. This will give users an overview on how to use the bot.
 
 Keep in mind this project is still in rapid development. A lot of features are placeholders and a work in progress.
 
@@ -60,9 +60,9 @@ Here's a list of some highlights.
 
 ## Bot Settings/Configuration
 
-After running the game with the mod once, a folder called `altoclef` should appear in your `.minecraft` directory. This contains `altoclef` related settings and configurations.
+After running the game with the mod once, a folder called `vibrato` should appear in your `.minecraft` directory. This contains `vibrato` related settings and configurations.
 
-With regards to the `altoclef_settings.json` file Check [Settings.java](https://github.com/gaucho-matrero/altoclef/blob/main/src/main/java/adris/altoclef/Settings.java)
+With regards to the `vibrato_settings.json` file Check [Settings.java](https://github.com/gaucho-matrero/altoclef/blob/main/src/main/java/adris/altoclef/Settings.java)
 
 After modifying your local settings, run `@reload_settings` to apply your changes in-game.
 
@@ -71,8 +71,8 @@ After modifying your local settings, run `@reload_settings` to apply your change
 
 This bot lets other players run commands on the bot via server messages. When sending a command via `/msg` you may omit the `@`.
 
-You'll have to append each player's name to a file called `altoclef_butler_whitelist.txt`
-located in your `.minecraft/altoclef` directory. Make sure your name is not found in `altoclef_butler_blacklist.txt` too.
+You'll have to append each player's name to a file called `vibrato_butler_whitelist.txt`
+located in your `.minecraft/vibrato` directory. Make sure your name is not found in `vibrato_butler_blacklist.txt` too.
 
 ### Disabling/Enabling Blacklist/Whitelist
 
@@ -88,7 +88,7 @@ users are prioritized and sent first.
 ### Dealing with custom /msg outputs on servers
 
 If the server's whisper /msg system doesn't send players a message that looks like `X whispers to you: Y` and it's not being
-picked up by altoclef, you can append the server's custom whisper format in the `whisperFormats` setting.
+picked up by vibrato, you can append the server's custom whisper format in the `whisperFormats` setting.
 
 **NOTE:** At least for now, you must escape brackets and paranthesis. Example: To receive messages that look like `[Player -> me] message` the format string is `\[{from} -> {to}\] {message}`
 

@@ -1,16 +1,16 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.AbstractDoToEntityTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasks.resources.TradeWithPiglinsTask.PerformTradeWithPiglin;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.EntityHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.AbstractDoToEntityTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.resources.TradeWithPiglinsTask.PerformTradeWithPiglin;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.EntityHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HoglinEntity;
@@ -49,17 +49,17 @@ public class TradeWithPiglinsTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // Collect gold if we don't have it.
         if (_goldTask != null && _goldTask.isActive() && !_goldTask.isFinished(mod)) {
             setDebugState("Collecting gold");
@@ -84,7 +84,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -111,7 +111,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected void onStart(AltoClef mod) {
+        protected void onStart(Vibrato mod) {
             super.onStart(mod);
 
             mod.getBehaviour().push();
@@ -130,7 +130,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
+        protected void onStop(Vibrato mod, Task interruptTask) {
             mod.getBehaviour().pop();
             super.onStop(mod, interruptTask);
         }
@@ -141,7 +141,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected Task onEntityInteract(AltoClef mod, Entity entity) {
+        protected Task onEntityInteract(Vibrato mod, Entity entity) {
 
             // If we didn't run this in a while, we can retry bartering.
             if (_intervalTimeout.elapsed()) {
@@ -190,7 +190,7 @@ public class TradeWithPiglinsTask extends ResourceTask {
         }
 
         @Override
-        protected Optional<Entity> getEntityTarget(AltoClef mod) {
+        protected Optional<Entity> getEntityTarget(Vibrato mod) {
             // Ignore trading piglins
             Optional<Entity> found = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
                     entity -> {

@@ -1,11 +1,11 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.tasksystem.TaskChain;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.time.Stopwatch;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.TaskChain;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.time.Stopwatch;
 
 public abstract class SingleTaskChain extends TaskChain {
 
@@ -13,7 +13,7 @@ public abstract class SingleTaskChain extends TaskChain {
     protected Task _mainTask = null;
     private boolean _interrupted = false;
 
-    private AltoClef _mod;
+    private Vibrato _mod;
 
     public SingleTaskChain(TaskRunner runner) {
         super(runner);
@@ -21,7 +21,7 @@ public abstract class SingleTaskChain extends TaskChain {
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick(Vibrato mod) {
         if (!isActive()) return;
 
         if (_interrupted) {
@@ -40,7 +40,7 @@ public abstract class SingleTaskChain extends TaskChain {
         }
     }
 
-    protected void onStop(AltoClef mod) {
+    protected void onStop(Vibrato mod) {
         if (isActive() && _mainTask != null) {
             _mainTask.stop(mod);
             _mainTask = null;
@@ -63,10 +63,10 @@ public abstract class SingleTaskChain extends TaskChain {
         return _mainTask != null;
     }
 
-    protected abstract void onTaskFinish(AltoClef mod);
+    protected abstract void onTaskFinish(Vibrato mod);
 
     @Override
-    public void onInterrupt(AltoClef mod, TaskChain other) {
+    public void onInterrupt(Vibrato mod, TaskChain other) {
         Debug.logInternal("Chain Interrupted: " + this + " by " + other.toString());
         // Stop our task. When we're started up again, let our task know we need to run.
         _interrupted = true;
@@ -75,7 +75,7 @@ public abstract class SingleTaskChain extends TaskChain {
         }
     }
 
-    protected boolean isCurrentlyRunning(AltoClef mod) {
+    protected boolean isCurrentlyRunning(Vibrato mod) {
         return !_interrupted && _mainTask.isActive() && !_mainTask.isFinished(mod);
     }
 

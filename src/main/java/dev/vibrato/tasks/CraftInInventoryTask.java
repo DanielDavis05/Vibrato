@@ -1,14 +1,14 @@
-package adris.altoclef.tasks;
+package dev.vibrato.tasks;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.resources.CollectRecipeCataloguedResourcesTask;
-import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.RecipeTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.resources.CollectRecipeCataloguedResourcesTask;
+import dev.vibrato.tasks.slot.ReceiveCraftingOutputSlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.RecipeTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -34,12 +34,12 @@ public class CraftInInventoryTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBehaviour().push();
         // Our inventory slots are here for conversion
         int recSlot = 0;
@@ -53,7 +53,7 @@ public class CraftInInventoryTask extends ResourceTask {
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // Grab from output FIRST
         if (StorageHelper.isPlayerInventoryOpen()) {
             if (StorageHelper.getItemStackInCursorSlot().isEmpty()) {
@@ -83,7 +83,7 @@ public class CraftInInventoryTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
     }
 
@@ -102,7 +102,7 @@ public class CraftInInventoryTask extends ResourceTask {
     }
 
     // virtual. By default assumes subtasks are CATALOGUED (in TaskCatalogue.java)
-    protected Task collectRecipeSubTask(AltoClef mod) {
+    protected Task collectRecipeSubTask(Vibrato mod) {
         return new CollectRecipeCataloguedResourcesTask(_ignoreUncataloguedSlots, _target);
     }
 

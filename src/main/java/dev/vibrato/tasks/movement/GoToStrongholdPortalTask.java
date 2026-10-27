@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -22,12 +22,12 @@ public class GoToStrongholdPortalTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.END_PORTAL_FRAME);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         /*
             If we don't know where stronghold is, find out where stronghold is.
             If we do know where stronghold is, fast travel there
@@ -48,7 +48,7 @@ public class GoToStrongholdPortalTask extends Task {
         setDebugState("Searching for Stronghold...");
         return new SearchChunkForBlockTask(Blocks.STONE_BRICKS) {
             @Override
-            protected Task onTick(AltoClef mod) {
+            protected Task onTick(Vibrato mod) {
                 if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
                     return getWanderTask(mod);
                 }
@@ -56,14 +56,14 @@ public class GoToStrongholdPortalTask extends Task {
             }
 
             @Override
-            protected Task getWanderTask(AltoClef mod) {
+            protected Task getWanderTask(Vibrato mod) {
                 return new FastTravelTask(_strongholdCoordinates, 300,true);
             }
         };
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.END_PORTAL_FRAME);
     }
 

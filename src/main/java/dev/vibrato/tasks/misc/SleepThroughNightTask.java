@@ -1,22 +1,22 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
 
 public class SleepThroughNightTask extends Task {
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         return new PlaceBedAndSetSpawnTask().stayInBed();
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -31,7 +31,7 @@ public class SleepThroughNightTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         // We're in daytime
         int time = (int)(mod.getWorld().getTimeOfDay() % 24000);
         return 0 <= time && time < 13000;

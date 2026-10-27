@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.slot;
+package dev.vibrato.tasks.slot;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.CursorSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.CursorSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 
 import java.util.Objects;
@@ -20,12 +20,12 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // Ensure inventory is closed.
         if (!StorageHelper.isPlayerInventoryOpen()) {
@@ -68,7 +68,7 @@ public class MoveInaccessibleItemToInventoryTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 

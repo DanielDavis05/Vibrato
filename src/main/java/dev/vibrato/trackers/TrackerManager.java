@@ -1,6 +1,6 @@
-package adris.altoclef.trackers;
+package dev.vibrato.trackers;
 
-import adris.altoclef.AltoClef;
+import dev.vibrato.Vibrato;
 
 import java.util.ArrayList;
 
@@ -8,16 +8,16 @@ public class TrackerManager {
 
     private final ArrayList<Tracker> _trackers = new ArrayList<>();
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
     private boolean _wasInGame = false;
 
-    public TrackerManager(AltoClef mod) {
+    public TrackerManager(Vibrato mod) {
         _mod = mod;
     }
 
     public void tick() {
-        boolean inGame = AltoClef.inGame();
+        boolean inGame = Vibrato.inGame();
         if (!inGame && _wasInGame) {
             // Reset when we leave our world
             for (Tracker tracker : _trackers) {

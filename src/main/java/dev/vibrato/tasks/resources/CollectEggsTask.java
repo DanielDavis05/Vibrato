@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.DoToClosestEntityTask;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.tasks.movement.GetToEntityTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.DoToClosestEntityTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.movement.GetToEntityTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.item.Items;
 
@@ -17,7 +17,7 @@ public class CollectEggsTask extends ResourceTask {
 
     private final DoToClosestEntityTask _waitNearChickens;
 
-    private AltoClef _mod;
+    private Vibrato _mod;
 
     public CollectEggsTask(int targetCount) {
         super(Items.EGG, targetCount);
@@ -26,17 +26,17 @@ public class CollectEggsTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         _mod = mod;
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // Wrong dimension check.
         if (_waitNearChickens.wasWandering() && WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             setDebugState("Going to right dimension.");
@@ -48,7 +48,7 @@ public class CollectEggsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 

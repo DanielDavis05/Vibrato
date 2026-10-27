@@ -1,20 +1,20 @@
-package adris.altoclef.control;
+package dev.vibrato.control;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockBreakingCancelEvent;
-import adris.altoclef.eventbus.events.BlockBreakingEvent;
+import dev.vibrato.Vibrato;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockBreakingCancelEvent;
+import dev.vibrato.eventbus.events.BlockBreakingEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
 public class PlayerExtraController {
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
     private BlockPos _blockBreakPos;
     private double _blockBreakProgress;
 
-    public PlayerExtraController(AltoClef mod) {
+    public PlayerExtraController(Vibrato mod) {
         _mod = mod;
 
         EventBus.subscribe(BlockBreakingEvent.class, evt -> onBlockBreak(evt.blockPos, evt.progress));

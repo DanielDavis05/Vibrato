@@ -1,19 +1,19 @@
-package adris.altoclef.tasksystem;
+package dev.vibrato.tasksystem;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
 
 import java.util.ArrayList;
 
 public class TaskRunner {
 
     private final ArrayList<TaskChain> _chains = new ArrayList<>();
-    private final AltoClef _mod;
+    private final Vibrato _mod;
     private boolean _active;
 
     private TaskChain _cachedCurrentTaskChain = null;
 
-    public TaskRunner(AltoClef mod) {
+    public TaskRunner(Vibrato mod) {
         _mod = mod;
         _active = false;
     }
@@ -69,7 +69,7 @@ public class TaskRunner {
     }
 
     // Kinda jank ngl
-    public AltoClef getMod() {
+    public Vibrato getMod() {
         return _mod;
     }
 }

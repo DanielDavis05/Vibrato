@@ -1,15 +1,15 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StlHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StlHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -61,17 +61,17 @@ public class CollectCropTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(_cropBlock);
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         /*
          *   Filter the empty crop list to remove non-empty areas
          *   If _currentCropBreaking != null && _currentCropBreaking is EMPTY:
@@ -139,12 +139,12 @@ public class CollectCropTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(_cropBlock);
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         // Don't stop while we're replanting crops.
         if (shouldReplantNow(mod)) {
             return false;
@@ -152,18 +152,18 @@ public class CollectCropTask extends ResourceTask {
         return super.isFinished(mod);
     }
 
-    private boolean shouldReplantNow(AltoClef mod) {
+    private boolean shouldReplantNow(Vibrato mod) {
         return mod.getModSettings().shouldReplantCrops() && hasEmptyCrops(mod) && mod.getItemStorage().hasItem(_cropSeed);
     }
 
-    private boolean hasEmptyCrops(AltoClef mod) {
+    private boolean hasEmptyCrops(Vibrato mod) {
         for (BlockPos pos : _emptyCropland) {
             if (isEmptyCrop(mod, pos)) return true;
         }
         return false;
     }
 
-    private boolean isEmptyCrop(AltoClef mod, BlockPos pos) {
+    private boolean isEmptyCrop(Vibrato mod, BlockPos pos) {
         return WorldHelper.isAir(mod, pos);
     }
 
@@ -181,7 +181,7 @@ public class CollectCropTask extends ResourceTask {
     }
 
 
-    private boolean isMature(AltoClef mod, BlockPos blockPos) {
+    private boolean isMature(Vibrato mod, BlockPos blockPos) {
         // Chunk needs to be loaded for wheat maturity to be checked.
         if (!mod.getChunkTracker().isChunkLoaded(blockPos) || !WorldHelper.canReach(mod, blockPos)) {
             return _wasFullyGrown.contains(blockPos);

@@ -1,15 +1,15 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.tasks.container.CraftInTableTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.RecipeTarget;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.tasks.container.CraftInTableTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.RecipeTarget;
 import net.minecraft.item.Item;
 
 public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
@@ -57,12 +57,12 @@ public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // TODO: Scenario of
         //      Command: Get 3 beds
@@ -130,23 +130,23 @@ public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 
     // Virtual
-    protected Task getAllSameResourcesTask(AltoClef mod) {
+    protected Task getAllSameResourcesTask(Vibrato mod) {
         ItemTarget infinityVersion = new ItemTarget(_sameResourceTarget, 999999);
         return TaskCatalogue.getItemTask(infinityVersion);
     }
 
     // Virtual
-    protected int getExpectedTotalCountOfSameItem(AltoClef mod, Item sameItem) {
+    protected int getExpectedTotalCountOfSameItem(Vibrato mod, Item sameItem) {
         return mod.getItemStorage().getItemCount(sameItem);
     }
 
     // Virtual
-    protected Task getSpecificSameResourceTask(AltoClef mod, Item[] toGet) {
+    protected Task getSpecificSameResourceTask(Vibrato mod, Item[] toGet) {
         Debug.logError("Uh oh!!! getSpecificSameResourceTask should be implemented!!!! Now we're stuck.");
         return null;
     }

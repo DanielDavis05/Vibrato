@@ -1,4 +1,4 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
 public class CursorSlot extends Slot {
 

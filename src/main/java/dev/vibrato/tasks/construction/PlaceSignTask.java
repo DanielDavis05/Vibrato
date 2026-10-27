@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -40,12 +40,12 @@ public class PlaceSignTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _finished = false;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (editingSign()) {
             return editSign(mod);
@@ -72,7 +72,7 @@ public class PlaceSignTask extends Task {
         }
     }
 
-    private Task editSign(AltoClef mod) {
+    private Task editSign(Vibrato mod) {
         SignEditScreen screen = (SignEditScreen) MinecraftClient.getInstance().currentScreen;
         assert screen != null;
 
@@ -112,12 +112,12 @@ public class PlaceSignTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         StorageHelper.closeScreen();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _finished;
     }
 

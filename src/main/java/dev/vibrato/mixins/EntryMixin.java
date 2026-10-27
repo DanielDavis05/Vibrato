@@ -1,8 +1,8 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.TitleScreenEntryEvent;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.TitleScreenEntryEvent;
 import net.minecraft.client.gui.screen.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

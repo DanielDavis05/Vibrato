@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.ItemHelper;
 
 public class CollectFlowerTask extends MineAndCollectTask {
     public CollectFlowerTask(int count) {

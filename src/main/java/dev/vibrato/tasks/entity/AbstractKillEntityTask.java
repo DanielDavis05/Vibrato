@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -41,7 +41,7 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
         super(maintainDistance, combatGuardLowerRange, combatGuardLowerFieldRadius);
     }
 
-    public static void equipWeapon(AltoClef mod) {
+    public static void equipWeapon(Vibrato mod) {
         for (Item item : WEAPON_ITEMS) {
             if (mod.getItemStorage().hasItem(item)) {
                 mod.getSlotHandler().forceEquipItem(item);
@@ -51,7 +51,7 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
     }
 
     @Override
-    protected Task onEntityInteract(AltoClef mod, Entity entity) {
+    protected Task onEntityInteract(Vibrato mod, Entity entity) {
         float hitProg = mod.getPlayer().getAttackCooldownProgress(0);
 
         // Equip weapon

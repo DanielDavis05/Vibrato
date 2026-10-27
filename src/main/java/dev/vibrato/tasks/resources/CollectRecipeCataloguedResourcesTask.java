@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.RecipeTarget;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.RecipeTarget;
+import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.item.Item;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -27,12 +27,12 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _finished = false;
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // TODO: Cache this once instead of doing it every frame.
 
         // Stuff to get, both catalogued + individual items.
@@ -105,7 +105,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
 
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -123,7 +123,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         if (_finished) {
             if (!StorageHelper.hasRecipeMaterialsOrTarget(mod, this._targets)) {
                 _finished = false;

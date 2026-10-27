@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.ChunkLoadEvent;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.ChunkLoadEvent;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashSet;
@@ -24,16 +24,16 @@ public abstract class SearchChunksExploreTask extends Task {
     private final Object _searcherMutex = new Object();
     private final Set<ChunkPos> _alreadyExplored = new HashSet<>();
     private ChunkSearchTask _searcher;
-    private AltoClef _mod;
+    private Vibrato _mod;
     private Subscription<ChunkLoadEvent> _chunkLoadedSubscription;
 
     // Virtual
-    protected ChunkPos getBestChunkOverride(AltoClef mod, List<ChunkPos> chunks) {
+    protected ChunkPos getBestChunkOverride(Vibrato mod, List<ChunkPos> chunks) {
         return null;
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _mod = mod;
 
         // Listen for chunk loading
@@ -43,7 +43,7 @@ public abstract class SearchChunksExploreTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         synchronized (_searcherMutex) {
             if (_searcher == null) {
                 setDebugState("Exploring/Searching for valid chunk");
@@ -68,7 +68,7 @@ public abstract class SearchChunksExploreTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         EventBus.unsubscribe(_chunkLoadedSubscription);
     }
 
@@ -86,17 +86,17 @@ public abstract class SearchChunksExploreTask extends Task {
         }
     }
 
-    protected Task getWanderTask(AltoClef mod) {
+    protected Task getWanderTask(Vibrato mod) {
         return new TimeoutWanderTask(true);
     }
 
-    protected abstract boolean isChunkWithinSearchSpace(AltoClef mod, ChunkPos pos);
+    protected abstract boolean isChunkWithinSearchSpace(Vibrato mod, ChunkPos pos);
 
     public boolean failedSearch() {
         return _searcher == null;
     }
 
-    public void resetSearch(AltoClef mod) {
+    public void resetSearch(Vibrato mod) {
         //Debug.logMessage("Search reset");
         _searcher = null;
         _alreadyExplored.clear();
@@ -113,12 +113,12 @@ public abstract class SearchChunksExploreTask extends Task {
         }
 
         @Override
-        protected boolean isChunkPartOfSearchSpace(AltoClef mod, ChunkPos pos) {
+        protected boolean isChunkPartOfSearchSpace(Vibrato mod, ChunkPos pos) {
             return isChunkWithinSearchSpace(mod, pos);
         }
 
         @Override
-        public ChunkPos getBestChunk(AltoClef mod, List<ChunkPos> chunks) {
+        public ChunkPos getBestChunk(Vibrato mod, List<ChunkPos> chunks) {
             ChunkPos override = getBestChunkOverride(mod, chunks);
             if (override != null) return override;
             return super.getBestChunk(mod, chunks);

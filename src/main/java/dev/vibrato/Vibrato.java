@@ -1,28 +1,28 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.butler.Butler;
-import adris.altoclef.chains.*;
-import adris.altoclef.commandsystem.CommandExecutor;
-import adris.altoclef.control.InputControls;
-import adris.altoclef.control.PlayerExtraController;
-import adris.altoclef.control.SlotHandler;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.ChatMessageEvent;
-import adris.altoclef.eventbus.events.ClientRenderEvent;
-import adris.altoclef.eventbus.events.ClientTickEvent;
-import adris.altoclef.eventbus.events.SendChatEvent;
-import adris.altoclef.eventbus.events.TitleScreenEntryEvent;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.trackers.*;
-import adris.altoclef.trackers.storage.ContainerSubTracker;
-import adris.altoclef.trackers.storage.ItemStorageTracker;
-import adris.altoclef.ui.CommandStatusOverlay;
-import adris.altoclef.ui.MessagePriority;
-import adris.altoclef.ui.MessageSender;
-import adris.altoclef.util.helpers.InputHelper;
+import dev.vibrato.butler.Butler;
+import dev.vibrato.chains.*;
+import dev.vibrato.commandsystem.CommandExecutor;
+import dev.vibrato.control.InputControls;
+import dev.vibrato.control.PlayerExtraController;
+import dev.vibrato.control.SlotHandler;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.ChatMessageEvent;
+import dev.vibrato.eventbus.events.ClientRenderEvent;
+import dev.vibrato.eventbus.events.ClientTickEvent;
+import dev.vibrato.eventbus.events.SendChatEvent;
+import dev.vibrato.eventbus.events.TitleScreenEntryEvent;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.trackers.*;
+import dev.vibrato.trackers.storage.ContainerSubTracker;
+import dev.vibrato.trackers.storage.ItemStorageTracker;
+import dev.vibrato.ui.CommandStatusOverlay;
+import dev.vibrato.ui.MessagePriority;
+import dev.vibrato.ui.MessageSender;
+import dev.vibrato.util.helpers.InputHelper;
 import baritone.Baritone;
-import baritone.altoclef.AltoClefSettings;
+import baritone.vibrato.VibratoSettings;
 import baritone.api.BaritoneAPI;
 import baritone.api.Settings;
 import net.fabricmc.api.ModInitializer;
@@ -44,12 +44,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Central access point for AltoClef
+ * Central access point for Vibrato
  */
-public class AltoClef implements ModInitializer {
+public class Vibrato implements ModInitializer {
 
-    // Static access to altoclef
-    private static final Queue<Consumer<AltoClef>> _postInitQueue = new ArrayDeque<>();
+    // Static access to vibrato
+    private static final Queue<Consumer<Vibrato>> _postInitQueue = new ArrayDeque<>();
 
     // Central Managers
     private static CommandExecutor _commandExecutor;
@@ -72,7 +72,7 @@ public class AltoClef implements ModInitializer {
     // Renderers
     private CommandStatusOverlay _commandStatusOverlay;
     // Settings
-    private adris.altoclef.Settings _settings;
+    private dev.vibrato.Settings _settings;
     // Misc managers/input
     private MessageSender _messageSender;
     private InputControls _inputControls;
@@ -143,7 +143,7 @@ public class AltoClef implements ModInitializer {
         initializeCommands();
 
         // Load settings
-        adris.altoclef.Settings.load(newSettings -> {
+        dev.vibrato.Settings.load(newSettings -> {
             _settings = newSettings;
             // Baritone's `acceptableThrowawayItems` should match our own.
             List<Item> baritoneCanPlace = Arrays.stream(_settings.getThrowawayItems(this, true))
@@ -252,7 +252,7 @@ public class AltoClef implements ModInitializer {
     private void initializeCommands() {
         try {
             // This creates the commands. If you want any more commands feel free to initialize new command lists.
-            new AltoClefCommands();
+            new VibratoCommands();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -344,16 +344,16 @@ public class AltoClef implements ModInitializer {
     }
 
     /**
-     * Baritone settings special to AltoClef (could just be static honestly)
+     * Baritone settings special to Vibrato (could just be static honestly)
      */
-    public AltoClefSettings getExtraBaritoneSettings() {
-        return AltoClefSettings.getInstance();
+    public VibratoSettings getExtraBaritoneSettings() {
+        return VibratoSettings.getInstance();
     }
 
     /**
-     * AltoClef Settings
+     * Vibrato Settings
      */
-    public adris.altoclef.Settings getModSettings() {
+    public dev.vibrato.Settings getModSettings() {
         return _settings;
     }
 
@@ -488,9 +488,9 @@ public class AltoClef implements ModInitializer {
     }
 
     /**
-     * Use this to access AltoClef as an external library.
+     * Use this to access Vibrato as an external library.
      */
-    public static void subscribeToPostInit(Consumer<AltoClef> onPostInit) {
+    public static void subscribeToPostInit(Consumer<Vibrato> onPostInit) {
         synchronized (_postInitQueue) {
             _postInitQueue.add(onPostInit);
         }

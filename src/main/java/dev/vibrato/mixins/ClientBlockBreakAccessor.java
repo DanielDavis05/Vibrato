@@ -1,4 +1,4 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import org.spongepowered.asm.mixin.Mixin;

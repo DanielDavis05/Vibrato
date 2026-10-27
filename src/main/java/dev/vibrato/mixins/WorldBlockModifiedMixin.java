@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockPlaceEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockPlaceEvent;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;

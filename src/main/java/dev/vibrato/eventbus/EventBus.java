@@ -1,4 +1,4 @@
-package adris.altoclef.eventbus;
+package dev.vibrato.eventbus;
 
 import net.minecraft.util.Pair;
 

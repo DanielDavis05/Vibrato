@@ -1,8 +1,8 @@
-package adris.altoclef.util;
+package dev.vibrato.util;
 
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.item.Item;
 
 import java.util.Arrays;

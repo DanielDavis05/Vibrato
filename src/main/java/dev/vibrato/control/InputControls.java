@@ -1,4 +1,4 @@
-package adris.altoclef.control;
+package dev.vibrato.control;
 
 import baritone.api.utils.input.Input;
 import net.minecraft.client.MinecraftClient;

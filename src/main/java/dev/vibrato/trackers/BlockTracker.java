@@ -1,16 +1,16 @@
-package adris.altoclef.trackers;
+package dev.vibrato.trackers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockPlaceEvent;
-import adris.altoclef.trackers.blacklisting.WorldLocateBlacklist;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.BaritoneHelper;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ConfigHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.helpers.StlHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockPlaceEvent;
+import dev.vibrato.trackers.blacklisting.WorldLocateBlacklist;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.BaritoneHelper;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ConfigHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.helpers.StlHelper;
 import baritone.Baritone;
 import baritone.api.utils.BlockOptionalMetaLookup;
 import baritone.pathing.movement.CalculationContext;
@@ -68,9 +68,9 @@ public class BlockTracker extends Tracker {
     private final Semaphore _endOfFrameMutex = new Semaphore(1);
 
     //private Block _currentlyTracking = null;
-    private final AltoClef _mod;
+    private final Vibrato _mod;
 
-    public BlockTracker(AltoClef mod, TrackerManager manager) {
+    public BlockTracker(Vibrato mod, TrackerManager manager) {
         super(manager);
         _mod = mod;
         // First time, track immediately
@@ -529,7 +529,7 @@ public class BlockTracker extends Tracker {
             return count;
         }
 
-        public void blacklistBlockUnreachable(AltoClef mod, BlockPos pos, int allowedFailures) {
+        public void blacklistBlockUnreachable(Vibrato mod, BlockPos pos, int allowedFailures) {
             _blacklist.blackListItem(mod, pos, allowedFailures);
         }
 
@@ -538,7 +538,7 @@ public class BlockTracker extends Tracker {
         }
 
         // Gets nearest block. For now does linear search. In the future might optimize this a bit
-        public Optional<BlockPos> getNearest(AltoClef mod, Vec3d position, Predicate<BlockPos> isValid, Block... blocks) {
+        public Optional<BlockPos> getNearest(Vibrato mod, Vec3d position, Predicate<BlockPos> isValid, Block... blocks) {
             if (!anyFound(blocks)) {
                 //Debug.logInternal("(failed cataloguecheck for " + block.getTranslationKey() + ")");
                 return Optional.empty();
@@ -589,7 +589,7 @@ public class BlockTracker extends Tracker {
         /**
          * Purge enough blocks so our size is small enough
          */
-        public void smartPurge(AltoClef mod, Vec3d playerPos) {
+        public void smartPurge(Vibrato mod, Vec3d playerPos) {
 
             // Clear cached by position blocks, as they can be a handful.
             try {

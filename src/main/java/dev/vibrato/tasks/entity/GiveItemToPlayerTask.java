@@ -1,19 +1,19 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.movement.FollowPlayerTask;
-import adris.altoclef.tasks.movement.RunAwayFromPositionTask;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.ThrowCursorTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.movement.FollowPlayerTask;
+import dev.vibrato.tasks.movement.RunAwayFromPositionTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.ThrowCursorTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 
@@ -40,13 +40,13 @@ public class GiveItemToPlayerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _droppingItems = false;
         _throwTarget.clear();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_throwTask != null && _throwTask.isActive() && !_throwTask.isFinished(mod)) {
             setDebugState("Throwing items");
@@ -114,7 +114,7 @@ public class GiveItemToPlayerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 

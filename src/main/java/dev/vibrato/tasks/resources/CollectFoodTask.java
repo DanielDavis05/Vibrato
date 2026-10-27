@@ -1,24 +1,24 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.tasks.container.CraftInTableTask;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.CraftingRecipe;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.RecipeTarget;
-import adris.altoclef.util.SmeltTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.slots.FurnaceSlot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.tasks.container.CraftInTableTask;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.CraftingRecipe;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.RecipeTarget;
+import dev.vibrato.util.SmeltTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.slots.FurnaceSlot;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -96,7 +96,7 @@ public class CollectFoodTask extends Task {
 
     // Gets the units of food if we were to convert all of our raw resources to food.
     @SuppressWarnings("RedundantCast")
-    private static double calculateFoodPotential(AltoClef mod) {
+    private static double calculateFoodPotential(Vibrato mod) {
         double potentialFood = 0;
         for (ItemStack food : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
             potentialFood += getFoodPotential(food);
@@ -113,7 +113,7 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         // Protect ALL food
         mod.getBehaviour().addProtectedItems(ITEMS_TO_PICK_UP);
@@ -135,7 +135,7 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // If we were previously smelting, keep on smelting.
         if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished(mod)) {
@@ -289,7 +289,7 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.HAY_BLOCK);
         mod.getBlockTracker().stopTracking(Blocks.SWEET_BERRY_BUSH);
         for (CropTarget crop : CROPS) {
@@ -299,7 +299,7 @@ public class CollectFoodTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return StorageHelper.calculateInventoryFoodScore(mod) >= _unitsNeeded;
     }
 
@@ -320,7 +320,7 @@ public class CollectFoodTask extends Task {
      * Returns a task that mines a block and picks up its output.
      * Returns null if task cannot reasonably run.
      */
-    private Task pickupBlockTaskOrNull(AltoClef mod, Block blockToCheck, Item itemToGrab, Predicate<BlockPos> accept, double maxRange) {
+    private Task pickupBlockTaskOrNull(Vibrato mod, Block blockToCheck, Item itemToGrab, Predicate<BlockPos> accept, double maxRange) {
         Predicate<BlockPos> acceptPlus = (blockPos) -> {
             if (!WorldHelper.canBreak(mod, blockPos)) return false;
             return accept.test(blockPos);
@@ -347,11 +347,11 @@ public class CollectFoodTask extends Task {
         return null;
     }
 
-    private Task pickupBlockTaskOrNull(AltoClef mod, Block blockToCheck, Item itemToGrab, double maxRange) {
+    private Task pickupBlockTaskOrNull(Vibrato mod, Block blockToCheck, Item itemToGrab, double maxRange) {
         return pickupBlockTaskOrNull(mod, blockToCheck, itemToGrab, toAccept -> true, maxRange);
     }
 
-    private Task killTaskOrNull(AltoClef mod, Entity entity, Item itemToGrab) {
+    private Task killTaskOrNull(Vibrato mod, Entity entity, Item itemToGrab) {
         return new KillAndLootTask(entity.getClass(), new ItemTarget(itemToGrab, 1));
     }
 
@@ -359,7 +359,7 @@ public class CollectFoodTask extends Task {
      * Returns a task that picks up a dropped item.
      * Returns null if task cannot reasonably run.
      */
-    private Task pickupTaskOrNull(AltoClef mod, Item itemToGrab, double maxRange) {
+    private Task pickupTaskOrNull(Vibrato mod, Item itemToGrab, double maxRange) {
         Optional<ItemEntity> nearestDrop = Optional.empty();
         if (mod.getEntityTracker().itemDropped(itemToGrab)) {
             nearestDrop = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), itemToGrab);
@@ -373,7 +373,7 @@ public class CollectFoodTask extends Task {
         return null;
     }
 
-    private Task pickupTaskOrNull(AltoClef mod, Item itemToGrab) {
+    private Task pickupTaskOrNull(Vibrato mod, Item itemToGrab) {
         return pickupTaskOrNull(mod, itemToGrab, Double.POSITIVE_INFINITY);
     }
 

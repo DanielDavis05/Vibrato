@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.ShearSheepTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.ItemHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.ShearSheepTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.ItemHelper;
 import net.minecraft.block.Block;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.item.Item;
@@ -47,17 +47,17 @@ public class CollectWoolTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(ItemHelper.itemsToBlocks(_wools));
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
 
         // TODO: If we don't find good color wool blocks
         // and we DONT find good color sheep:
@@ -93,7 +93,7 @@ public class CollectWoolTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(ItemHelper.itemsToBlocks(_wools));
     }
 

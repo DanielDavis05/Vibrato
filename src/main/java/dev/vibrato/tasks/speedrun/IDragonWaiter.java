@@ -1,4 +1,4 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
 import net.minecraft.util.math.BlockPos;
 

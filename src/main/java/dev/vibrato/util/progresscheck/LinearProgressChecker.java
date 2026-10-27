@@ -1,6 +1,6 @@
-package adris.altoclef.util.progresscheck;
+package dev.vibrato.util.progresscheck;
 
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.util.time.TimerGame;
 
 /**
  * Simple progress checker that requires we always make progress.

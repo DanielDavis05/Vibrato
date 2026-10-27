@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.SlotClickChangedEvent;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.SlotClickChangedEvent;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -65,7 +65,7 @@ public class ContainerStoredTracker {
         return getStoredCount(target.getMatches()) >= target.getTargetCount();
     }
 
-    public ItemTarget[] getUnstoredItemTargetsYouCanStore(AltoClef mod, ItemTarget[] toStore) {
+    public ItemTarget[] getUnstoredItemTargetsYouCanStore(Vibrato mod, ItemTarget[] toStore) {
         return Arrays.stream(toStore)
                 .filter(target -> !matches(target) && mod.getItemStorage().hasItem(target.getMatches()))
                 // If we don't have enough, reduce the count to what we CAN add

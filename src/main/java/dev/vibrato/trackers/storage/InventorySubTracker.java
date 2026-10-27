@@ -1,13 +1,13 @@
-package adris.altoclef.trackers.storage;
+package dev.vibrato.trackers.storage;
 
-import adris.altoclef.trackers.Tracker;
-import adris.altoclef.trackers.TrackerManager;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.CraftingTableSlot;
-import adris.altoclef.util.slots.CursorSlot;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.trackers.Tracker;
+import dev.vibrato.trackers.TrackerManager;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.CraftingTableSlot;
+import dev.vibrato.util.slots.CursorSlot;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;

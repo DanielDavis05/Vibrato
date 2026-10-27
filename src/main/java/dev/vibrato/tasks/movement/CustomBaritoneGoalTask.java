@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 
 /**
@@ -26,13 +26,13 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
         _checker.reset();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_cachedGoal == null) {
             _cachedGoal = newGoal(mod);
@@ -64,7 +64,7 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         if (_cachedGoal == null) {
             _cachedGoal = newGoal(mod);
         }
@@ -72,11 +72,11 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
     }
 
-    protected abstract Goal newGoal(AltoClef mod);
+    protected abstract Goal newGoal(Vibrato mod);
 
-    protected void onWander(AltoClef mod) {}
+    protected void onWander(Vibrato mod) {}
 }

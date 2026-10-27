@@ -1,4 +1,4 @@
-package adris.altoclef.util;
+package dev.vibrato.util;
 
 public enum WoodType {
     ACACIA,

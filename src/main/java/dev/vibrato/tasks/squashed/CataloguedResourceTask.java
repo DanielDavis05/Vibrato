@@ -1,14 +1,14 @@
-package adris.altoclef.tasks.squashed;
+package dev.vibrato.tasks.squashed;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.container.CraftInTableTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.container.UpgradeInSmithingTableTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask.TaskSquasher;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.container.CraftInTableTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.container.UpgradeInSmithingTableTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask.TaskSquasher;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
@@ -42,12 +42,12 @@ public class CataloguedResourceTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         for (ResourceTask task : _tasksToComplete) {
             for (ItemTarget target : task.getItemTargets()) {
                 // If we failed to meet this task's targets, do the task.
@@ -58,7 +58,7 @@ public class CataloguedResourceTask extends ResourceTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         for (ResourceTask task : _tasksToComplete) {
             for (ItemTarget target : task.getItemTargets()) {
                 if (!StorageHelper.itemTargetsMetInventory(mod, target)) return false;
@@ -69,13 +69,13 @@ public class CataloguedResourceTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         // Useless
         return false;
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -101,7 +101,7 @@ public class CataloguedResourceTask extends ResourceTask {
     @SuppressWarnings({"unchecked", "rawtypes"})
     static class TaskSquasher {
 
-        private final Map<Class, adris.altoclef.tasks.squashed.TypeSquasher> _squashMap = new HashMap<>();
+        private final Map<Class, dev.vibrato.tasks.squashed.TypeSquasher> _squashMap = new HashMap<>();
 
         private final List<ResourceTask> _unSquashableTasks = new ArrayList<>();
 

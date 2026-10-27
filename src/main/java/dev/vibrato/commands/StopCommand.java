@@ -1,8 +1,8 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
 
 public class StopCommand extends Command {
 
@@ -11,7 +11,7 @@ public class StopCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
+    protected void call(Vibrato mod, ArgParser parser) {
         mod.getUserTaskChain().cancel(mod);
         finish();
     }

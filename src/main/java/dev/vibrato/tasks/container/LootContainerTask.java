@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.slot.ClickSlotTask;
-import adris.altoclef.tasks.slot.EnsureFreeInventorySlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerType;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.EnsureFreeInventorySlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerType;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -38,7 +38,7 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         for (Item item : targets) {
             if (!mod.getBehaviour().isProtected(item)) {
@@ -48,7 +48,7 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if(!ContainerType.screenHandlerMatches(ContainerType.CHEST)) {
             setDebugState("Interact with container");
             return new InteractWithBlockTask(chest);
@@ -74,7 +74,7 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
+    protected void onStop(Vibrato mod, Task task) {
         StorageHelper.closeScreen();
         mod.getBehaviour().pop();
     }
@@ -84,7 +84,7 @@ public class LootContainerTask extends Task {
         return other instanceof LootContainerTask && targets == ((LootContainerTask) other).targets;
     }
 
-    private Optional<Slot> getAMatchingSlot(AltoClef mod) {
+    private Optional<Slot> getAMatchingSlot(Vibrato mod) {
         for (Item item : targets) {
             List<Slot> slots = mod.getItemStorage().getSlotsWithItemContainer(item);
             if (!slots.isEmpty()) for (Slot slot : slots) {
@@ -95,7 +95,7 @@ public class LootContainerTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _weDoneHere || (ContainerType.screenHandlerMatchesAny() &&
                 getAMatchingSlot(mod).isEmpty());
     }

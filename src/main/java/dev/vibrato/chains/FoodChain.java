@@ -1,13 +1,13 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Settings;
-import adris.altoclef.chains.FoodChain.FoodChainConfig;
-import adris.altoclef.tasks.resources.CollectFoodTask;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.helpers.ConfigHelper;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.LookHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Settings;
+import dev.vibrato.chains.FoodChain.FoodChainConfig;
+import dev.vibrato.tasks.resources.CollectFoodTask;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.helpers.ConfigHelper;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
 import baritone.api.utils.input.Input;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -41,9 +41,9 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority(Vibrato mod) {
 
-        if (!AltoClef.inGame()) {
+        if (!Vibrato.inGame()) {
             stopEat(mod);
             return Float.NEGATIVE_INFINITY;
         }
@@ -118,11 +118,11 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish(Vibrato mod) {
         // Nothing.
     }
 
-    private void startEat(AltoClef mod, Item food) {
+    private void startEat(Vibrato mod, Item food) {
         //Debug.logInternal("EATING " + toUse.getTranslationKey() + " : " + test);
         _isTryingToEat = true;
         _requestFillup = true;
@@ -131,7 +131,7 @@ public class FoodChain extends SingleTaskChain {
         mod.getExtraBaritoneSettings().setInteractionPaused(true);
     }
 
-    private void stopEat(AltoClef mod) {
+    private void stopEat(Vibrato mod) {
         if (_isTryingToEat) {
             mod.getInputControls().release(Input.CLICK_RIGHT);
             mod.getExtraBaritoneSettings().setInteractionPaused(false);
@@ -140,7 +140,7 @@ public class FoodChain extends SingleTaskChain {
         }
     }
 
-    public boolean needsToEat(AltoClef mod) {
+    public boolean needsToEat(Vibrato mod) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         assert player != null;
         int foodLevel = player.getHungerManager().getFoodLevel();
@@ -191,13 +191,13 @@ public class FoodChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop(Vibrato mod) {
         stopEat(mod);
         super.onStop(mod);
     }
 
     // If we need to eat like, NOW.
-    public boolean needsToEatCritical(AltoClef mod) {
+    public boolean needsToEatCritical(Vibrato mod) {
         int foodLevel = mod.getPlayer().getHungerManager().getFoodLevel();
         float health = mod.getPlayer().getHealth();
         int armor = mod.getPlayer().getArmor();
@@ -205,7 +205,7 @@ public class FoodChain extends SingleTaskChain {
         return armor >= _config.canTankHitsAndEatArmor && foodLevel < _config.canTankHitsAndEatMaxHunger; // EAT WE CAN TAKE A FEW HITS
     }
 
-    private Pair<Integer, Optional<Item>> calculateFood(AltoClef mod) {
+    private Pair<Integer, Optional<Item>> calculateFood(Vibrato mod) {
         Item bestFood = null;
         double bestFoodScore = Double.NEGATIVE_INFINITY;
         int foodTotal = 0;

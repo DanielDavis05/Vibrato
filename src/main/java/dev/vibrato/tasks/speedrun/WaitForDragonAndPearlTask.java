@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.movement.GetToXZTask;
-import adris.altoclef.tasks.movement.GetToYTask;
-import adris.altoclef.tasks.movement.RunAwayFromPositionTask;
-import adris.altoclef.tasks.movement.ThrowEnderPearlSimpleProjectileTask;
-import adris.altoclef.tasks.resources.GetBuildingMaterialsTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.movement.GetToXZTask;
+import dev.vibrato.tasks.movement.GetToYTask;
+import dev.vibrato.tasks.movement.RunAwayFromPositionTask;
+import dev.vibrato.tasks.movement.ThrowEnderPearlSimpleProjectileTask;
+import dev.vibrato.tasks.resources.GetBuildingMaterialsTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.DragonFireballEntity;
 import net.minecraft.item.Items;
@@ -63,11 +63,11 @@ public class WaitForDragonAndPearlTask extends Task implements IDragonWaiter {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_throwPearlTask != null && _throwPearlTask.isActive() && !_throwPearlTask.isFinished(mod)) {
             setDebugState("Throwing pearl!");
             return _throwPearlTask;
@@ -130,7 +130,7 @@ public class WaitForDragonAndPearlTask extends Task implements IDragonWaiter {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -140,7 +140,7 @@ public class WaitForDragonAndPearlTask extends Task implements IDragonWaiter {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _dragonIsPerching
                 && ((_throwPearlTask == null || (_throwPearlTask.isActive() && _throwPearlTask.isFinished(mod)))
                 || WorldHelper.inRangeXZ(mod.getPlayer(), _targetToPearl, CLOSE_ENOUGH_DISTANCE));

@@ -1,19 +1,19 @@
-package adris.altoclef.tasks.construction.compound;
+package dev.vibrato.tasks.construction.compound;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.ClearLiquidTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceObsidianBucketTask;
-import adris.altoclef.tasks.movement.PickupDroppedItemTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.ClearLiquidTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceObsidianBucketTask;
+import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -78,7 +78,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     private boolean _firstSearch = false;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
         _currentDestroyTarget = null;
 
@@ -108,7 +108,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         if (_refreshTimer.elapsed()) {
             Debug.logMessage("Duct tape: Refreshing inventory again just in case");
@@ -244,7 +244,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.LAVA);
         mod.getBehaviour().pop();
     }
@@ -259,7 +259,7 @@ public class ConstructNetherPortalBucketTask extends Task {
         return "Construct Nether Portal";
     }
 
-    private BlockPos findLavaLake(AltoClef mod, BlockPos playerPos) {
+    private BlockPos findLavaLake(Vibrato mod, BlockPos playerPos) {
         HashSet<BlockPos> alreadyExplored = new HashSet<>();
 
         double nearestSqDistance = Double.POSITIVE_INFINITY;
@@ -314,7 +314,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     }
 
     // Get a region that a portal can fit into
-    private BlockPos getPortalableRegion(AltoClef mod, BlockPos lava, BlockPos playerPos, Vec3i sizeOffset, Vec3i sizeAllocation, int timeoutRange) {
+    private BlockPos getPortalableRegion(Vibrato mod, BlockPos lava, BlockPos playerPos, Vec3i sizeOffset, Vec3i sizeAllocation, int timeoutRange) {
         Vec3i[] directions = new Vec3i[]{new Vec3i(1, 0, 0), new Vec3i(-1, 0, 0), new Vec3i(0, 0, 1), new Vec3i(0, 0, -1)};
 
         double minDistanceToPlayer = Double.POSITIVE_INFINITY;

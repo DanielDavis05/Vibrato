@@ -1,4 +1,4 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
 import java.util.*;
 import java.util.function.Function;

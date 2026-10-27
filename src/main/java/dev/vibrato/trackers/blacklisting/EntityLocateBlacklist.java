@@ -1,4 +1,4 @@
-package adris.altoclef.trackers.blacklisting;
+package dev.vibrato.trackers.blacklisting;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;

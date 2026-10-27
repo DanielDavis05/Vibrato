@@ -1,8 +1,8 @@
-package adris.altoclef.util.time;
+package dev.vibrato.util.time;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.mixins.ClientConnectionAccessor;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.mixins.ClientConnectionAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.ClientConnection;
 
@@ -22,7 +22,7 @@ public class TimerGame extends BaseTimer {
 
     @Override
     protected double currentTime() {
-        if (!AltoClef.inGame()) {
+        if (!Vibrato.inGame()) {
             Debug.logError("Running game timer while not in game.");
             return 0;
         }

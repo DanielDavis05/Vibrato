@@ -1,4 +1,4 @@
-package adris.altoclef;
+package dev.vibrato;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
@@ -7,20 +7,20 @@ import net.minecraft.text.Text;
 public class Debug {
 
     public static void logInternal(String message) {
-        System.out.println("ALTO CLEF: " + message);
+        System.out.println("VIBRATO: " + message);
     }
 
     public static void logInternal(String format, Object... args) {
         logInternal(String.format(format, args));
     }
 
-    public static AltoClef jankModInstance;
+    public static Vibrato jankModInstance;
 
     private static String getLogPrefix() {
         if (jankModInstance != null) {
             return jankModInstance.getModSettings().getChatLogPrefix();
         }
-        return "[Alto Clef] ";
+        return "[Vibrato] ";
     }
 
     public static void logMessage(String message, boolean prefix) {

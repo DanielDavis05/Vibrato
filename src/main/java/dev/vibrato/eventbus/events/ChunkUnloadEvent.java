@@ -1,4 +1,4 @@
-package adris.altoclef.eventbus.events;
+package dev.vibrato.eventbus.events;
 
 import net.minecraft.util.math.ChunkPos;
 

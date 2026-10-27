@@ -1,11 +1,11 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.*;
-import adris.altoclef.tasks.container.StoreInAnyContainerTask;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.PlayerSlot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.*;
+import dev.vibrato.tasks.container.StoreInAnyContainerTask;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.PlayerSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
@@ -16,7 +16,7 @@ public class DepositCommand extends Command {
         super("deposit", "Deposit ALL of our items", new Arg(ItemList.class, "items (empty for ALL non gear items)", null, 0, false));
     }
 
-    public static ItemTarget[] getAllNonEquippedOrToolItemsAsTarget(AltoClef mod) {
+    public static ItemTarget[] getAllNonEquippedOrToolItemsAsTarget(Vibrato mod) {
         return StorageHelper.getAllInventoryItemsAsTargets(slot -> {
             // Ignore armor
             if (ArrayUtils.contains(PlayerSlot.ARMOR_SLOTS, slot))
@@ -32,7 +32,7 @@ public class DepositCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         ItemList itemList = parser.get(ItemList.class);
         ItemTarget[] items;
         if (itemList == null) {

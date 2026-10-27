@@ -1,11 +1,11 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.CommandException;
-import adris.altoclef.ui.MessagePriority;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.commandsystem.CommandException;
+import dev.vibrato.ui.MessagePriority;
 
 import java.util.Arrays;
 
@@ -15,7 +15,7 @@ public class ListCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         mod.log("#### LIST OF ALL OBTAINABLE ITEMS ####", MessagePriority.OPTIONAL);
         mod.log(Arrays.toString(TaskCatalogue.resourceNames().toArray()), MessagePriority.OPTIONAL);
         mod.log("############# END LIST ###############", MessagePriority.OPTIONAL);

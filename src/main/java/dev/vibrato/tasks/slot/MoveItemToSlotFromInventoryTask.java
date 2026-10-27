@@ -1,7 +1,7 @@
-package adris.altoclef.tasks.slot;
+package dev.vibrato.tasks.slot;
 
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.slots.Slot;
 
 public class MoveItemToSlotFromInventoryTask extends MoveItemToSlotTask {
     public MoveItemToSlotFromInventoryTask(ItemTarget toMove, Slot destination) {

@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.MovementHelper;
@@ -22,7 +22,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBehaviour().allowSwimThroughLava(true);
         // Encourage placing of all blocks!
@@ -34,7 +34,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Sprint through lava + jump, it's faster
         if (mod.getPlayer().isInLava() || mod.getWorld().getBlockState(mod.getPlayer().getBlockPos().down()).getBlock() == Blocks.LAVA) {
             mod.getInputControls().hold(Input.JUMP);
@@ -44,14 +44,14 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBehaviour().pop();
         mod.getInputControls().release(Input.JUMP);
         mod.getInputControls().release(Input.SPRINT);
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new EscapeFromLavaGoal();
     }
 
@@ -61,7 +61,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return !mod.getPlayer().isInLava() && !mod.getPlayer().isOnFire();
     }
 

@@ -1,17 +1,17 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.construction.PlaceObsidianBucketTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.construction.PlaceObsidianBucketTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
@@ -47,12 +47,12 @@ public class CollectObsidianTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
         mod.getBehaviour().push();
 
         mod.getBehaviour().setRayTracingFluidHandling(RaycastContext.FluidHandling.SOURCE_ONLY);
@@ -76,7 +76,7 @@ public class CollectObsidianTask extends ResourceTask {
         });
     }
 
-    private static BlockPos getGoodObsidianPosition(AltoClef mod) {
+    private static BlockPos getGoodObsidianPosition(Vibrato mod) {
         BlockPos start = mod.getPlayer().getBlockPos().add(-3, -3, -3);
         BlockPos end = mod.getPlayer().getBlockPos().add(3, 3, 3);
         for (BlockPos pos : WorldHelper.scanRegion(mod, start, end)) {
@@ -88,7 +88,7 @@ public class CollectObsidianTask extends ResourceTask {
     }
 
     @Override
-    protected adris.altoclef.tasksystem.Task onResourceTick(AltoClef mod) {
+    protected dev.vibrato.tasksystem.Task onResourceTick(Vibrato mod) {
 
         // Clear the current waiting lava pos if it's no longer lava.
         if (_lavaWaitCurrentPos != null && mod.getChunkTracker().isChunkLoaded(_lavaWaitCurrentPos) && mod.getWorld().getBlockState(_lavaWaitCurrentPos).getBlock() != Blocks.LAVA) {
@@ -178,7 +178,7 @@ public class CollectObsidianTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, adris.altoclef.tasksystem.Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, dev.vibrato.tasksystem.Task interruptTask) {
         //mod.getBlockTracker().stopTracking(Blocks.LAVA);
         //mod.getBlockTracker().stopTracking(Blocks.WATER);
         mod.getBlockTracker().stopTracking(Blocks.OBSIDIAN);

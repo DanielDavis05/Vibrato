@@ -1,11 +1,11 @@
-package adris.altoclef.trackers.storage;
+package dev.vibrato.trackers.storage;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.trackers.Tracker;
-import adris.altoclef.trackers.TrackerManager;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.trackers.Tracker;
+import dev.vibrato.trackers.TrackerManager;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -41,7 +41,7 @@ public class ItemStorageTracker extends Tracker {
         return new Slot[0];
     }*/
 
-    public ItemStorageTracker(AltoClef mod, TrackerManager manager, Consumer<ContainerSubTracker> containerTrackerConsumer) {
+    public ItemStorageTracker(Vibrato mod, TrackerManager manager, Consumer<ContainerSubTracker> containerTrackerConsumer) {
         super(manager);
         _inventory = new InventorySubTracker(manager);
         _containers = new ContainerSubTracker(manager);

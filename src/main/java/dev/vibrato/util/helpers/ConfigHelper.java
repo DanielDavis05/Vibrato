@@ -1,7 +1,7 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.Debug;
-import adris.altoclef.util.serialization.*;
+import dev.vibrato.Debug;
+import dev.vibrato.util.serialization.*;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -27,10 +27,10 @@ import java.util.function.Supplier;
  */
 public class ConfigHelper {
 
-    private static final String ALTO_FOLDER = "altoclef";
+    private static final String VIBRATO_FOLDER = "vibrato";
 
     private static File getConfigFile(String path) {
-        return Paths.get(ALTO_FOLDER, path).toFile();
+        return Paths.get(VIBRATO_FOLDER, path).toFile();
     }
 
     // For reloading

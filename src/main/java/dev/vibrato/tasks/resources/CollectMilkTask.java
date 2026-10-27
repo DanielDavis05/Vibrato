@@ -1,12 +1,12 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.AbstractDoToEntityTask;
-import adris.altoclef.tasks.resources.CollectMilkTask.MilkCowTask;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.AbstractDoToEntityTask;
+import dev.vibrato.tasks.resources.CollectMilkTask.MilkCowTask;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.item.Items;
@@ -24,16 +24,16 @@ public class CollectMilkTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         // Make sure we have a bucket.
         if (!mod.getItemStorage().hasItem(Items.BUCKET)) {
             return TaskCatalogue.getItemTask(Items.BUCKET, 1);
@@ -46,7 +46,7 @@ public class CollectMilkTask extends ResourceTask {
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -72,7 +72,7 @@ public class CollectMilkTask extends ResourceTask {
         }
 
         @Override
-        protected Task onEntityInteract(AltoClef mod, Entity entity) {
+        protected Task onEntityInteract(Vibrato mod, Entity entity) {
             if (!mod.getItemStorage().hasItem(Items.BUCKET)) {
                 Debug.logWarning("Failed to milk cow because you have no bucket.");
                 return null;
@@ -86,7 +86,7 @@ public class CollectMilkTask extends ResourceTask {
         }
 
         @Override
-        protected Optional<Entity> getEntityTarget(AltoClef mod) {
+        protected Optional<Entity> getEntityTarget(Vibrato mod) {
             return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), CowEntity.class);
         }
 

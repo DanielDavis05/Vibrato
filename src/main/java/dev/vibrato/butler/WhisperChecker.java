@@ -1,8 +1,8 @@
-package adris.altoclef.butler;
+package dev.vibrato.butler;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.util.time.TimerGame;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -60,7 +60,7 @@ public class WhisperChecker {
         return null;
     }
 
-    public MessageResult receiveMessage(AltoClef mod, String ourUsername, String msg) {
+    public MessageResult receiveMessage(Vibrato mod, String ourUsername, String msg) {
         String foundMiddlePart = "";
         int index = -1;
 

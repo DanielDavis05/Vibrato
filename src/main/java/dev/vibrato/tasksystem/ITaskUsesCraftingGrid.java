@@ -1,4 +1,4 @@
-package adris.altoclef.tasksystem;
+package dev.vibrato.tasksystem;
 
 /**
  * Some tasks (mainly tasks that open containers) will break if they don't require

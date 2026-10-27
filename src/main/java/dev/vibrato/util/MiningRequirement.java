@@ -1,6 +1,6 @@
-package adris.altoclef.util;
+package dev.vibrato.util;
 
-import adris.altoclef.Debug;
+import dev.vibrato.Debug;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;

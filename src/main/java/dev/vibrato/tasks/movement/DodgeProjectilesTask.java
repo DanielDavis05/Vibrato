@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.baritone.GoalDodgeProjectiles;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.baritone.GoalDodgeProjectiles;
 import baritone.api.pathing.goals.Goal;
 
 public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
@@ -16,7 +16,7 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_cachedGoal != null) {
             // EntityTracker runs ensureUpdated automatically which calls updateState which locks the mutex,
             // so don't lock here.
@@ -44,7 +44,7 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
     }
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         return new GoalDodgeProjectiles(mod, _distanceHorizontal, _distanceVertical);
     }
 }

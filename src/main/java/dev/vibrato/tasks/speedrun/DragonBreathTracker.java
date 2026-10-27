@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.speedrun;
+package dev.vibrato.tasks.speedrun;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.CustomBaritoneGoalTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.entity.AreaEffectCloudEntity;
@@ -15,7 +15,7 @@ import java.util.HashSet;
 public class DragonBreathTracker {
     private final HashSet<BlockPos> _breathBlocks = new HashSet<>();
 
-    public void updateBreath(AltoClef mod) {
+    public void updateBreath(Vibrato mod) {
         _breathBlocks.clear();
         for (AreaEffectCloudEntity cloud : mod.getEntityTracker().getTrackedEntities(AreaEffectCloudEntity.class)) {
             for (BlockPos bad : WorldHelper.getBlocksTouchingBox(mod, cloud.getBoundingBox())) {
@@ -35,7 +35,7 @@ public class DragonBreathTracker {
     private class RunAwayFromDragonsBreathTask extends CustomBaritoneGoalTask {
 
         @Override
-        protected void onStart(AltoClef mod) {
+        protected void onStart(Vibrato mod) {
             super.onStart(mod);
             mod.getBehaviour().push();
             // Encourage placing of all blocks!
@@ -47,13 +47,13 @@ public class DragonBreathTracker {
         }
 
         @Override
-        protected void onStop(AltoClef mod, Task interruptTask) {
+        protected void onStop(Vibrato mod, Task interruptTask) {
             super.onStop(mod, interruptTask);
             mod.getBehaviour().pop();
         }
 
         @Override
-        protected Goal newGoal(AltoClef mod) {
+        protected Goal newGoal(Vibrato mod) {
             return new GoalRunAway(2, _breathBlocks.toArray(BlockPos[]::new));
         }
 

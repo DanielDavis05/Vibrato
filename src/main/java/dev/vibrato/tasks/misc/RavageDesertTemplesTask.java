@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.movement.SearchWithinBiomeTask;
-import adris.altoclef.tasks.squashed.CataloguedResourceTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.SearchWithinBiomeTask;
+import dev.vibrato.tasks.squashed.CataloguedResourceTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -46,13 +46,13 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(Blocks.STONE_PRESSURE_PLATE);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (_pickaxeTask != null && !_pickaxeTask.isFinished(mod)) {
             setDebugState("Need to get pickaxes first");
             return _pickaxeTask;
@@ -76,7 +76,7 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
+    protected void onStop(Vibrato mod, Task task) {
         mod.getBlockTracker().stopTracking(Blocks.STONE_PRESSURE_PLATE);
         mod.getBehaviour().pop();
     }
@@ -87,7 +87,7 @@ public class RavageDesertTemplesTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return false;
     }
 

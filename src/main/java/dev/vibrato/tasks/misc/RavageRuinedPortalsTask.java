@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.misc;
+package dev.vibrato.tasks.misc;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.container.LootContainerTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.container.LootContainerTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 
 import net.minecraft.item.Item;
@@ -52,13 +52,13 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBehaviour().push();
         mod.getBlockTracker().trackBlock(Blocks.CHEST);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if(_lootTask != null && _lootTask.isActive() && !_lootTask.isFinished(mod)) {
             return _lootTask;
         }
@@ -71,7 +71,7 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task task) {
+    protected void onStop(Vibrato mod, Task task) {
         mod.getBlockTracker().stopTracking(Blocks.CHEST);
         mod.getBehaviour().pop();
     }
@@ -82,7 +82,7 @@ public class RavageRuinedPortalsTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return false;
     }
 
@@ -91,7 +91,7 @@ public class RavageRuinedPortalsTask extends Task {
         return "Ravaging Ruined Portals";
     }
 
-    private boolean canBeLootablePortalChest(AltoClef mod, BlockPos blockPos) {
+    private boolean canBeLootablePortalChest(Vibrato mod, BlockPos blockPos) {
         if (mod.getWorld().getBlockState(blockPos.up(1)).getBlock() == Blocks.WATER || blockPos.getY() < 50) {
             return false;
         }
@@ -104,7 +104,7 @@ public class RavageRuinedPortalsTask extends Task {
         return false;
     }
 
-    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(AltoClef mod) {
+    private Optional<BlockPos> locateClosestUnopenedRuinedPortalChest(Vibrato mod) {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             return Optional.empty();
         }

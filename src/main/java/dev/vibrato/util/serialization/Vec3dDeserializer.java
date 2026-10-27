@@ -1,4 +1,4 @@
-package adris.altoclef.util.serialization;
+package dev.vibrato.util.serialization;
 
 import com.fasterxml.jackson.core.JsonToken;
 import net.minecraft.util.math.Vec3d;

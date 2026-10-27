@@ -1,24 +1,24 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasks.CraftGenericManuallyTask;
-import adris.altoclef.tasks.CraftGenericWithRecipeBooksTask;
-import adris.altoclef.tasks.CraftInInventoryTask;
-import adris.altoclef.tasks.ResourceTask;
-import adris.altoclef.tasks.entity.KillEntitiesTask;
-import adris.altoclef.tasks.resources.CollectRecipeCataloguedResourcesTask;
-import adris.altoclef.tasks.slot.MoveInaccessibleItemToInventoryTask;
-import adris.altoclef.tasks.slot.ReceiveCraftingOutputSlotTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.RecipeTarget;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.CraftingTableSlot;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.CraftGenericManuallyTask;
+import dev.vibrato.tasks.CraftGenericWithRecipeBooksTask;
+import dev.vibrato.tasks.CraftInInventoryTask;
+import dev.vibrato.tasks.ResourceTask;
+import dev.vibrato.tasks.entity.KillEntitiesTask;
+import dev.vibrato.tasks.resources.CollectRecipeCataloguedResourcesTask;
+import dev.vibrato.tasks.slot.MoveInaccessibleItemToInventoryTask;
+import dev.vibrato.tasks.slot.ReceiveCraftingOutputSlotTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.RecipeTarget;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.CraftingTableSlot;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
@@ -66,22 +66,22 @@ public class CraftInTableTask extends ResourceTask {
     }
 
     @Override
-    protected boolean shouldAvoidPickingUp(AltoClef mod) {
+    protected boolean shouldAvoidPickingUp(Vibrato mod) {
         return false;
     }
 
     @Override
-    protected void onResourceStart(AltoClef mod) {
+    protected void onResourceStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onResourceTick(AltoClef mod) {
+    protected Task onResourceTick(Vibrato mod) {
         return _craftTask;
     }
 
     @Override
-    protected void onResourceStop(AltoClef mod, Task interruptTask) {
+    protected void onResourceStop(Vibrato mod, Task interruptTask) {
         // Close the crafting table screen
         StorageHelper.closeScreen();
         //mod.getControllerExtras().closeCurrentContainer();
@@ -130,7 +130,7 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         super.onStart(mod);
         _craftCount = 0;
         StorageHelper.closeScreen();
@@ -157,14 +157,14 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         super.onStop(mod, interruptTask);
         mod.getBehaviour().pop();
         StorageHelper.closeScreen();
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
 
         // TODO: This shouldn't be here.
         // This is duct tape for the following scenario:
@@ -228,12 +228,12 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    protected boolean isContainerOpen(AltoClef mod) {
+    protected boolean isContainerOpen(Vibrato mod) {
         return (mod.getPlayer().currentScreenHandler instanceof CraftingScreenHandler);
     }
 
     @Override
-    protected Task containerSubTask(AltoClef mod) {
+    protected Task containerSubTask(Vibrato mod) {
 
         // Refresh crafting table Juuust in case
         _craftResetTimer.setInterval(mod.getModSettings().getContainerItemMoveDelay() * 10 + CRAFT_RESET_TIMER_BONUS_SECONDS);
@@ -266,12 +266,12 @@ class DoCraftInTableTask extends DoStuffInContainerTask {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _craftCount >= _targets.length;//_crafted;
     }
 
     @Override
-    protected double getCostToMakeNew(AltoClef mod) {
+    protected double getCostToMakeNew(Vibrato mod) {
         // TODO: If we have an axe, lower the cost.
         if (mod.getItemStorage().hasItem(ItemHelper.LOG) || mod.getItemStorage().getItemCount(ItemHelper.PLANKS) >= 4) {
             // We can craft it right now, so it's real cheap

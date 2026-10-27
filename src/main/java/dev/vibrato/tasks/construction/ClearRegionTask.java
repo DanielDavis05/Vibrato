@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.ITaskRequiresGrounded;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.ITaskRequiresGrounded;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 
@@ -23,12 +23,12 @@ public class ClearRegionTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
             mod.getClientBaritone().getBuilderProcess().clearArea(_from, _to);
         }
@@ -36,12 +36,12 @@ public class ClearRegionTask extends Task implements ITaskRequiresGrounded {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         int x = _from.getX() - _to.getX();
         int y = _from.getY() - _to.getY();
         int z = _from.getZ() - _to.getZ();

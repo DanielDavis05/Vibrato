@@ -1,4 +1,4 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
 public class BrewingStandSlot extends Slot {
     public static final BrewingStandSlot LEFT_POTION = new BrewingStandSlot(0);

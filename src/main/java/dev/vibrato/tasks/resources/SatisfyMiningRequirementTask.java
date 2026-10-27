@@ -1,10 +1,10 @@
-package adris.altoclef.tasks.resources;
+package dev.vibrato.tasks.resources;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.MiningRequirement;
-import adris.altoclef.util.helpers.StorageHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.MiningRequirement;
+import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.item.Items;
 
 /**
@@ -19,12 +19,12 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         switch (_requirement) {
             case HAND:
                 // Will never happen if you program this right
@@ -42,7 +42,7 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
@@ -60,7 +60,7 @@ public class SatisfyMiningRequirementTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return StorageHelper.miningRequirementMetInventory(mod, _requirement);
     }
 }

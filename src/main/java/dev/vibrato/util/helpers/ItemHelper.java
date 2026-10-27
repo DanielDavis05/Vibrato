@@ -1,7 +1,7 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.util.WoodType;
+import dev.vibrato.Vibrato;
+import dev.vibrato.util.WoodType;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.LeavesBlock;
@@ -406,13 +406,13 @@ public class ItemHelper {
         }
     }
 
-    private static boolean isStackProtected(AltoClef mod, ItemStack stack) {
+    private static boolean isStackProtected(Vibrato mod, ItemStack stack) {
         if (stack.contains(DataComponentTypes.CUSTOM_NAME) && mod.getModSettings().getDontThrowAwayCustomNameItems())
             return true;
         return mod.getBehaviour().isProtected(stack.getItem()) || mod.getModSettings().isImportant(stack.getItem());
     }
 
-    public static boolean canThrowAwayStack(AltoClef mod, ItemStack stack) {
+    public static boolean canThrowAwayStack(Vibrato mod, ItemStack stack) {
         // Can't throw away empty stacks!
         if (stack.isEmpty())
             return false;

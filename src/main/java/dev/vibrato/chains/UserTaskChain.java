@@ -1,12 +1,12 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.TaskFinishedEvent;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.time.Stopwatch;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.TaskFinishedEvent;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.time.Stopwatch;
 
 // A task chain that runs a user defined task at the same priority.
 // This basically replaces our old Task Runner.
@@ -46,7 +46,7 @@ public class UserTaskChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTick(AltoClef mod) {
+    protected void onTick(Vibrato mod) {
 
         // Pause if we're not loaded into a world.
         if (!mod.inGame()) return;
@@ -54,7 +54,7 @@ public class UserTaskChain extends SingleTaskChain {
         super.onTick(mod);
     }
 
-    public void cancel(AltoClef mod) {
+    public void cancel(Vibrato mod) {
         if (_mainTask != null && _mainTask.isActive()) {
             stop(mod);
             onTaskFinish(mod);
@@ -62,7 +62,7 @@ public class UserTaskChain extends SingleTaskChain {
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
+    public float getPriority(Vibrato mod) {
         return 50;
     }
 
@@ -71,7 +71,7 @@ public class UserTaskChain extends SingleTaskChain {
         return "User Tasks";
     }
 
-    public void runTask(AltoClef mod, Task task, Runnable onFinish) {
+    public void runTask(Vibrato mod, Task task, Runnable onFinish) {
         _runningIdleTask = _nextTaskIdleFlag;
         _nextTaskIdleFlag = false;
 
@@ -91,7 +91,7 @@ public class UserTaskChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish(Vibrato mod) {
         boolean shouldIdle = mod.getModSettings().shouldRunIdleCommandWhenNotActive();
         if (!shouldIdle) {
             // Stop.
@@ -114,7 +114,7 @@ public class UserTaskChain extends SingleTaskChain {
                 EventBus.publish(new TaskFinishedEvent(seconds, oldTask));
             }
             if (shouldIdle) {
-                AltoClef.getCommandExecutor().executeWithPrefix(mod.getModSettings().getIdleCommand());
+                Vibrato.getCommandExecutor().executeWithPrefix(mod.getModSettings().getIdleCommand());
                 signalNextTaskToBeIdleTask();
                 _runningIdleTask = true;
             }

@@ -1,11 +1,11 @@
-package adris.altoclef.trackers;
+package dev.vibrato.trackers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.ChunkLoadEvent;
-import adris.altoclef.eventbus.events.ChunkUnloadEvent;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.ChunkLoadEvent;
+import dev.vibrato.eventbus.events.ChunkUnloadEvent;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.EmptyChunk;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
  */
 public class SimpleChunkTracker {
 
-    private final AltoClef _mod;
+    private final Vibrato _mod;
     private final Set<ChunkPos> _loaded = new HashSet<>();
 
-    public SimpleChunkTracker(AltoClef mod) {
+    public SimpleChunkTracker(Vibrato mod) {
         _mod = mod;
 
         // When chunks load...
@@ -89,7 +89,7 @@ public class SimpleChunkTracker {
         });
     }
 
-    public void reset(AltoClef mod) {
+    public void reset(Vibrato mod) {
         Debug.logInternal("CHUNKS RESET");
         _loaded.clear();
     }

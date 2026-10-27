@@ -1,8 +1,8 @@
-package adris.altoclef.util.helpers;
+package dev.vibrato.util.helpers;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.mixins.ClientConnectionAccessor;
-import adris.altoclef.util.Dimension;
+import dev.vibrato.Vibrato;
+import dev.vibrato.mixins.ClientConnectionAccessor;
+import dev.vibrato.util.Dimension;
 import baritone.api.BaritoneAPI;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.MovementHelper;
@@ -59,7 +59,7 @@ public interface WorldHelper {
         return BlockPos.ofFloored(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    static boolean isSourceBlock(AltoClef mod, BlockPos pos, boolean onlyAcceptStill) {
+    static boolean isSourceBlock(Vibrato mod, BlockPos pos, boolean onlyAcceptStill) {
         BlockState s = mod.getWorld().getBlockState(pos);
         if (s.getBlock() instanceof FluidBlock) {
             // Only accept still fluids.
@@ -105,14 +105,14 @@ public interface WorldHelper {
     }
 
 
-    static boolean isSolid(AltoClef mod, BlockPos pos) {
+    static boolean isSolid(Vibrato mod, BlockPos pos) {
         return mod.getWorld().getBlockState(pos).isSolidBlock(mod.getWorld(), pos);
     }
 
     /**
      * Get the "head" of a block with a bed, if the block is a bed.
      */
-    static BlockPos getBedHead(AltoClef mod, BlockPos posWithBed) {
+    static BlockPos getBedHead(Vibrato mod, BlockPos posWithBed) {
         BlockState state = mod.getWorld().getBlockState(posWithBed);
         if (state.getBlock() instanceof BedBlock) {
             Direction facing = state.get(BedBlock.FACING);
@@ -126,7 +126,7 @@ public interface WorldHelper {
     /**
      * Get the "foot" of a block with a bed, if the block is a bed.
      */
-    static BlockPos getBedFoot(AltoClef mod, BlockPos posWithBed) {
+    static BlockPos getBedFoot(Vibrato mod, BlockPos posWithBed) {
         BlockState state = mod.getWorld().getBlockState(posWithBed);
         if (state.getBlock() instanceof BedBlock) {
             Direction facing = state.get(BedBlock.FACING);
@@ -140,7 +140,7 @@ public interface WorldHelper {
 
     // Get the left side of a chest, given a block pos.
     // Used to consistently identify whether a double chest is part of the same chest.
-    static BlockPos getChestLeft(AltoClef mod, BlockPos posWithChest) {
+    static BlockPos getChestLeft(Vibrato mod, BlockPos posWithChest) {
         BlockState state = mod.getWorld().getBlockState(posWithChest);
         if (state.getBlock() instanceof ChestBlock) {
             ChestType type = state.get(ChestBlock.CHEST_TYPE);
@@ -153,7 +153,7 @@ public interface WorldHelper {
         return null;
     }
 
-    static boolean isChestBig(AltoClef mod, BlockPos posWithChest) {
+    static boolean isChestBig(Vibrato mod, BlockPos posWithChest) {
         BlockState state = mod.getWorld().getBlockState(posWithChest);
         if (state.getBlock() instanceof ChestBlock) {
             ChestType type = state.get(ChestBlock.CHEST_TYPE);
@@ -162,7 +162,7 @@ public interface WorldHelper {
         return false;
     }
 
-    static int getGroundHeight(AltoClef mod, int x, int z) {
+    static int getGroundHeight(Vibrato mod, int x, int z) {
         for (int y = WORLD_CEILING_Y; y >= WORLD_FLOOR_Y; --y) {
             BlockPos check = new BlockPos(x, y, z);
             if (isSolid(mod, check)) return y;
@@ -170,7 +170,7 @@ public interface WorldHelper {
         return -1;
     }
 
-    static BlockPos getADesertTemple(AltoClef mod) {
+    static BlockPos getADesertTemple(Vibrato mod) {
         for (BlockPos pos : mod.getBlockTracker().getKnownLocations(Blocks.STONE_PRESSURE_PLATE)) {
             if (mod.getWorld().getBlockState(pos).getBlock() == Blocks.STONE_PRESSURE_PLATE && // Duct tape
                     mod.getWorld().getBlockState(pos.down()).getBlock() == Blocks.CUT_SANDSTONE &&
@@ -181,11 +181,11 @@ public interface WorldHelper {
         return null;
     }
 
-    static boolean isUnopenedChest(AltoClef mod, BlockPos pos) {
+    static boolean isUnopenedChest(Vibrato mod, BlockPos pos) {
         return mod.getItemStorage().getContainerAtPosition(pos).isEmpty();
     }
 
-    static int getGroundHeight(AltoClef mod, int x, int z, Block... groundBlocks) {
+    static int getGroundHeight(Vibrato mod, int x, int z, Block... groundBlocks) {
         Set<Block> possibleBlocks = new HashSet<>(Arrays.asList(groundBlocks));
         for (int y = WORLD_CEILING_Y; y >= WORLD_FLOOR_Y; --y) {
             BlockPos check = new BlockPos(x, y, z);
@@ -195,7 +195,7 @@ public interface WorldHelper {
         return -1;
     }
 
-    static boolean canBreak(AltoClef mod, BlockPos pos) {
+    static boolean canBreak(Vibrato mod, BlockPos pos) {
         // JANK: Temporarily check if we can break WITHOUT paused interactions.
         // Not doing this creates bugs where we loop back and forth through the nether portal and stuff.
         boolean prevInteractionPaused = mod.getExtraBaritoneSettings().isInteractionPaused();
@@ -208,14 +208,14 @@ public interface WorldHelper {
         return result;
     }
 
-    static boolean isInNetherPortal(AltoClef mod) {
+    static boolean isInNetherPortal(Vibrato mod) {
         if (mod.getPlayer() == null)
             return false;
         PortalManager portalManager = mod.getPlayer().portalManager;
         return portalManager != null && portalManager.isInPortal();
     }
 
-    static boolean dangerousToBreakIfRightAbove(AltoClef mod, BlockPos toBreak) {
+    static boolean dangerousToBreakIfRightAbove(Vibrato mod, BlockPos toBreak) {
         // There might be mumbo jumbo next to it, we fall and we get killed by lava or something.
         if (MovementHelper.avoidBreaking(mod.getClientBaritone().bsi, toBreak.getX(), toBreak.getY(), toBreak.getZ(), mod.getWorld().getBlockState(toBreak))) {
             return true;
@@ -240,12 +240,12 @@ public interface WorldHelper {
         return true;
     }
 
-    static boolean canPlace(AltoClef mod, BlockPos pos) {
+    static boolean canPlace(Vibrato mod, BlockPos pos) {
         return !mod.getExtraBaritoneSettings().shouldAvoidPlacingAt(pos)
                 && canReach(mod, pos);
     }
 
-    static boolean canReach(AltoClef mod, BlockPos pos) {
+    static boolean canReach(Vibrato mod, BlockPos pos) {
         if (mod.getModSettings().shouldAvoidOcean()) {
             // 45 is roughly the ocean floor. We add 2 just cause why not.
             // This > 47 can clearly cause a stuck bug.
@@ -271,7 +271,7 @@ public interface WorldHelper {
         || b.matchesKey(BiomeKeys.FROZEN_OCEAN));
     }
 
-    static boolean isAir(AltoClef mod, BlockPos pos) {
+    static boolean isAir(Vibrato mod, BlockPos pos) {
         return mod.getBlockTracker().blockIsValid(pos, Blocks.AIR, Blocks.CAVE_AIR, Blocks.VOID_AIR);
         //return state.isAir() || isAir(state.getBlock());
     }
@@ -280,7 +280,7 @@ public interface WorldHelper {
         return block == Blocks.AIR || block == Blocks.CAVE_AIR || block == Blocks.VOID_AIR;
     }
 
-    static boolean isInteractableBlock(AltoClef mod, BlockPos pos) {
+    static boolean isInteractableBlock(Vibrato mod, BlockPos pos) {
         Block block = mod.getWorld().getBlockState(pos).getBlock();
         return (block instanceof ChestBlock
                 || block instanceof EnderChestBlock
@@ -294,21 +294,21 @@ public interface WorldHelper {
         );
     }
 
-    static boolean isInsidePlayer(AltoClef mod, BlockPos pos) {
+    static boolean isInsidePlayer(Vibrato mod, BlockPos pos) {
         return pos.isWithinDistance(mod.getPlayer().getPos(), 2);
     }
 
-    static Iterable<BlockPos> getBlocksTouchingPlayer(AltoClef mod) {
+    static Iterable<BlockPos> getBlocksTouchingPlayer(Vibrato mod) {
         return getBlocksTouchingBox(mod, mod.getPlayer().getBoundingBox());
     }
     
-    static Iterable<BlockPos> getBlocksTouchingBox(AltoClef mod, Box box) {
+    static Iterable<BlockPos> getBlocksTouchingBox(Vibrato mod, Box box) {
         BlockPos min = BlockPos.ofFloored(box.minX, box.minY, box.minZ);
         BlockPos max = BlockPos.ofFloored(box.maxX, box.maxY, box.maxZ);
         return scanRegion(mod, min, max);
     }
 
-    static Iterable<BlockPos> scanRegion(AltoClef mod, BlockPos start, BlockPos end) {
+    static Iterable<BlockPos> scanRegion(Vibrato mod, BlockPos start, BlockPos end) {
         return () -> new Iterator<>() {
             int x = start.getX(), y = start.getY(), z = start.getZ();
 
@@ -352,7 +352,7 @@ public interface WorldHelper {
         return w.getBlockState(pos).getBlock() instanceof FallingBlock;
     }
 
-    static Entity getSpawnerEntity(AltoClef mod, BlockPos pos) {
+    static Entity getSpawnerEntity(Vibrato mod, BlockPos pos) {
         BlockState state = mod.getWorld().getBlockState(pos);
         if (state.getBlock() instanceof SpawnerBlock) {
             BlockEntity be = mod.getWorld().getBlockEntity(pos);
@@ -376,7 +376,7 @@ public interface WorldHelper {
         return pos;
     }
 
-    static boolean isChest(AltoClef mod, BlockPos block) {
+    static boolean isChest(Vibrato mod, BlockPos block) {
         Block b = mod.getWorld().getBlockState(block).getBlock();
         return isChest(b);
     }
@@ -384,7 +384,7 @@ public interface WorldHelper {
         return b instanceof ChestBlock || b instanceof EnderChestBlock;
     }
 
-    static boolean isBlock(AltoClef mod, BlockPos pos, Block block) {
+    static boolean isBlock(Vibrato mod, BlockPos pos, Block block) {
         return mod.getWorld().getBlockState(pos).getBlock() == block;
     }
 

@@ -1,39 +1,39 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.butler.WhisperChecker;
-import adris.altoclef.tasks.construction.compound.ConstructIronGolemTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.CraftGenericManuallyTask;
-import adris.altoclef.tasks.construction.PlaceBlockNearbyTask;
-import adris.altoclef.tasks.construction.PlaceSignTask;
-import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
-import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
-import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.container.StoreInAnyContainerTask;
-import adris.altoclef.tasks.entity.KillEntityTask;
-import adris.altoclef.tasks.misc.*;
-import adris.altoclef.tasks.resources.TradeWithPiglinsTask;
-import adris.altoclef.tasks.examples.ExampleTask2;
-import adris.altoclef.tasks.construction.PlaceSignTask;
-import adris.altoclef.tasks.speedrun.*;
-import adris.altoclef.tasks.stupid.BeeMovieTask;
-import adris.altoclef.tasks.stupid.ReplaceBlocksTask;
-import adris.altoclef.tasks.stupid.SCP173Task;
-import adris.altoclef.tasks.stupid.TerminatorTask;
-import adris.altoclef.tasks.movement.*;
-import adris.altoclef.tasks.resources.CollectBlazeRodsTask;
-import adris.altoclef.tasks.resources.CollectFlintTask;
-import adris.altoclef.tasks.resources.CollectFoodTask;
-import adris.altoclef.tasks.resources.TradeWithPiglinsTask;
-import adris.altoclef.tasks.speedrun.KillEnderDragonTask;
-import adris.altoclef.tasks.speedrun.KillEnderDragonWithBedsTask;
-import adris.altoclef.tasks.speedrun.WaitForDragonAndPearlTask;
-import adris.altoclef.tasks.stupid.BeeMovieTask;
-import adris.altoclef.tasks.stupid.ReplaceBlocksTask;
-import adris.altoclef.tasks.stupid.SCP173Task;
-import adris.altoclef.tasks.stupid.TerminatorTask;
-import adris.altoclef.util.*;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.butler.WhisperChecker;
+import dev.vibrato.tasks.construction.compound.ConstructIronGolemTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.CraftGenericManuallyTask;
+import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasks.construction.PlaceSignTask;
+import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
+import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
+import dev.vibrato.tasks.container.SmeltInFurnaceTask;
+import dev.vibrato.tasks.container.StoreInAnyContainerTask;
+import dev.vibrato.tasks.entity.KillEntityTask;
+import dev.vibrato.tasks.misc.*;
+import dev.vibrato.tasks.resources.TradeWithPiglinsTask;
+import dev.vibrato.tasks.examples.ExampleTask2;
+import dev.vibrato.tasks.construction.PlaceSignTask;
+import dev.vibrato.tasks.speedrun.*;
+import dev.vibrato.tasks.stupid.BeeMovieTask;
+import dev.vibrato.tasks.stupid.ReplaceBlocksTask;
+import dev.vibrato.tasks.stupid.SCP173Task;
+import dev.vibrato.tasks.stupid.TerminatorTask;
+import dev.vibrato.tasks.movement.*;
+import dev.vibrato.tasks.resources.CollectBlazeRodsTask;
+import dev.vibrato.tasks.resources.CollectFlintTask;
+import dev.vibrato.tasks.resources.CollectFoodTask;
+import dev.vibrato.tasks.resources.TradeWithPiglinsTask;
+import dev.vibrato.tasks.speedrun.KillEnderDragonTask;
+import dev.vibrato.tasks.speedrun.KillEnderDragonWithBedsTask;
+import dev.vibrato.tasks.speedrun.WaitForDragonAndPearlTask;
+import dev.vibrato.tasks.stupid.BeeMovieTask;
+import dev.vibrato.tasks.stupid.ReplaceBlocksTask;
+import dev.vibrato.tasks.stupid.SCP173Task;
+import dev.vibrato.tasks.stupid.TerminatorTask;
+import dev.vibrato.util.*;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
@@ -61,7 +61,7 @@ import java.util.Scanner;
 @SuppressWarnings("EnhancedSwitchMigration")
 public class Playground {
 
-    public static void IDLE_TEST_INIT_FUNCTION(AltoClef mod) {
+    public static void IDLE_TEST_INIT_FUNCTION(Vibrato mod) {
         // Test code here
 
         // Print all uncatalogued resources as well as resources that don't have a corresponding item
@@ -116,11 +116,11 @@ public class Playground {
          */
     }
 
-    public static void IDLE_TEST_TICK_FUNCTION(AltoClef mod) {
+    public static void IDLE_TEST_TICK_FUNCTION(Vibrato mod) {
         // Test code here
     }
 
-    public static void TEMP_TEST_FUNCTION(AltoClef mod, String arg) {
+    public static void TEMP_TEST_FUNCTION(Vibrato mod, String arg) {
         //mod.runUserTask();
         Debug.logMessage("Running test...");
 

@@ -1,6 +1,6 @@
-package adris.altoclef.eventbus.events;
+package dev.vibrato.eventbus.events;
 
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 
 public class SlotClickChangedEvent {

@@ -1,7 +1,7 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.PlayerCollidedWithEntityEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.PlayerCollidedWithEntityEvent;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;

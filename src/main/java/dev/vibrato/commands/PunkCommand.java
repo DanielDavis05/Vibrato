@@ -1,11 +1,11 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.Arg;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.CommandException;
-import adris.altoclef.tasks.entity.KillPlayerTask;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.Arg;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.commandsystem.CommandException;
+import dev.vibrato.tasks.entity.KillPlayerTask;
 
 public class PunkCommand extends Command {
     public PunkCommand() throws CommandException {
@@ -13,7 +13,7 @@ public class PunkCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) throws CommandException {
+    protected void call(Vibrato mod, ArgParser parser) throws CommandException {
         String playerName = parser.get(String.class);
         mod.runUserTask(new KillPlayerTask(playerName), this::finish);
     }

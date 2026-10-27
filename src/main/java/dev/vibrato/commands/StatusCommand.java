@@ -1,9 +1,9 @@
-package adris.altoclef.commands;
+package dev.vibrato.commands;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.commandsystem.ArgParser;
-import adris.altoclef.commandsystem.Command;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.commandsystem.ArgParser;
+import dev.vibrato.commandsystem.Command;
+import dev.vibrato.tasksystem.Task;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ public class StatusCommand extends Command {
     }
 
     @Override
-    protected void call(AltoClef mod, ArgParser parser) {
+    protected void call(Vibrato mod, ArgParser parser) {
         List<Task> tasks = mod.getUserTaskChain().getTasks();
         if (tasks.size() == 0) {
             mod.log("No tasks currently running.");

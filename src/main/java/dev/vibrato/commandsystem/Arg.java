@@ -1,4 +1,4 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
 public class Arg<T> extends ArgBase {
     public T Default;

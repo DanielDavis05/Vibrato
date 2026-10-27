@@ -1,7 +1,7 @@
-package adris.altoclef.butler;
+package dev.vibrato.butler;
 
-import adris.altoclef.util.helpers.ConfigHelper;
-import adris.altoclef.util.serialization.IListConfigFile;
+import dev.vibrato.util.helpers.ConfigHelper;
+import dev.vibrato.util.serialization.IListConfigFile;
 
 import java.util.HashSet;
 import java.util.function.Consumer;

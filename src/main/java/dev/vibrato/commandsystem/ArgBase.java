@@ -1,4 +1,4 @@
-package adris.altoclef.commandsystem;
+package dev.vibrato.commandsystem;
 
 import java.lang.reflect.ParameterizedType;
 

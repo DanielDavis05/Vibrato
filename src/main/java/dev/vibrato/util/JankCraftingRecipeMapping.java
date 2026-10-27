@@ -1,6 +1,6 @@
-package adris.altoclef.util;
+package dev.vibrato.util;
 
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.item.Item;

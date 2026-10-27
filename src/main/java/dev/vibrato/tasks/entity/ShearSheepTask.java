@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.item.Items;
@@ -22,7 +22,7 @@ public class ShearSheepTask extends AbstractDoToEntityTask {
     }
 
     @Override
-    protected Task onEntityInteract(AltoClef mod, Entity entity) {
+    protected Task onEntityInteract(Vibrato mod, Entity entity) {
         if (!mod.getItemStorage().hasItem(Items.SHEARS)) {
             Debug.logWarning("Failed to shear sheep because you have no shears.");
             return null;
@@ -36,7 +36,7 @@ public class ShearSheepTask extends AbstractDoToEntityTask {
     }
 
     @Override
-    protected Optional<Entity> getEntityTarget(AltoClef mod) {
+    protected Optional<Entity> getEntityTarget(Vibrato mod) {
         return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
                 entity -> {
                     if (entity instanceof SheepEntity sheep) {

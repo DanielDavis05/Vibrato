@@ -1,16 +1,16 @@
-package adris.altoclef.tasks.construction.compound;
+package dev.vibrato.tasks.construction.compound;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.TaskCatalogue;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.ClearLiquidTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.construction.PlaceStructureBlockTask;
-import adris.altoclef.tasks.movement.GetToBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.ClearLiquidTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
+import dev.vibrato.tasks.movement.GetToBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -30,7 +30,7 @@ import java.util.HashSet;
  * Baritone to get stuck
  * Use "ConstructNetherPortalBucketTask" which is much more methodical and doesn't have this pitfall.
  */
-public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem.Task {
+public class ConstructNetherPortalSpeedrunTask extends dev.vibrato.tasksystem.Task {
 
     // The "portalable" region includes the portal (1 x 6 x 4 structure) and an outer buffer for its construction and water bullshit.
     // The "portal origin relative to region" corresponds to the portal origin with respect to the "portalable" region (see _portalOrigin).
@@ -97,7 +97,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     };
     private static final Vec3i WATER_SOURCE_ORIGIN = new Vec3i(1, 3, 0);
     private final TimerGame _lavaSearchTimer = new TimerGame(5);
-    private final adris.altoclef.tasksystem.Task _collectLavaTask = TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
+    private final dev.vibrato.tasksystem.Task _collectLavaTask = TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
     private final TimerGame _placeLavaWeCanBreakAgainTimer = new TimerGame(5);
     private final TimerGame _specialBottomCaseCloserTimer = new TimerGame(10);
     private final TimerGame _specialBottomCaseCloserTimerForcePlace = new TimerGame(5);
@@ -109,7 +109,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     private boolean _firstSearch = false;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _isPlacingLiquid = false;
         _portalFrameBuilt = false;
         mod.getBlockTracker().trackBlock(Blocks.LAVA);
@@ -138,7 +138,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     }
 
     @Override
-    protected adris.altoclef.tasksystem.Task onTick(AltoClef mod) {
+    protected dev.vibrato.tasksystem.Task onTick(Vibrato mod) {
 
         // Pre-affirmed thing
         mod.getBehaviour().setAllowWalkThroughFlowingWater(false);
@@ -318,13 +318,13 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
     }
 
     @Override
-    protected void onStop(AltoClef mod, adris.altoclef.tasksystem.Task interruptTask) {
+    protected void onStop(Vibrato mod, dev.vibrato.tasksystem.Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.LAVA);
         mod.getBehaviour().pop();
     }
 
     @Override
-    protected boolean isEqual(adris.altoclef.tasksystem.Task other) {
+    protected boolean isEqual(dev.vibrato.tasksystem.Task other) {
         return other instanceof ConstructNetherPortalSpeedrunTask;
     }
 
@@ -335,7 +335,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
 
 
     // Scans to find the nearest lava lake (collection of lava bigger than 12 blocks)
-    private BlockPos findLavaLake(AltoClef mod, BlockPos playerPos) {
+    private BlockPos findLavaLake(Vibrato mod, BlockPos playerPos) {
         HashSet<BlockPos> alreadyExplored = new HashSet<>();
 
         double nearestSqDistance = Double.POSITIVE_INFINITY;
@@ -517,7 +517,7 @@ public class ConstructNetherPortalSpeedrunTask extends adris.altoclef.tasksystem
         }
 
         // Place lava at a point, but from a direction.
-        private adris.altoclef.tasksystem.Task placeTask(BlockPos portalOrigin, boolean below) {
+        private dev.vibrato.tasksystem.Task placeTask(BlockPos portalOrigin, boolean below) {
             BlockPos placeAt = portalOrigin.add(where);
             BlockPos placeOn = placeAt.offset(fromWhere.getOpposite());
             // Clear first

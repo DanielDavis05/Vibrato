@@ -1,11 +1,11 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask;
-import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.Dimension;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.construction.compound.ConstructNetherPortalBucketTask;
+import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.Dimension;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 
@@ -28,12 +28,12 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         mod.getBlockTracker().trackBlock(Blocks.NETHER_PORTAL);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         if (WorldHelper.getCurrentDimension() == _target) return null;
 
         switch (_target) {
@@ -70,7 +70,7 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getBlockTracker().stopTracking(Blocks.NETHER_PORTAL);
     }
 
@@ -88,11 +88,11 @@ public class DefaultGoToDimensionTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return WorldHelper.getCurrentDimension() == _target;
     }
 
-    private Task goToOverworldFromNetherTask(AltoClef mod) {
+    private Task goToOverworldFromNetherTask(Vibrato mod) {
         if (netherPortalIsClose(mod)) {
             setDebugState("Going to nether portal");
             return new EnterNetherPortalTask(Dimension.NETHER);
@@ -108,12 +108,12 @@ public class DefaultGoToDimensionTask extends Task {
         return new ConstructNetherPortalObsidianTask();
     }
 
-    private Task goToOverworldFromEndTask(AltoClef mod) {
+    private Task goToOverworldFromEndTask(Vibrato mod) {
         setDebugState("TODO: Go to center portal (at 0,0). If it doesn't exist, kill ender dragon lol");
         return null;
     }
 
-    private Task goToNetherFromOverworldTask(AltoClef mod) {
+    private Task goToNetherFromOverworldTask(Vibrato mod) {
         if (netherPortalIsClose(mod)) {
             setDebugState("Going to nether portal");
             return new EnterNetherPortalTask(Dimension.NETHER);
@@ -124,13 +124,13 @@ public class DefaultGoToDimensionTask extends Task {
         };
     }
 
-    private Task goToEndTask(AltoClef mod) {
+    private Task goToEndTask(Vibrato mod) {
         // Keep in mind that getting to the end requires going to the nether first.
         setDebugState("TODO: Get to End, Same as BeatMinecraft");
         return null;
     }
 
-    private boolean netherPortalIsClose(AltoClef mod) {
+    private boolean netherPortalIsClose(Vibrato mod) {
         if (mod.getBlockTracker().anyFound(Blocks.NETHER_PORTAL)) {
             Optional<BlockPos> closest = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), Blocks.NETHER_PORTAL);
             return closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), 2000);

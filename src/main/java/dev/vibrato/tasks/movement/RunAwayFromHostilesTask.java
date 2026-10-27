@@ -1,9 +1,9 @@
-package adris.altoclef.tasks.movement;
+package dev.vibrato.tasks.movement;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.BaritoneHelper;
-import adris.altoclef.util.baritone.GoalRunAwayFromEntities;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.BaritoneHelper;
+import dev.vibrato.util.baritone.GoalRunAwayFromEntities;
 import baritone.api.pathing.goals.Goal;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.SkeletonEntity;
@@ -28,7 +28,7 @@ public class RunAwayFromHostilesTask extends CustomBaritoneGoalTask {
 
 
     @Override
-    protected Goal newGoal(AltoClef mod) {
+    protected Goal newGoal(Vibrato mod) {
         // We want to run away NOW
         mod.getClientBaritone().getPathingBehavior().forceCancel();
         return new GoalRunAwayFromHostiles(mod, _distanceToRun);
@@ -49,12 +49,12 @@ public class RunAwayFromHostilesTask extends CustomBaritoneGoalTask {
 
     private class GoalRunAwayFromHostiles extends GoalRunAwayFromEntities {
 
-        public GoalRunAwayFromHostiles(AltoClef mod, double distance) {
+        public GoalRunAwayFromHostiles(Vibrato mod, double distance) {
             super(mod, distance, false, 0.8);
         }
 
         @Override
-        protected List<Entity> getEntities(AltoClef mod) {
+        protected List<Entity> getEntities(Vibrato mod) {
             List<Entity> result;
             Stream<Entity> stream = mod.getEntityTracker().getHostiles().stream();
             synchronized (BaritoneHelper.MINECRAFT_LOCK) {

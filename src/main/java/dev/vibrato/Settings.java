@@ -1,13 +1,13 @@
-package adris.altoclef;
+package dev.vibrato;
 
-import adris.altoclef.control.KillAura;
-import adris.altoclef.tasks.movement.DefaultGoToDimensionTask;
-import adris.altoclef.util.BlockRange;
-import adris.altoclef.util.helpers.ConfigHelper;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.serialization.IFailableConfigFile;
-import adris.altoclef.util.serialization.ItemDeserializer;
-import adris.altoclef.util.serialization.ItemSerializer;
+import dev.vibrato.control.KillAura;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.util.BlockRange;
+import dev.vibrato.util.helpers.ConfigHelper;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.serialization.IFailableConfigFile;
+import dev.vibrato.util.serialization.ItemDeserializer;
+import dev.vibrato.util.serialization.ItemSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class Settings implements IFailableConfigFile {
 
-    public static final String SETTINGS_PATH = "altoclef_settings.json";
+    public static final String SETTINGS_PATH = "vibrato_settings.json";
 
     // Internal only.
     // If settings failed to load, this will be set to warn the user.
@@ -67,7 +67,7 @@ public class Settings implements IFailableConfigFile {
     /**
      * When logging to chat, will prepend this to each log.
      */
-    private String chatLogPrefix = "[Alto Clef] ";
+    private String chatLogPrefix = "[Vibrato] ";
 
     /**
      * If true, will show a timer.
@@ -572,10 +572,10 @@ public class Settings implements IFailableConfigFile {
         return entityReachRange;
     }
 
-    public Item[] getThrowawayItems(AltoClef mod, boolean includeProtected) {
+    public Item[] getThrowawayItems(Vibrato mod, boolean includeProtected) {
         return throwawayItems.stream().filter(item -> includeProtected || !mod.getBehaviour().isProtected(item)).toArray(Item[]::new);
     }
-    public Item[] getThrowawayItems(AltoClef mod) {
+    public Item[] getThrowawayItems(Vibrato mod) {
         return getThrowawayItems(mod, false);
     }
 

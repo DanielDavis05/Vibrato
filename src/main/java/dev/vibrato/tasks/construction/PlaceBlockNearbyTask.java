@@ -1,18 +1,18 @@
-package adris.altoclef.tasks.construction;
+package dev.vibrato.tasks.construction;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.Debug;
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.Subscription;
-import adris.altoclef.eventbus.events.BlockPlaceEvent;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.ItemHelper;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.helpers.WorldHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
-import adris.altoclef.util.time.TimerGame;
+import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.BlockPlaceEvent;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.util.time.TimerGame;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.MovementHelper;
@@ -45,7 +45,7 @@ public class PlaceBlockNearbyTask extends Task {
     private BlockPos _justPlaced; // Where we JUST placed a block.
     private BlockPos _tryPlace;   // Where we should TRY placing a block.
     // Oof, necesarry for the onBlockPlaced action.
-    private AltoClef _mod;
+    private Vibrato _mod;
     private Subscription<BlockPlaceEvent> _onBlockPlaced;
 
     public PlaceBlockNearbyTask(Predicate<BlockPos> canPlaceHere, Block... toPlace) {
@@ -58,7 +58,7 @@ public class PlaceBlockNearbyTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
         _mod = mod;
         mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
 
@@ -71,7 +71,7 @@ public class PlaceBlockNearbyTask extends Task {
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         // Method:
         // - If looking at placable block
         //      Place immediately
@@ -131,7 +131,7 @@ public class PlaceBlockNearbyTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
         stopPlacing(mod);
         EventBus.unsubscribe(_onBlockPlaced);
     }
@@ -150,7 +150,7 @@ public class PlaceBlockNearbyTask extends Task {
     }
 
     @Override
-    public boolean isFinished(AltoClef mod) {
+    public boolean isFinished(Vibrato mod) {
         return _justPlaced != null && ArrayUtils.contains(_toPlace, mod.getWorld().getBlockState(_justPlaced).getBlock());
     }
 
@@ -158,7 +158,7 @@ public class PlaceBlockNearbyTask extends Task {
         return _justPlaced;
     }
 
-    private BlockPos getCurrentlyLookingBlockPlace(AltoClef mod) {
+    private BlockPos getCurrentlyLookingBlockPlace(Vibrato mod) {
         HitResult hit = MinecraftClient.getInstance().crosshairTarget;
         if (hit instanceof BlockHitResult bhit) {
             BlockPos bpos = bhit.getBlockPos();//.subtract(bhit.getSide().getVector());
@@ -179,11 +179,11 @@ public class PlaceBlockNearbyTask extends Task {
         return null;
     }
 
-    private boolean blockEquipped(AltoClef mod) {
+    private boolean blockEquipped(Vibrato mod) {
         return StorageHelper.isEquipped(mod, ItemHelper.blocksToItems(_toPlace));
     }
 
-    private boolean place(AltoClef mod, BlockPos targetPlace) {
+    private boolean place(Vibrato mod, BlockPos targetPlace) {
         if (!mod.getExtraBaritoneSettings().isInteractionPaused() && blockEquipped(mod)) {
             // Shift click just for 100% container security.
             mod.getInputControls().hold(Input.SNEAK);
@@ -211,14 +211,14 @@ public class PlaceBlockNearbyTask extends Task {
         return false;
     }
 
-    private void stopPlacing(AltoClef mod) {
+    private void stopPlacing(Vibrato mod) {
         mod.getInputControls().release(Input.SNEAK);
         //mod.getControllerExtras().mouseClickOverride(1, false);
         // Oof, these sometimes cause issues so this is a bit of a duct tape fix.
         mod.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
-    private BlockPos locateClosePlacePos(AltoClef mod) {
+    private BlockPos locateClosePlacePos(Vibrato mod) {
         int range = 7;
         BlockPos best = null;
         double smallestScore = Double.POSITIVE_INFINITY;

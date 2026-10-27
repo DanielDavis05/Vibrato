@@ -1,13 +1,13 @@
-package adris.altoclef.tasks.container;
+package dev.vibrato.tasks.container;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.DestroyBlockTask;
-import adris.altoclef.tasks.movement.TimeoutWanderTask;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.trackers.storage.ContainerCache;
-import adris.altoclef.trackers.storage.ContainerType;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.trackers.storage.ContainerCache;
+import dev.vibrato.trackers.storage.ContainerType;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 
@@ -21,12 +21,12 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
     private ContainerType _currentContainerType = null;
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         Optional<BlockPos> containerTarget = getContainerTarget();
 
         // No container found
@@ -64,17 +64,17 @@ public abstract class AbstractDoToStorageContainerTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 
     protected abstract Optional<BlockPos> getContainerTarget();
 
-    protected abstract Task onContainerOpenSubtask(AltoClef mod, ContainerCache containerCache);
+    protected abstract Task onContainerOpenSubtask(Vibrato mod, ContainerCache containerCache);
 
     // Virtual
     // TODO: Interface this
-    protected Task onSearchWander(AltoClef mod) {
+    protected Task onSearchWander(Vibrato mod) {
         return new TimeoutWanderTask();
     }
 }

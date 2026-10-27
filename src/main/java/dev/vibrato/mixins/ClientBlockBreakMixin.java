@@ -1,8 +1,8 @@
-package adris.altoclef.mixins;
+package dev.vibrato.mixins;
 
-import adris.altoclef.eventbus.EventBus;
-import adris.altoclef.eventbus.events.BlockBreakingCancelEvent;
-import adris.altoclef.eventbus.events.BlockBreakingEvent;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockBreakingCancelEvent;
+import dev.vibrato.eventbus.events.BlockBreakingEvent;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;

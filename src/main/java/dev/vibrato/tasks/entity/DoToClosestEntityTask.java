@@ -1,8 +1,8 @@
-package adris.altoclef.tasks.entity;
+package dev.vibrato.tasks.entity;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.AbstractDoToClosestObjectTask;
-import adris.altoclef.tasksystem.Task;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
+import dev.vibrato.tasksystem.Task;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 
@@ -46,18 +46,18 @@ public class DoToClosestEntityTask extends AbstractDoToClosestObjectTask<Entity>
     }
 
     @Override
-    protected Vec3d getPos(AltoClef mod, Entity obj) {
+    protected Vec3d getPos(Vibrato mod, Entity obj) {
         return obj.getPos();
     }
 
     @Override
-    protected Optional<Entity> getClosestTo(AltoClef mod, Vec3d pos) {
+    protected Optional<Entity> getClosestTo(Vibrato mod, Vec3d pos) {
         if (!mod.getEntityTracker().entityFound(_targetEntities)) return Optional.empty();
         return mod.getEntityTracker().getClosestEntity(pos, _shouldInteractWith, _targetEntities);
     }
 
     @Override
-    protected Vec3d getOriginPos(AltoClef mod) {
+    protected Vec3d getOriginPos(Vibrato mod) {
         if (_getOriginPos != null) {
             return _getOriginPos.get();
         }
@@ -70,16 +70,16 @@ public class DoToClosestEntityTask extends AbstractDoToClosestObjectTask<Entity>
     }
 
     @Override
-    protected boolean isValid(AltoClef mod, Entity obj) {
+    protected boolean isValid(Vibrato mod, Entity obj) {
         return obj.isAlive() && mod.getEntityTracker().isEntityReachable(obj);
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
     }
 
     @Override

@@ -1,4 +1,4 @@
-package adris.altoclef.util.slots;
+package dev.vibrato.util.slots;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.EquipmentSlot;

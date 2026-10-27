@@ -1,20 +1,20 @@
-package adris.altoclef.tasks.slot;
+package dev.vibrato.tasks.slot;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasksystem.Task;
-import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.slots.PlayerSlot;
-import adris.altoclef.util.slots.Slot;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.slots.PlayerSlot;
+import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
 
 public class EnsureFreePlayerCraftingGridTask extends Task {
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart(Vibrato mod) {
 
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick(Vibrato mod) {
         setDebugState("Clearing the 2x2 crafting grid");
         for(Slot slot : PlayerSlot.CRAFT_INPUT_SLOTS) {
             ItemStack items = StorageHelper.getItemStackInSlot(slot);
@@ -30,7 +30,7 @@ public class EnsureFreePlayerCraftingGridTask extends Task {
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Vibrato mod, Task interruptTask) {
 
     }
 

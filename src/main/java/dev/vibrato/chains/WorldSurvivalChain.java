@@ -1,15 +1,15 @@
-package adris.altoclef.chains;
+package dev.vibrato.chains;
 
-import adris.altoclef.AltoClef;
-import adris.altoclef.tasks.DoToClosestBlockTask;
-import adris.altoclef.tasks.InteractWithBlockTask;
-import adris.altoclef.tasks.construction.PutOutFireTask;
-import adris.altoclef.tasks.movement.*;
-import adris.altoclef.tasksystem.TaskRunner;
-import adris.altoclef.util.ItemTarget;
-import adris.altoclef.util.time.TimerGame;
-import adris.altoclef.util.helpers.LookHelper;
-import adris.altoclef.util.helpers.WorldHelper;
+import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.DoToClosestBlockTask;
+import dev.vibrato.tasks.InteractWithBlockTask;
+import dev.vibrato.tasks.construction.PutOutFireTask;
+import dev.vibrato.tasks.movement.*;
+import dev.vibrato.tasksystem.TaskRunner;
+import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.time.TimerGame;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.WorldHelper;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
 import net.minecraft.block.AbstractFireBlock;
@@ -35,13 +35,13 @@ public class WorldSurvivalChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onTaskFinish(AltoClef mod) {
+    protected void onTaskFinish(Vibrato mod) {
 
     }
 
     @Override
-    public float getPriority(AltoClef mod) {
-        if (!AltoClef.inGame()) return Float.NEGATIVE_INFINITY;
+    public float getPriority(Vibrato mod) {
+        if (!Vibrato.inGame()) return Float.NEGATIVE_INFINITY;
 
         // Drowning
         handleDrowning(mod);
@@ -109,7 +109,7 @@ public class WorldSurvivalChain extends SingleTaskChain {
         return Float.NEGATIVE_INFINITY;
     }
 
-    private void handleDrowning(AltoClef mod) {
+    private void handleDrowning(Vibrato mod) {
         // Swim
         boolean avoidedDrowning = false;
         if (mod.getModSettings().shouldAvoidDrowning()) {
@@ -131,14 +131,14 @@ public class WorldSurvivalChain extends SingleTaskChain {
         }
     }
 
-    private boolean isInLavaOhShit(AltoClef mod) {
+    private boolean isInLavaOhShit(Vibrato mod) {
         if (mod.getPlayer().isInLava() && !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
             _wasInLavaTimer.reset();
             return true;
         }
         return mod.getPlayer().isOnFire() && !_wasInLavaTimer.elapsed();
     }
-    private boolean isInFire(AltoClef mod) {
+    private boolean isInFire(Vibrato mod) {
         if (mod.getPlayer().isOnFire() && !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
             for (BlockPos pos : WorldHelper.getBlocksTouchingPlayer(mod)) {
                 Block b = mod.getWorld().getBlockState(pos).getBlock();
@@ -150,7 +150,7 @@ public class WorldSurvivalChain extends SingleTaskChain {
         return false;
     }
 
-    private boolean isStuckInNetherPortal(AltoClef mod) {
+    private boolean isStuckInNetherPortal(Vibrato mod) {
         return WorldHelper.isInNetherPortal(mod) && !mod.getUserTaskChain().getCurrentTask().thisOrChildSatisfies(task -> task instanceof EnterNetherPortalTask);
     }
 
@@ -166,7 +166,7 @@ public class WorldSurvivalChain extends SingleTaskChain {
     }
 
     @Override
-    protected void onStop(AltoClef mod) {
+    protected void onStop(Vibrato mod) {
         super.onStop(mod);
     }
 }
