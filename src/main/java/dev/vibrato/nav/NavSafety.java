@@ -29,6 +29,7 @@ public final class NavSafety {
      * Installs the navigation chain, unless {@code -Dvibrato.nav=off} disables it. Waypoint tracking stays on either way.
      */
     public static void install(Vibrato mod) {
+        NavigationTrace.install(mod);
         String mode = System.getProperty("vibrato.nav", "on");
         if ("off".equalsIgnoreCase(mode)) {
             Debug.logInternal("Navigation safety: OFF (-Dvibrato.nav=off), unstuck actions are disabled");

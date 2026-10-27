@@ -49,6 +49,13 @@ public class GoalFollowEntity implements Goal {
         return Math.min(near, sameCell);
     }
 
+    @Override
+    public String toString() {
+        Vec3d target = _position.get();
+        return String.format(java.util.Locale.ROOT, "GoalFollowEntity{target=(%.3f,%.3f,%.3f),radius=%.3f}",
+                target.x, target.y, target.z, _closeEnoughDistance);
+    }
+
     private double outsideRadius(double offset) {
         return Math.copySign(Math.max(0, Math.abs(offset) - _closeEnoughDistance), offset);
     }
