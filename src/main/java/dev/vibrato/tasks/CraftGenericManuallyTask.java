@@ -55,7 +55,9 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
         // We need 9 sticks
         // plank recipe results in 4 sticks
         // this means 3 planks per slot
-        int requiredPerSlot = (int)Math.ceil((double) _target.getTargetCount() / _target.getRecipe().outputCount());
+        int requiredPerSlot = requiredPerSlot(_target.getTargetCount(),
+                mod.getItemStorage().getItemCountInventoryOnly(_target.getOutputItem()),
+                _target.getRecipe().outputCount());
 
         // For each slot in table
         for (int craftSlot = 0; craftSlot < _target.getRecipe().getSlotCount(); ++craftSlot) {
@@ -81,8 +83,9 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
                 if (!isSatisfied) {
                     // We have items that satisfy, but we CAN NOT fill in the current slot!
                     // In that case, just grab from the output.
-                    if (!mod.getItemStorage().hasItemInventoryOnly(toFill.getMatches())
-                            && !toFill.matches(StorageHelper.getItemStackInCursorSlot().getItem())) {
+                    if (!hasMatchingIngredient(toFill::matches, mod.getItemStorage().getItemStacksPlayerInventory(false).stream()
+                            .limit(36).filter(stack -> !stack.isEmpty()).map(ItemStack::getItem).toList(),
+                            StorageHelper.getItemStackInCursorSlot().getItem())) {
                         if (!StorageHelper.getItemStackInSlot(outputSlot).isEmpty()) {
                             setDebugState("NO MORE to fit: grabbing from output.");
                             return new ReceiveCraftingOutputSlotTask(outputSlot, _target.getTargetCount());
@@ -126,6 +129,20 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
             // Wait
             return null;
         }
+    }
+
+    static int requiredPerSlot(int targetCount, int heldCount, int outputCount) {
+        int remaining = Math.max(0, targetCount - heldCount);
+        return (int) Math.ceil((double) remaining / outputCount);
+    }
+
+    static <T> boolean hasMatchingIngredient(java.util.function.Predicate<T> matches,
+                                             Iterable<T> inventory, T cursor) {
+        if (cursor != null && matches.test(cursor)) return true;
+        for (T item : inventory) {
+            if (matches.test(item)) return true;
+        }
+        return false;
     }
 
     @Override

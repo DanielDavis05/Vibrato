@@ -143,7 +143,7 @@ public class MineAndCollectTask extends ResourceTask {
             remaining += Math.max(0, target.getTargetCount()
                     - mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()));
         }
-        if (remaining < 8) return null;
+        if (!worthCraftingGatherTool(remaining)) return null;
 
         // A tool is useful only if it speeds up every block in this request.
         // This avoids crafting an axe for a mixed set of unrelated blocks.
@@ -153,6 +153,10 @@ public class MineAndCollectTask extends ResourceTask {
         if (speedsEveryBlock(new ItemStack(Items.WOODEN_AXE))) return Items.WOODEN_AXE;
         if (speedsEveryBlock(new ItemStack(Items.WOODEN_SHOVEL))) return Items.WOODEN_SHOVEL;
         return null;
+    }
+
+    static boolean worthCraftingGatherTool(int remaining) {
+        return remaining >= 16;
     }
 
     private boolean speedsEveryBlock(ItemStack stack) {
