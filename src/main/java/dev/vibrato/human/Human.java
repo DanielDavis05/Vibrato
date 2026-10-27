@@ -2,6 +2,7 @@ package dev.vibrato.human;
 
 import baritone.api.Settings;
 import baritone.vibrato.VibratoSettings;
+import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 
 /**
@@ -15,8 +16,14 @@ public final class Human {
 
     /**
      * Installs the camera model into Baritone and turns off its own jitter and smoothing, which the model replaces.
+     * {@code -Dvibrato.human=off} skips all of it and leaves Baritone's stock aiming, for A/B comparisons.
      */
     public static void install(Vibrato mod, long seed) {
+        if ("off".equalsIgnoreCase(System.getProperty("vibrato.human"))) {
+            Debug.logMessage("Human camera: OFF (-Dvibrato.human=off), using Baritone's stock aiming");
+            return;
+        }
+        Debug.logMessage("Human camera: ON");
         HumanLook humanLook = new HumanLook(seed, HumanLookConfig.DEFAULT);
         look = humanLook;
         VibratoSettings.getInstance().setRotationSmoother(humanLook);
