@@ -17,6 +17,27 @@ class PlanSamplerTest {
 
     private static final Fact PLANKS = Fact.has("planks");
 
+    @Test
+    void preplannedStepsAreRecheckedAfterFailureAndCooldown() {
+        Activity provider = SyntheticActivity.of("gather_planks", FeatureArea.GATHER, Set.of(), Set.of(PLANKS));
+        Activity consumer = SyntheticActivity.of("craft_pick", FeatureArea.CRAFT, Set.of(PLANKS), Set.of());
+        Activity unrelated = SyntheticActivity.of("explore", FeatureArea.EXPLORE);
+        CoverageTracker coverage = new CoverageTracker();
+        Set<Fact> facts = new HashSet<>();
+
+        // The provider failed: its effects were never applied, but independent work remains eligible.
+        coverage.recordFailure(provider.id(), 3);
+        assertFalse(PlanSampler.canRunNow(provider, facts, coverage));
+        assertFalse(PlanSampler.canRunNow(consumer, facts, coverage));
+        assertTrue(PlanSampler.canRunNow(unrelated, facts, coverage));
+
+        // Once the requirement really exists the dependent step is eligible again.
+        PlanSampler.applyEffects(facts, provider);
+        assertTrue(PlanSampler.canRunNow(consumer, facts, coverage));
+        coverage.recordFailure(consumer.id(), 3);
+        assertFalse(PlanSampler.canRunNow(consumer, facts, coverage));
+    }
+
     private static ActivityRegistry registry(Activity... activities) {
         ActivityRegistry registry = new ActivityRegistry();
         for (Activity activity : activities) {

@@ -56,6 +56,11 @@ public final class PlanSampler {
         facts.addAll(provides);
     }
 
+    /** A precomputed step can become invalid when an earlier step fails or the world changes. */
+    static boolean canRunNow(Activity activity, Set<Fact> facts, CoverageTracker coverage) {
+        return !coverage.isOnCooldown(activity.id()) && facts.containsAll(activity.requires());
+    }
+
     static ParamValues sampleParams(Activity activity, RandomGenerator rng) {
         Map<String, Object> values = new HashMap<>();
         for (ParamSpec spec : activity.params()) {

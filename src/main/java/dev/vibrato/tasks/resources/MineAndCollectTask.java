@@ -250,6 +250,9 @@ public class MineAndCollectTask extends ResourceTask {
         @Override
         protected boolean isValid(Vibrato mod, Object obj) {
             if (obj instanceof BlockPos b) {
+                // A failed progress check blacklists the active pursuit as well as future searches.
+                // Otherwise AbstractDoToClosestObjectTask keeps returning that same block forever.
+                if (_blacklist.contains(b)) return false;
                 if (!mod.getBlockTracker().blockIsValid(b, _blocks)) return false;
                 if (WorldHelper.canBreak(mod, b)) return true;
                 // Blocks in unloaded chunks are assumed to be breakable, so we only know for sure once the chunk loads.

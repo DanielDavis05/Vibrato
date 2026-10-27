@@ -272,6 +272,13 @@ public class DirectorTask extends Task implements StepAbandonable {
                 }
             }
             PlannedStep step = _plan.steps().get(_stepIndex++);
+            // Plans assume that every earlier step succeeds. Recheck against the real world before
+            // starting a step, so a failed provider or a new cooldown cannot cause a cascade.
+            _facts = factsAtPlanBoundary(mod);
+            if (!PlanSampler.canRunNow(step.activity(), _facts, _coverage)) {
+                Debug.logInternal("Director skipping " + step.signature() + ": prerequisites or cooldown changed");
+                continue;
+            }
             String[] error = {null};
             Task task = StepGuard.call(() -> step.activity().create(mod, step.params()), e -> {
                 error[0] = "exception: " + e;
