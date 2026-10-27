@@ -19,6 +19,17 @@ class ClientProtocolScenarioTaskTest {
         assertTrue(ClientProtocolScenarioTask.expectedPackets("jigsaw_generate").contains("Jigsaw Generate"));
     }
 
+    @Test void directSprintFixtureRestoresEitherInitialState() {
+        assertEquals(java.util.List.of(
+                net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.START_SPRINTING,
+                net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.STOP_SPRINTING),
+                ClientProtocolScenarioTask.sprintTransitions(false));
+        assertEquals(java.util.List.of(
+                net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.STOP_SPRINTING,
+                net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.START_SPRINTING),
+                ClientProtocolScenarioTask.sprintTransitions(true));
+    }
+
     @Test void fixtureModesMatchTheInterfacesAndSpectatorAction() {
         assertEquals(net.minecraft.world.GameMode.SURVIVAL, ClientProtocolScenarioTask.fixtureGameMode("recipe_seen"));
         assertEquals(net.minecraft.world.GameMode.CREATIVE, ClientProtocolScenarioTask.fixtureGameMode("structure"));

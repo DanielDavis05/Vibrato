@@ -19,6 +19,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerSessionC2SPacket;
 import net.minecraft.network.encryption.PlayerPublicKey;
 import net.minecraft.network.encryption.PublicPlayerSession;
@@ -81,7 +82,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("move_position", new Requirement("Walk on fixture floor", List.of("Set Player Position"))),
             Map.entry("move_rotation", new Requirement("Turn on fixture floor", List.of("Set Player Rotation"))),
             Map.entry("move_full", new Requirement("Walk and turn on fixture floor", List.of("Set Player Position and Rotation"))),
-            Map.entry("player_command", new Requirement("Sprint on fixture floor", List.of("Player Command"))),
+            Map.entry("player_command", new Requirement("Direct fixture sprint-state transition, followed by restoration", List.of("Player Command"))),
             Map.entry("swing", new Requirement("Join fixture world", List.of("Swing Arm"))),
             Map.entry("held_item", new Requirement("Join fixture world with an item in hotbar", List.of("Set Held Item (serverbound)"))),
             Map.entry("drop_item", new Requirement("Join fixture world with an item in hotbar", List.of("Player Action"))),
@@ -263,7 +264,12 @@ public final class ClientProtocolScenarioTask extends Task {
                 client.getNetworkHandler().sendChatCommand("msg " + client.player.getGameProfile().getName() + " protocol fixture");
                 yield true;
             }
-            case "move_position", "move_rotation", "move_full", "player_command", "boat" -> drive(client);
+            case "move_position", "move_rotation", "move_full", "boat" -> drive(client);
+            case "player_command" -> {
+                for (var mode : sprintTransitions(client.player.isSprinting()))
+                    client.getNetworkHandler().sendPacket(new ClientCommandC2SPacket(client.player, mode));
+                yield true;
+            }
             case "move_ground" -> {
                 client.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.OnGroundOnly(client.player.isOnGround()));
                 yield true;
@@ -352,13 +358,17 @@ public final class ClientProtocolScenarioTask extends Task {
         if (!done) setDebugState("Waiting for fixture: " + requirements(action));
         return null;
     }
+    static List<ClientCommandC2SPacket.Mode> sprintTransitions(boolean sprinting) {
+        return sprinting
+                ? List.of(ClientCommandC2SPacket.Mode.STOP_SPRINTING, ClientCommandC2SPacket.Mode.START_SPRINTING)
+                : List.of(ClientCommandC2SPacket.Mode.START_SPRINTING, ClientCommandC2SPacket.Mode.STOP_SPRINTING);
+    }
     private boolean drive(MinecraftClient client) {
         phaseTicks++;
         if ((phaseTicks == 1 && action.equals("move_rotation")) || action.equals("move_full"))
             client.player.setYaw(client.player.getYaw() + (action.equals("move_full") ? 2.0f : 35.0f));
-        if (action.equals("move_position") || action.equals("move_full") || action.equals("player_command") || action.equals("boat"))
+        if (action.equals("move_position") || action.equals("move_full") || action.equals("boat"))
             client.options.forwardKey.setPressed(true);
-        if (action.equals("player_command")) client.options.sprintKey.setPressed(true);
         if (phaseTicks < 20) return false;
         client.options.forwardKey.setPressed(false);
         client.options.sprintKey.setPressed(false);
