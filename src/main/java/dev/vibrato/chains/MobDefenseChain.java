@@ -2,7 +2,8 @@ package dev.vibrato.chains;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.Debug;
-import dev.vibrato.tasks.entity.KillEntitiesTask;
+import dev.vibrato.tasks.entity.KillEntityTask;
+import dev.vibrato.tasks.combat.TransitCombatPolicy;
 import dev.vibrato.tasks.movement.CustomBaritoneGoalTask;
 import dev.vibrato.tasks.movement.DodgeProjectilesTask;
 import dev.vibrato.tasks.movement.RunAwayFromCreepersTask;
@@ -11,7 +12,6 @@ import dev.vibrato.tasksystem.TaskRunner;
 import dev.vibrato.control.KillAura;
 import dev.vibrato.util.helpers.BaritoneHelper;
 import dev.vibrato.util.baritone.CachedProjectile;
-import dev.vibrato.util.time.TimerGame;
 import dev.vibrato.util.helpers.EntityHelper;
 import dev.vibrato.util.helpers.LookHelper;
 import dev.vibrato.util.helpers.ProjectileHelper;
@@ -28,9 +28,6 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.DragonFireballEntity;
 import net.minecraft.entity.projectile.FireballEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.item.ToolItem;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -49,8 +46,10 @@ public class MobDefenseChain extends SingleTaskChain {
     // Kind of a silly solution
     public static Class[] HOSTILE_ANNOYING_CLASSES = new Class[]{SkeletonEntity.class, ZombieEntity.class, SpiderEntity.class, CaveSpiderEntity.class, WitchEntity.class, PiglinEntity.class, PiglinBruteEntity.class, HoglinEntity.class, ZoglinEntity.class, BlazeEntity.class, WitherSkeletonEntity.class, PillagerEntity.class, DrownedEntity.class};
     private final KillAura _killAura = new KillAura();
-    private final HashMap<Entity, TimerGame> _closeAnnoyingEntities = new HashMap<>();
     private Entity _targetEntity;
+    private Entity _transitTarget;
+    private int _engagementStarted;
+    private int _lastEngagementEnded = Integer.MIN_VALUE;
     private boolean _doingFunkyStuff = false;
     private boolean _wasPuttingOutFire = false;
     private CustomBaritoneGoalTask _runAwayTask;
@@ -152,103 +151,29 @@ public class MobDefenseChain extends SingleTaskChain {
             }
         }
 
-        if (mod.getModSettings().shouldDealWithAnnoyingHostiles()) {
-            // Deal with hostiles because they are annoying.
-            List<Entity> hostiles;
-            // TODO: I don't think this lock is necessary at all.
-            synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-                hostiles = mod.getEntityTracker().getHostiles();//mod.getEntityTracker().getTrackedEntities(SkeletonEntity.class;
-            }
-
-            ToolItem bestSword = null;
-            Item[] SWORDS = new Item[]{Items.NETHERITE_SWORD, Items.DIAMOND_SWORD, Items.IRON_SWORD, Items.GOLDEN_SWORD, Items.STONE_SWORD, Items.WOODEN_SWORD};
-            for (Item item : SWORDS) {
-                if (mod.getItemStorage().hasItem(item)) {
-                    bestSword = (ToolItem) item;
-                    break;
-                }
-            }
-
-            List<Entity> toDealWith = new ArrayList<>();
-
-            // TODO: I don't think this lock is necessary at all.
-            synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-                for (Entity hostile : hostiles) {
-                    int annoyingRange = (hostile instanceof SkeletonEntity || hostile instanceof WitchEntity) ? 18 : 5;
-                    boolean isClose = hostile.isInRange(mod.getPlayer(), annoyingRange);
-
-                    if (isClose) {
-                        isClose = LookHelper.seesPlayer(hostile, mod.getPlayer(), annoyingRange);
-                    }
-
-                    // Give each hostile a timer, if they're close for too long deal with them.
-                    if (isClose) {
-                        if (!_closeAnnoyingEntities.containsKey(hostile)) {
-                            _closeAnnoyingEntities.put(hostile, new TimerGame(mod.getModSettings().getKillHostileWhenCloseForSeconds()));
-                            _closeAnnoyingEntities.get(hostile).reset();
-                        }
-                        if (_closeAnnoyingEntities.get(hostile).elapsed()) {
-                            toDealWith.add(hostile);
-                        }
-                    } else {
-                        _closeAnnoyingEntities.remove(hostile);
-                    }
-                }
-
-                // Clear dead/non existing hostiles
-                List<Entity> toRemove = new ArrayList<>();
-                for (Entity check : _closeAnnoyingEntities.keySet()) {
-                    if (!check.isAlive()) {
-                        toRemove.add(check);
-                    }
-                }
-                for (Entity remove : toRemove) _closeAnnoyingEntities.remove(remove);
-
-                int numberOfProblematicEntities = toDealWith.size();
-
-                if (numberOfProblematicEntities > 0) {
-
-                    // Depending on our weapons/armor, we may chose to straight up kill hostiles if we're not dodging their arrows.
-
-                    // wood 0 : 1 skeleton
-                    // stone 1 : 1 skeleton
-                    // iron 2 : 2 hostiles
-                    // diamond 3 : 3 hostiles
-                    // netherite 4 : 4 hostiles
-
-                    // Armor: (do the math I'm not boutta calculate this)
-                    // leather: ?1 skeleton
-                    // iron: ?2 hostiles
-                    // diamond: ?3 hostiles
-
-                    // 7 is full set of leather
-                    // 15 is full set of iron.
-                    // 20 is full set of diamond.
-                    // Diamond+netherite have bonus "toughness" parameter (we can simply add them I think, for now.)
-                    // full diamond has 8 bonus toughness
-                    // full netherite has 12 bonus toughness
-                    int armor = mod.getPlayer().getArmor();
-                    float damage = bestSword == null ? 0 : (1 + bestSword.getMaterial().getAttackDamage());
-
-                    int canDealWith = (int) Math.ceil((armor * 3.6 / 20.0) + (damage * 0.8));
-
-                    canDealWith += 1;
-                    if (canDealWith > numberOfProblematicEntities) {
-                        // We can deal with it.
-                        _runAwayTask = null;
-                        setTask(new KillEntitiesTask(
-                                toDealWith::contains,
-                                // Oof
-                                HOSTILE_ANNOYING_CLASSES));
-                        return 65;
-                    } else {
-                        // We can't deal with it
-                        _runAwayTask = new RunAwayFromHostilesTask(30, true);
-                        setTask(_runAwayTask);
-                        return 80;
-                    }
-                }
-            }
+        // A transit encounter is one target and a short commitment, not an open-ended hunt.
+        int now = mod.getPlayer().age;
+        if (_transitTarget != null && !TransitCombatPolicy.keepEngaging(
+                _transitTarget.isAlive(), _transitTarget.squaredDistanceTo(mod.getPlayer()), now - _engagementStarted)) {
+            _transitTarget = null;
+            _lastEngagementEnded = now;
+        }
+        if (_transitTarget == null && !isVulnurable(mod) && mod.getModSettings().shouldDealWithAnnoyingHostiles()
+                && TransitCombatPolicy.mayStart(now, _lastEngagementEnded)) {
+            _transitTarget = mod.getEntityTracker().getHostiles().stream()
+                    .filter(entity -> Arrays.stream(HOSTILE_ANNOYING_CLASSES).anyMatch(type -> type.isInstance(entity)))
+                    .filter(entity -> !mod.getBehaviour().shouldExcludeFromForcefield(entity))
+                    .filter(entity -> EntityHelper.isAngryAtPlayer(mod, entity))
+                    .filter(entity -> TransitCombatPolicy.eligible(entity.isAlive(), entity.squaredDistanceTo(mod.getPlayer()),
+                            LookHelper.cleanLineOfSight(mod.getPlayer(), entity.getPos().add(0, entity.getHeight() / 2, 0), 6)))
+                    .min(Comparator.comparingDouble(entity -> entity.squaredDistanceTo(mod.getPlayer())))
+                    .orElse(null);
+            if (_transitTarget != null) _engagementStarted = now;
+        }
+        if (_transitTarget != null) {
+            _runAwayTask = null;
+            setTask(new KillEntityTask(_transitTarget));
+            return 65;
         }
 
 
@@ -313,7 +238,7 @@ public class MobDefenseChain extends SingleTaskChain {
                 if (mod.getBehaviour().shouldExcludeFromForcefield(entity)) continue;
                 if (entity instanceof Monster) {
                     if (EntityHelper.isGenerallyHostileToPlayer(mod, entity)) {
-                        if (LookHelper.seesPlayer(entity, mod.getPlayer(), 10)) {
+                        if (entity.isInRange(mod.getPlayer(), 1.75) && LookHelper.seesPlayer(entity, mod.getPlayer(), 10)) {
                             shouldForce = true;
                         }
                     }

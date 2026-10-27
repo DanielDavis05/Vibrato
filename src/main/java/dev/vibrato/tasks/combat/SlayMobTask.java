@@ -26,7 +26,6 @@ import net.minecraft.entity.mob.HoglinEntity;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
@@ -187,7 +186,9 @@ public class SlayMobTask extends Task {
         }
         equipWeapon(mod);
         aim(mod, avoidEyes);
-        boolean facing = avoidEyes || LookHelper.raycast(mod.getPlayer(), _target, reach).getType() == HitResult.Type.ENTITY;
+        Vec3d aimPoint = avoidEyes ? _target.getPos() : _target.getBoundingBox().getCenter();
+        boolean facing = LookHelper.cleanLineOfSight(mod.getPlayer(), aimPoint, reach)
+                && mod.getPlayer().getRotationVec(1.0f).dotProduct(aimPoint.subtract(mod.getPlayer().getEyePos()).normalize()) > 0.98;
         if (facing && AttackTiming.shouldSwing(mod.getPlayer().getAttackCooldownProgress(0), _kind)) {
             mod.getControllerExtras().attack(_target);
             _struck = true;

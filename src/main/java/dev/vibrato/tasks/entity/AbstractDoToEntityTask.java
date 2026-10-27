@@ -76,8 +76,11 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
         double playerReach = mod.getModSettings().getEntityReachRange();
 
-        // TODO: This is basically useless.
+        LookHelper.lookAt(mod, entity.getPos().add(0, entity.getHeight() / 2, 0));
         EntityHitResult result = LookHelper.raycast(mod.getPlayer(), entity, playerReach);
+        boolean visible = LookHelper.cleanLineOfSight(mod.getPlayer(), entity.getPos().add(0, entity.getHeight() / 2, 0), playerReach);
+        var direction = entity.getBoundingBox().getCenter().subtract(mod.getPlayer().getEyePos()).normalize();
+        boolean aligned = mod.getPlayer().getRotationVec(1.0f).dotProduct(direction) > 0.98;
 
         double sqDist = entity.squaredDistanceTo(mod.getPlayer());
 
@@ -93,14 +96,14 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
         boolean tooClose = sqDist < maintainDistance * maintainDistance;
 
         // Step away if we're too close
-        if (tooClose) {
+        if (tooClose && !(this instanceof AbstractKillEntityTask)) {
             //setDebugState("Maintaining distance");
             if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
             }
         }
 
-        if (entity.squaredDistanceTo(mod.getPlayer()) < playerReach * playerReach && result != null && result.getType() == HitResult.Type.ENTITY) {
+        if (entity.squaredDistanceTo(mod.getPlayer()) < playerReach * playerReach && result != null && result.getType() == HitResult.Type.ENTITY && visible && aligned) {
             _progress.reset();
             return onEntityInteract(mod, entity);
         } else if (!tooClose) {
@@ -116,7 +119,7 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
             return new GetToEntityTask(entity, maintainDistance);
         }
 
-        return _wanderTask;
+        return null;
     }
 
     @Override
@@ -132,7 +135,7 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean doubleCheck(double a, double b) {
-        if (Double.isInfinite(a) == Double.isInfinite(b)) return true;
+        if (Double.isInfinite(a) || Double.isInfinite(b)) return a == b;
         return Math.abs(a - b) < 0.1;
     }
 
