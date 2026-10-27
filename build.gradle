@@ -56,6 +56,18 @@ test {
     useJUnitPlatform()
 }
 
+// Extra JVM properties for runClient, e.g. -PgameProps="-Dvibrato.world=smoke -Dvibrato.autostart=true"
+loom {
+    runs {
+        client {
+            def gameProps = project.findProperty('gameProps')?.toString()?.trim()
+            if (gameProps) {
+                gameProps.split(/\s+/).each { vmArg(it) }
+            }
+        }
+    }
+}
+
 processResources {
     inputs.property "version", project.version
 
