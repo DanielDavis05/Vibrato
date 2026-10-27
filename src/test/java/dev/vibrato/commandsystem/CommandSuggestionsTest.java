@@ -8,7 +8,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CommandSuggestionsTest {
-    private static final List<Command> COMMANDS = List.of(command("get"), command("goto"), command("help"), command("locate_structure"));
+    private static final List<Command> COMMANDS = List.of(command("get"), command("goto"), command("help"), command("locate_structure"), command("play"));
 
     private static Command command(String name) {
         return new Command(name, "description") {
@@ -39,5 +39,7 @@ class CommandSuggestionsTest {
         assertEquals(List.of("@locate_structure stronghold"), completions("@", "@locate_structure str"));
         assertTrue(completions("@", "@locate_structure stronghold str").isEmpty());
         assertEquals(List.of("@help all"), completions("@", "@help a"));
+        assertEquals(List.of("@play builder"), completions("@", "@play bu"));
+        assertTrue(completions("@", "@play builder mi").isEmpty());
     }
 }

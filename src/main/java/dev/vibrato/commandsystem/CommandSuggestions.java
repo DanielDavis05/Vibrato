@@ -1,6 +1,7 @@
 package dev.vibrato.commandsystem;
 
 import dev.vibrato.TaskCatalogue;
+import dev.vibrato.director.Personas;
 import dev.vibrato.util.Dimension;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -50,6 +51,8 @@ public final class CommandSuggestions {
         String name = command.getName();
         if (name.equals("help") && tokenStart == argumentStart) {
             values = java.util.stream.Stream.concat(java.util.stream.Stream.of("all"), commands.stream().map(Command::getName)).toList();
+        } else if (name.equals("play") && tokenStart == argumentStart) {
+            values = Personas.all().stream().map(persona -> persona.name()).toList();
         } else if (name.equals("goto") && validGotoCoordinates(beforeCursor.substring(argumentStart, tokenStart))) {
             values = Arrays.stream(Dimension.values()).map(d -> d.name().toLowerCase(Locale.ROOT)).toList();
         } else if (name.equals("locate_structure") && !arguments.contains(" ")) {

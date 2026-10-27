@@ -12,6 +12,7 @@ public class VibratoCommands {
         // List commands here
         Vibrato.getCommandExecutor().registerNewCommand(
                 new HelpCommand(),
+                new PlayCommand(),
                 new GetCommand(),
                 new FollowCommand(),
                 new GiveCommand(),

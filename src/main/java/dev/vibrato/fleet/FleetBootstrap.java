@@ -40,6 +40,8 @@ public final class FleetBootstrap {
     private static long _ticksSinceJoin;
     private static boolean _started;
     private static boolean _manuallyStopped;
+    private static boolean _explicitlyStarted;
+    private static Persona _activePersona;
     private static long _startedAtMillis;
     private static boolean _everJoined;
     private static long _lastConnectAttempt = AutostartGate.NEVER;
@@ -56,12 +58,27 @@ public final class FleetBootstrap {
         _manuallyStopped = true;
     }
 
+    /** Start or resume autonomous play, replacing the current user task. */
+    public static Persona startDirector(Vibrato mod, Persona persona, Runnable onFinish) {
+        FleetConfig config = mod.getFleetConfig();
+        Persona selected = persona == null ? resolvePersona(config) : persona;
+        _manuallyStopped = false;
+        _explicitlyStarted = true;
+        _started = true;
+        _startedAtMillis = System.currentTimeMillis();
+        _activePersona = selected;
+        start(mod, config, selected, onFinish);
+        return selected;
+    }
+
     private static void onClientTick(Vibrato mod) {
         FleetConfig config = mod.getFleetConfig();
         if (!Vibrato.inGame()) {
             _ticksSinceJoin = 0;
             _started = false;
             _manuallyStopped = false;
+            _explicitlyStarted = false;
+            _activePersona = null;
             if (config.world() != null) {
                 maybeEnterWorld(config);
             } else {
@@ -81,10 +98,10 @@ public final class FleetBootstrap {
         boolean directorRunning = mod.getUserTaskChain().getCurrentTask() instanceof DirectorTask;
         long now = System.currentTimeMillis();
         if (_started) {
-            if (AutostartGate.shouldRestartDirector(config.autostart(), directorRunning, busy && !directorRunning,
+            if (AutostartGate.shouldRestartDirector(config.autostart() || _explicitlyStarted, directorRunning, busy && !directorRunning,
                     now, _startedAtMillis)) {
                 Debug.logInternal("Director is no longer running, restarting it");
-                start(mod, config);
+                start(mod, config, _activePersona, () -> {});
                 _startedAtMillis = now;
             }
             return;
@@ -94,16 +111,16 @@ public final class FleetBootstrap {
                 == AutostartGate.Decision.START) {
             _started = true;
             _startedAtMillis = now;
-            start(mod, config);
+            _activePersona = resolvePersona(config);
+            start(mod, config, _activePersona, () -> {});
         }
     }
 
-    private static void start(Vibrato mod, FleetConfig config) {
-        Persona persona = resolvePersona(config);
+    private static void start(Vibrato mod, FleetConfig config, Persona persona, Runnable onFinish) {
         Path coverageFile = Paths.get(config.dataDir(), "coverage-" + config.botId() + ".json");
         ActivityRegistry registry = BuiltinActivities.createRegistry();
         Debug.logInternal("Director starting: bot=" + config.botId() + " persona=" + persona.name());
-        mod.runUserTask(new DirectorTask(registry, config.seed(), persona, config.planLength(), coverageFile));
+        mod.runUserTask(new DirectorTask(registry, config.seed(), persona, config.planLength(), coverageFile), onFinish);
     }
 
     private static Persona resolvePersona(FleetConfig config) {

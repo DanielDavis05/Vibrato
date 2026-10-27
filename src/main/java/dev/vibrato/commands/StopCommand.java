@@ -15,7 +15,7 @@ public class StopCommand extends Command {
     protected void call(Vibrato mod, ArgParser parser) {
         FleetBootstrap.stopForSession();
         mod.getUserTaskChain().cancel(mod);
-        mod.log("Stopped the current task. Director autostart is paused until you reconnect.");
+        mod.log("Stopped the current task. Director autostart is paused until " + mod.getModSettings().getCommandPrefix() + "play or reconnect.");
         finish();
     }
 }

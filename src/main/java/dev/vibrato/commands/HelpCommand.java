@@ -18,9 +18,10 @@ public class HelpCommand extends Command {
         String prefix = mod.getModSettings().getCommandPrefix();
         if (query == null) {
             mod.log("Vibrato commands · Type " + prefix + " and press Tab to explore", MessagePriority.OPTIONAL);
+            mod.log("Play       " + prefix + "play · " + prefix + "status · " + prefix + "stop", MessagePriority.OPTIONAL);
             mod.log("Collect  " + prefix + "get · " + prefix + "equip · " + prefix + "food", MessagePriority.OPTIONAL);
             mod.log("Move     " + prefix + "goto · " + prefix + "follow · " + prefix + "coords", MessagePriority.OPTIONAL);
-            mod.log("Manage  " + prefix + "inventory · " + prefix + "deposit · " + prefix + "status · " + prefix + "stop", MessagePriority.OPTIONAL);
+            mod.log("Manage  " + prefix + "inventory · " + prefix + "deposit", MessagePriority.OPTIONAL);
             mod.log("Use " + prefix + "help <command> for details or " + prefix + "help all for every command. Baritone uses #.", MessagePriority.OPTIONAL);
         } else if (query.equalsIgnoreCase("all")) {
             mod.log("All Vibrato commands · Select a command to put it in chat", MessagePriority.OPTIONAL);
