@@ -68,7 +68,13 @@ public class MoveItemToSlotTask extends Task {
                     Debug.logError("Called MoveItemToSlotTask when item/not enough item is available! valid items: " + StlHelper.toString(validItems, Item::getTranslationKey));
                     return null;
                 }
-                return new ClickSlotTask(toPlace.get());
+                int button = 0;
+                if (currentHeld.isEmpty()) {
+                    ItemStack source = StorageHelper.getItemStackInSlot(toPlace.get());
+                    int placed = _toMove.matches(atTarget.getItem()) ? atTarget.getCount() : 0;
+                    button = StackTransferPolicy.pickupButton(source.getCount(), _toMove.getTargetCount() - placed);
+                }
+                return new ClickSlotTask(toPlace.get(), button);
             }
 
             int currentlyPlaced = Arrays.asList(validItems).contains(atTarget.getItem()) ? atTarget.getCount() : 0;
@@ -121,7 +127,7 @@ public class MoveItemToSlotTask extends Task {
             int countBest  = StorageHelper.getItemStackInSlot(bestMatch).getCount();
             int countCheck = StorageHelper.getItemStackInSlot(slot).getCount();
             if (   (countBest < _toMove.getTargetCount() && countCheck > countBest)
-                    || (countBest >= _toMove.getTargetCount() && countCheck >= _toMove.getTargetCount() && countCheck > countBest) ) {
+                    || (countBest >= _toMove.getTargetCount() && countCheck >= _toMove.getTargetCount() && countCheck < countBest) ) {
                 // If we don't have enough, go for largest
                 // If we have too much, go for smallest over the limit.
                 bestMatch = slot;

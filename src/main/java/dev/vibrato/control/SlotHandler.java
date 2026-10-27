@@ -75,6 +75,10 @@ public class SlotHandler {
         int syncId = player.currentScreenHandler.syncId;
 
         try {
+            if (Boolean.getBoolean("vibrato.debugNavigation")) {
+                System.out.printf("[InventoryTrace] sync=%d slot=%d button=%d action=%s cursor=%s%n",
+                        syncId, windowSlot, mouseButton, type, player.currentScreenHandler.getCursorStack());
+            }
             _mod.getController().clickSlot(syncId, windowSlot, mouseButton, type, player);
         } catch (Exception e) {
             Debug.logWarning("Slot Click Error (ignored)");
