@@ -146,7 +146,7 @@ public class MLGBucketTask extends Task {
         Optional<Rotation> reachable = RotationUtils.reachableCenter(ctx.player(), toPlaceOn, ctx.playerController().getBlockReachDistance(), false);
         if (reachable.isPresent()) {
             setDebugState("Performing MLG");
-            LookHelper.lookAt(mod, reachable.get());
+            LookHelper.lookAtInstant(mod, reachable.get());
             // Try water by default
             boolean hasClutch = (!mod.getWorld().getDimension().ultrawarm() &&mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET));
             if (!hasClutch) {
@@ -213,7 +213,7 @@ public class MLGBucketTask extends Task {
         Vec3d pd = delta.subtract(velocity.multiply(3f));
         double forwardStrength = pd.dotProduct(forwardFacing);
         if (newForwardTarget) {
-            LookHelper.lookAt(mod, _movingTorwards);
+            LookHelper.lookAtInstant(mod, _movingTorwards);
         }
         Debug.logInternal("F:" + forwardStrength);
         moveForwardBack(mod, (int)Math.signum(forwardStrength));
