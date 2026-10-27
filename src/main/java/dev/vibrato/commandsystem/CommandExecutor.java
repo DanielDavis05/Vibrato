@@ -26,12 +26,12 @@ public class CommandExecutor {
         }
     }
 
-    private String getCommandPrefix() {
+    public String getCommandPrefix() {
         return _mod.getModSettings().getCommandPrefix();
     }
 
     public boolean isClientCommand(String line) {
-        return line.startsWith(getCommandPrefix());
+        return !getCommandPrefix().isEmpty() && line.startsWith(getCommandPrefix());
     }
 
     // This is how we "nest" command finishes so we can complete them in order.
@@ -66,6 +66,7 @@ public class CommandExecutor {
             }
         } catch (CommandException e) {
             getException.accept(e);
+            return;
         }
         executeRecursive(commands, parts, 0, onFinish, getException);
     }

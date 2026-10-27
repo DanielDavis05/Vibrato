@@ -6,7 +6,11 @@ Keep in mind this project is still in rapid development. A lot of features are p
 
 ## Commands
 
-Commands are prefixed with `@`. Here's a list along with their functions:
+Local Vibrato commands start with `@` by default. Type `@` in chat to browse commands, and use Tab to complete a name or a suggested argument. Hover a command suggestion for its usage and description, or run `@help` for the complete list. These commands are handled by the client and are not sent to the server. The prefix can be changed in settings.
+
+Baritone commands use `#` and are separate from Vibrato commands. For example, `@stop` stops Vibrato's current task; use Baritone's own commands to control Baritone directly.
+
+Here are the Vibrato commands and their functions:
 
 | command | description | examples |
 | --------| ------------|---|

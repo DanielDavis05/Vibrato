@@ -13,20 +13,12 @@ public class HelpCommand extends Command {
 
     @Override
     protected void call(Vibrato mod, ArgParser parser) {
-        mod.log("########## HELP: ##########", MessagePriority.OPTIONAL);
-        int padSize = 10;
-        for (Command c : mod.getCommandExecutor().allCommands()) {
-            StringBuilder line = new StringBuilder();
-            //line.append("");
-            line.append(c.getName()).append(": ");
-            int toAdd = padSize - c.getName().length();
-            for (int i = 0; i < toAdd; ++i) {
-                line.append(" ");
-            }
-            line.append(c.getDescription());
-            mod.log(line.toString(), MessagePriority.OPTIONAL);
-        }
-        mod.log("###########################", MessagePriority.OPTIONAL);
+        String prefix = mod.getModSettings().getCommandPrefix();
+        mod.log("Vibrato commands · Type " + prefix + " and press Tab to explore", MessagePriority.OPTIONAL);
+        mod.getCommandExecutor().allCommands().stream()
+                .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                .forEach(command -> mod.log(prefix + command.getHelpRepresentation() + " — " + command.getDescription(), MessagePriority.OPTIONAL));
+        mod.log("Chain commands with ; · Baritone uses #", MessagePriority.OPTIONAL);
         finish();
     }
 }
