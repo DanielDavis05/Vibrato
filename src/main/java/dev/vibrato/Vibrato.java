@@ -139,6 +139,7 @@ public class Vibrato implements ModInitializer {
         Human.install(this, _fleet.seed());
         NavSafety.install(this);
         FleetBootstrap.install(this);
+        Debug.logMessage("Installed human camera, nav safety and fleet bootstrap for bot " + _fleet.botId());
 
         // Trackers
         _storageTracker = new ItemStorageTracker(this, _trackerManager, container -> _containerSubTracker = container);
