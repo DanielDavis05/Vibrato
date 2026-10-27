@@ -162,7 +162,7 @@ public final class CoreActivities {
     }
 
     private static void registerFarm(ActivityRegistry registry) {
-        registry.register(new CoreActivity("farm_crop", FeatureArea.FARM, Set.of(Fact.of("loc:surface")), Set.of(), List.of(
+        registry.register(new CoreActivity("gather_crop", FeatureArea.FARM, Set.of(Fact.of("loc:surface")), Set.of(), List.of(
                 ParamSpec.choice("crop", CROPS),
                 ParamSpec.ints("count", 1, 64)),
                 values -> Duration.ofMinutes(Math.min(15, 4 + values.getInt("count") / 8)),
@@ -221,7 +221,7 @@ public final class CoreActivities {
         registry.register(new CoreActivity("place_bed_and_set_spawn", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld"), Fact.of("loc:surface")),
                 Set.of(Fact.of("spawn:set")), List.of(), values -> Duration.ofMinutes(8),
                 (mod, values) -> new PlaceBedAndSetSpawnTask()));
-        registry.register(new CoreActivity("sleep_through_night", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld"), Fact.of("loc:surface")),
+        registry.register(new CoreActivity("wait_out_night", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld"), Fact.of("loc:surface")),
                 Set.of(), List.of(), values -> Duration.ofMinutes(15),
                 (mod, values) -> new SleepThroughNightTask()));
     }

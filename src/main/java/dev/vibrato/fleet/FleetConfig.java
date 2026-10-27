@@ -19,7 +19,9 @@ public record FleetConfig(
         int startDelaySeconds,
         String serverAddress,
         PerfMode perfMode,
-        String dataDir
+        String dataDir,
+        String world,
+        long worldSeed
 ) {
 
     public enum PerfMode {
@@ -41,14 +43,17 @@ public record FleetConfig(
     public static final int MIN_START_DELAY = 5;
     public static final int MAX_START_DELAY = 25;
     public static final int MAX_EXPLICIT_START_DELAY = 600;
+    public static final long DEFAULT_WORLD_SEED = 424242L;
 
     private static final Pattern BOT_ID = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final Pattern PERSONA = Pattern.compile("[a-z][a-z_]{0,31}");
     private static final Pattern HOST_PORT = Pattern.compile("[A-Za-z0-9._-]+:\\d{1,5}");
+    private static final Pattern WORLD = Pattern.compile("[A-Za-z0-9_-]{1,64}");
 
     private static final String[] KEYS = {
             "vibrato.botId", "vibrato.seed", "vibrato.persona", "vibrato.autostart", "vibrato.planLength",
-            "vibrato.startDelay", "vibrato.server", "vibrato.perf", "vibrato.dataDir"
+            "vibrato.startDelay", "vibrato.server", "vibrato.perf", "vibrato.dataDir", "vibrato.world",
+            "vibrato.worldSeed"
     };
 
     /** Reads the configuration from the JVM system properties. Throws {@link IllegalArgumentException} on bad values. */
@@ -109,7 +114,16 @@ public record FleetConfig(
             dataDir = DEFAULT_DATA_DIR;
         }
 
-        return new FleetConfig(botId, seed, persona, autostart, planLength, startDelay, server, perf, dataDir);
+        String world = optional(values, "vibrato.world");
+        if (world != null && !WORLD.matcher(world).matches()) {
+            throw new IllegalArgumentException("vibrato.world must be 1-64 characters of [A-Za-z0-9_-], got '" + world + "'");
+        }
+
+        String worldSeedText = optional(values, "vibrato.worldSeed");
+        long worldSeed = worldSeedText == null ? DEFAULT_WORLD_SEED : parseSeed(worldSeedText);
+
+        return new FleetConfig(botId, seed, persona, autostart, planLength, startDelay, server, perf, dataDir,
+                world, worldSeed);
     }
 
     /** Stable 64-bit seed from the bot id (FNV-1a), so the same id always gets the same behaviour. */
