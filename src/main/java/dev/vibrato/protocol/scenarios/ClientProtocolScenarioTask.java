@@ -70,6 +70,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("spectator_teleport", new Requirement("Enter spectator mode and aim at an entity", List.of("Teleport To Entity"))),
             Map.entry("ping", new Requirement("Join a Play connection", List.of("Ping Request (play)"))),
             Map.entry("statistics", new Requirement("Join a Play connection with no screen open", List.of("Client Status"))),
+            Map.entry("client_information", new Requirement("Join a Play connection", List.of("Client Information (play)"))),
             Map.entry("chat", new Requirement("Join a server that permits chat", List.of("Chat Message"))),
             Map.entry("command", new Requirement("Join a server with the help command", List.of("Chat Command"))),
             Map.entry("chat_ack_empty", new Requirement("Fresh isolated connection with no pending signed messages", List.of("Acknowledge Message"))),
@@ -217,6 +218,10 @@ public final class ClientProtocolScenarioTask extends Task {
             case "statistics" -> {
                 if (client.currentScreen != null) yield false;
                 client.setScreen(new StatsScreen(null, client.player.getStatHandler()));
+                yield true;
+            }
+            case "client_information" -> {
+                client.options.sendClientSettings();
                 yield true;
             }
             case "chat" -> {
