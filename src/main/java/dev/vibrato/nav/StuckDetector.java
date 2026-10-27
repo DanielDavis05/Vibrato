@@ -10,6 +10,7 @@ public final class StuckDetector {
 
     private final StuckConfig _config;
     private final MotionSample[] _history;
+    private final RouteLoopDetector _routeLoop = new RouteLoopDetector();
     private int _size;
     private int _next;
     private int _edgeRun;
@@ -32,13 +33,17 @@ public final class StuckDetector {
             _size++;
         }
         _edgeRun = sample.horizontalCollision() && sample.wantsToMove() && !sample.productive() ? _edgeRun + 1 : 0;
-        return classify(sample);
+        boolean routeLoop = sample.wantsToMove() && _routeLoop.update(sample);
+        if (!sample.wantsToMove()) _routeLoop.reset();
+        StuckState state = classify(sample);
+        return state == StuckState.OK && routeLoop ? StuckState.OSCILLATING : state;
     }
 
     public void reset() {
         _size = 0;
         _next = 0;
         _edgeRun = 0;
+        _routeLoop.reset();
     }
 
     private StuckState classify(MotionSample s) {
