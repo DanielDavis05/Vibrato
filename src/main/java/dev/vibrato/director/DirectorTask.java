@@ -9,6 +9,7 @@ import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.registry.Registries;
 import dev.vibrato.util.time.TimerGame;
 
@@ -56,6 +57,7 @@ public class DirectorTask extends Task implements StepAbandonable {
     private TimerGame _stepTimer; // Breather only; activity budgets count active director ticks.
     private ActiveStepBudget _stepBudget;
     private StepHealth _health = new StepHealth();
+    private StepDeathTracker<ClientPlayerEntity> _stepDeath = new StepDeathTracker<>();
     private Task _stuckWitness;
     private final FailureChurn _churn = new FailureChurn();
     private InterruptTracker _interrupts = new InterruptTracker();
@@ -133,7 +135,13 @@ public class DirectorTask extends Task implements StepAbandonable {
             _onBreather = false;
             _stepTask = null;
         } else if (_stepTask != null) {
-            if (_interrupts.harassed(_tick)) {
+            StepDeathTracker.State death = _stepDeath.observe(mod.getPlayer(), player -> player.getHealth() <= 0);
+            if (death == StepDeathTracker.State.RESPAWNED) {
+                completeStep(false, "player died and respawned");
+            } else if (death == StepDeathTracker.State.DEAD) {
+                // Do not evaluate a goal against the dead player while waiting for respawn.
+                return null;
+            } else if (_interrupts.harassed(_tick)) {
                 completeStep(false, "harassed by interruptions");
             } else if (_stepTask.isFinished(mod)) {
                 completeStep(true, "finished");
@@ -309,6 +317,8 @@ public class DirectorTask extends Task implements StepAbandonable {
             dev.vibrato.packetcoverage.PacketCoverage.setTask(getClass().getSimpleName(), step.activity().id());
             _stepTask = task;
             _stepStartTick = _tick;
+            _stepDeath = new StepDeathTracker<>();
+            _stepDeath.observe(mod.getPlayer(), player -> player.getHealth() <= 0);
             _health = new StepHealth();
             _interrupts = new InterruptTracker();
             _stepSerial++;
