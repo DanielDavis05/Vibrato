@@ -10,7 +10,7 @@ only. Trace format: the JSON Lines schema in the plan.
 | `fit.py` | Human traces to `human_profile.json` (mean and sigma per trait). Uses the mouse channel. |
 | `discriminate.py` | Human windows vs bot windows on the tick channel: logistic regression, held-out accuracy, top features, usable window counts. |
 | `synth.py` | Fake human and bot traces, for testing the pipeline without recordings. |
-| `test_pipeline.sh` | Runs synth, fit and discriminate in a temp dir. Fails if accuracy is below 0.8. |
+| `test_pipeline.sh` | Runs synth, fit and discriminate in a temp dir. Checks the tick clock (tick features do not change with the sampler jitter). Fails if accuracy is below 0.8. |
 
 Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps `__pycache__` out of the repo.
 
@@ -22,7 +22,7 @@ Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps 
    ```
    python3 -I -B scripts/human/fit.py run/traces/*-human.jsonl -o human_profile.json
    ```
-   Each trait is estimated per 10 s window and reported as the mean over windows, with the sample standard
+   Each trait is estimated per 10 s window (200 ticks on the tick clock, see below) and reported as the mean over windows, with the sample standard
    deviation as sigma. A trait with no usable data is left out, and `Population` falls back to its default.
 3. Check that the discriminator separates the two sources:
    ```
@@ -47,6 +47,8 @@ Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps 
 * `mouse`: deltas are cleaned on read (`features.clean_mouse`). A delta over 200 px in either axis is dropped
   (cursor recentre or screen switch). After a silence of more than 500 ms with no mouse events, deltas over 50 px in
   the first 100 ms are dropped (a huge first sample after a gap).
+* `tick.n`: the tick count. The tick channel times everything from it (see Tick clock). Its `ms` is the sampler's
+  timestamp and is bursty.
 * `tick.yaw`, `tick.vx/vz`, `tick.ground`: what a server sees. The tick channel uses only these.
 * `tick.edge` (optional, blocks): distance along the movement heading to the first gap or drop within 6 blocks. Absent
   when there is none. Edge features use only edge ticks: onGround, horizontal speed above 0.05 blocks per tick, and an
@@ -70,8 +72,33 @@ mouse events. Any feature that reads mouse events separates the two classes by t
 `discriminate.py` refuses mouse-only features, and `test_pipeline.sh` checks that removing every mouse event from a
 trace leaves its tick-channel features unchanged.
 
-The tick channel uses the recorded timestamps, not a fixed 50 ms. The recorder writes ticks about every 34 ms (roughly
-30 Hz), not 20 Hz. Key rates are still per window second.
+### Tick clock (why tick features do not use `ms`)
+
+The game advances exactly one tick, 50 ms, per tick event, and the tick event's `n` counts those ticks. Its `ms` is
+the wall-clock time the client sampler took the sample. The sampler runs when the render thread catches up, so tick
+`ms` gaps are bursty: in `walk1-human.jsonl` the median gap is 34 ms and the mean is exactly 50 ms. Converting those gaps
+to time would make every tick-channel feature depend on sampler bursts, not on the game.
+
+So the tick channel runs on the tick clock:
+
+* `read_trace()` sets `tk` on every event (`features.tick_clock`). A tick has `tk = n * 50` ms exactly.
+* A key or mouse event has only `ms`. Its `tk` is its fractional tick position, by linear interpolation between the
+  neighbouring tick events' `(ms, n)` pairs. Outside the first and last tick it extrapolates at 50 ms per tick.
+* Windows are sliced on `tk`. A 10 s window is 200 ticks (`features.window_ticks`).
+* Hold times, jump press timing and strafe taps are measured on `tk`, then in ticks. Turn timing, the yaw burst gaps
+  and the submove merge use tick counts (`TICK_BURST_GAP_TICKS`, `TICK_MERGE_TICKS`).
+* Mouse deltas keep `ms`. The mouse channel's turn and burst timing are real input timing between mouse events, and
+  `clean_mouse` works on them too. The mouse channel's reaction time uses the tick clock, because it measures from a
+  tick to a key or mouse event.
+
+Key rates are still per window second. A key's tick position inherits the sampler's bursts through the interpolation.
+Its error is at most 0.5 ms per end of the bracket, which is 0.5 ticks at a 1 ms sampler gap. A 20 ms gap gives 0.025
+ticks per end, so the uncertainty is small only when the sampler is not bunched up.
+
+`synth.py` reproduces this: tick `ms` is game time plus a random sampler jitter (`apply_sampler_clock`), kept strictly
+increasing with at least 20 ms between samples. Key and mouse `ms` go through the same clock. `--clock-seed` changes only
+that jitter; `test_pipeline.sh` regenerates a trace with another clock seed and checks that tick-channel features agree
+within the rounding bound (0.05 ticks, and one hold's share for `short_hold_frac`).
 
 ## Trait mapping for human traces
 
@@ -105,7 +132,7 @@ match `HumanProfile`.
 * The lateral features use the middle 70% of each segment. `lateral_sd` is an rms about zero, not a per-segment
   sd, because segments are about one correlation time long and per-segment statistics are strongly biased.
 * Ledge and jump features are per window. A ledge whose jump falls in the next window counts as a miss, which
-  inflates `jumpMissChance` slightly. Keep the window length as the default (10 s) unless there is a reason.
+  inflates `jumpMissChance` slightly. Keep the window length as the default (10 s, 200 ticks) unless there is a reason.
 * Bot mouse deltas must be whole pixels, as the game receives them. Fractional `dx` would separate them trivially,
   which is why `dx_nonint_frac` is mouse-channel only and `discriminate.py` refuses it.
 * `synth.py` puts `edge` on both classes' ticks, as the real recorder does. Otherwise edge presence alone separates

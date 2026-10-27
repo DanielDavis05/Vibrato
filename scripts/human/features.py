@@ -22,6 +22,14 @@ Ticks may carry "edge": blocks along the movement heading to the first gap or dr
 is none. Edge features (jump timing and jump misses) use only meaningful ticks: a tick is moving when its horizontal
 speed is above MOVE_SPEED_BPT, and an edge reading counts only on a moving, grounded tick. A key event counts only when
 the latest tick at or before it is moving. Stationary time (crafting in place) therefore does not dilute these features.
+
+The tick clock. The game advances exactly one tick (TICK_MS) per tick event, and the tick event's 'n' is that count. Its
+wall-clock 'ms' is a sampler timestamp: the client samples when the render thread catches up, so ms gaps between ticks
+are bursty (README.md). Every tick-channel feature therefore runs on the tick clock, not on 'ms'. read_trace() adds
+"tk" to every event: for a tick, tk = n * TICK_MS exactly. A key or mouse event has only 'ms', so its tk is its
+fractional tick position, found by linear interpolation between the neighbouring tick events' (ms, n) pairs. Windows
+are sliced on tk. Mouse deltas (clean_mouse, the mouse channel's turn and burst timing) keep using 'ms', because that is
+real input timing between mouse events.
 """
 
 import bisect
@@ -42,8 +50,9 @@ MIN_TURN_PX = 8.0       # mouse channel: bursts smaller than this are jitter, no
 BURST_GAP_MS = 100.0    # mouse channel: mouse events further apart than this start a new burst
 SUBMOVE_MERGE_MS = 25.0 # mouse channel: active samples this close together belong to one submovement
 TICK_MIN_TURN_DEG = 1.0 # tick channel: a yaw move summing to less than this is jitter, not a turn
-TICK_BURST_GAP_MS = 150.0 # tick channel: yaw changes further apart than this start a new turn
-TICK_MERGE_MS = 70.0    # tick channel: yaw changes this close together belong to one submovement (ticks are ~34 ms)
+TICK_BURST_GAP_TICKS = 3  # tick channel: yaw changes more than this many ticks apart start a new turn
+TICK_MERGE_TICKS = 2      # tick channel: yaw changes this many ticks apart or less belong to one submovement
+WINDOW_SECONDS = 10.0     # default window length; sliced as WINDOW_SECONDS * 1000 / TICK_MS ticks (200)
 LEDGE_RANGE = 3.0       # blocks, horizontal distance at which an upcoming ledge is first seen
 LEDGE_DY = 0.5          # the next node must be this much higher to count as a ledge
 JUMP_WINDOW_TICKS = 6   # a jump press this close (in ticks) to a ledge counts for it
@@ -88,7 +97,10 @@ MOUSE_ONLY_FEATURES = ("mouse_rate_hz", "dx_nonint_frac", "reaction_median_ticks
 
 
 def read_trace(path):
-    """Return (header, events) with mouse outliers removed. Raises ValueError if the first line is not a header."""
+    """Return (header, events) with mouse outliers removed and the tick clock 'tk' set on every event.
+
+    Raises ValueError if the first line is not a header.
+    """
     with open(path, encoding="utf-8") as f:
         lines = [ln for ln in f if ln.strip()]
     if not lines:
@@ -96,7 +108,39 @@ def read_trace(path):
     header = json.loads(lines[0])
     if header.get("t") != "header":
         raise ValueError(f"{path}: first line is not a header")
-    return header, clean_mouse([json.loads(ln) for ln in lines[1:]])
+    return header, tick_clock(clean_mouse([json.loads(ln) for ln in lines[1:]]))
+
+
+def tick_clock(events):
+    """Set 'tk' on every event, in place, and return the list.
+
+    tk is a position on the tick clock in ms of game time: a tick event sits at n * TICK_MS exactly. A key or mouse event
+    sits at its fractional tick position, found by linear interpolation between the neighbouring tick events' (ms, n)
+    pairs. Outside the first and last tick it extrapolates at the nominal TICK_MS per tick. The map is monotone because
+    tick ms must be non-decreasing; a trace with no tick events gets tk = ms, which no tick feature uses.
+    """
+    anchors = sorted((e["ms"], e["n"]) for e in events if e["t"] == "tick")
+    anchor_ms = [ms for ms, _ in anchors]
+    for e in events:
+        if e["t"] == "tick":
+            e["tk"] = e["n"] * TICK_MS
+        elif not anchors:
+            e["tk"] = float(e["ms"])
+        else:
+            e["tk"] = _tick_clock_at(anchors, anchor_ms, e["ms"])
+    return events
+
+
+def _tick_clock_at(anchors, anchor_ms, ms):
+    """Tick clock (ms of game time) at wall-clock ms, from sorted (ms, n) anchors."""
+    i = bisect.bisect_right(anchor_ms, ms) - 1
+    if i < 0:
+        return anchors[0][1] * TICK_MS + (ms - anchors[0][0])
+    if i + 1 >= len(anchors):
+        return anchors[-1][1] * TICK_MS + (ms - anchors[-1][0])
+    (ms0, n0), (ms1, n1) = anchors[i], anchors[i + 1]
+    # ms0 <= ms < ms1 here, so the denominator is positive.
+    return (n0 + (n1 - n0) * (ms - ms0) / (ms1 - ms0)) * TICK_MS
 
 
 def clean_mouse(events):
@@ -123,21 +167,30 @@ def clean_mouse(events):
     return out
 
 
-def split_windows(events, seconds=10.0):
-    """Split events into fixed-length windows by ms. Returns a list of (start_ms, events).
+def window_ticks(seconds=WINDOW_SECONDS):
+    """Window length in ticks: 10 s is 200 ticks."""
+    return int(round(seconds * 1000.0 / TICK_MS))
 
-    Keys already down at a window start are re-stated there as carry-in key-down events.
+
+def split_windows(events, seconds=WINDOW_SECONDS):
+    """Split events into fixed-length windows of window_ticks(seconds) ticks, on the tick clock 'tk' (see tick_clock).
+
+    Returns a list of (start_tk, events), with start_tk in tick-clock ms. Keys already down at a window start are
+    re-stated there as carry-in key-down events.
     """
-    span = seconds * 1000.0
+    if events and "tk" not in events[0]:
+        raise ValueError("split_windows needs events from read_trace() or tick_clock()")
+    span = window_ticks(seconds) * TICK_MS
     windows = []
     current = None
     held = set()
     for e in events:
-        index = int(e["ms"] // span)
+        index = math.floor(e["tk"] / span)
         if index != current:
             current = index
             start = index * span
-            carry = [{"t": "key", "ms": start, "key": k, "down": True, "carry": True} for k in sorted(held)]
+            carry = [{"t": "key", "ms": start, "tk": start, "key": k, "down": True, "carry": True}
+                     for k in sorted(held)]
             windows.append((start, carry))
         windows[-1][1].append(e)
         if e["t"] == "key":
@@ -158,7 +211,7 @@ def moving_seconds(events):
     total = 0.0
     for a, b in zip(ticks, ticks[1:]):
         if _moving(a):
-            total += min(b["ms"] - a["ms"], MAX_TICK_GAP_MS)
+            total += min(b["tk"] - a["tk"], MAX_TICK_GAP_MS)
     return total / 1000.0
 
 
@@ -176,9 +229,9 @@ def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL
     mouse = [e for e in events if e["t"] == "mouse"] if mouse_ch else []
     keys = [e for e in events if e["t"] == "key"]
     downs = [e for e in keys if e["down"] and not e.get("carry")]
-    tick_ms = [t["ms"] for t in ticks]
-    presses = sorted(e["ms"] for e in downs if e["key"] == "jump")
-    jumps = [m for m in presses if _tick_moving_at(ticks, tick_ms, m)]
+    tick_tk = [t["tk"] for t in ticks]
+    presses = sorted(e["tk"] for e in downs if e["key"] == "jump")
+    jumps = [m for m in presses if _tick_moving_at(ticks, tick_tk, m)]
 
     f = {name: NAN for name in FEATURE_NAMES}
 
@@ -189,7 +242,8 @@ def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL
         f["dx_nonint_frac"] = _frac(lambda d: abs(d - round(d)) > 1e-6, [m["dx"] for m in mouse])
         turns = _turns(mouse, BURST_GAP_MS, MIN_TURN_PX, SUBMOVE_MERGE_MS, FRAME_MS)
     else:
-        turns = _turns(_yaw_samples(ticks), TICK_BURST_GAP_MS, TICK_MIN_TURN_DEG, TICK_MERGE_MS, _tick_dt(ticks))
+        turns = _turns(_yaw_samples(ticks), TICK_BURST_GAP_TICKS * TICK_MS, TICK_MIN_TURN_DEG,
+                       TICK_MERGE_TICKS * TICK_MS, _tick_dt(ticks))
 
     f["turn_count"] = float(len(turns))
     f["turn_peak_norm"] = _median([t["norm"] for t in turns])
@@ -200,14 +254,14 @@ def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL
 
     # Key features count only events on moving ticks.
     holds = [(e - s) / TICK_MS for k, s, e in _holds(keys)
-             if k in HOLD_KEYS and _tick_moving_at(ticks, tick_ms, s)]
+             if k in HOLD_KEYS and _tick_moving_at(ticks, tick_tk, s)]
     f["hold_median_ticks"] = _median([max(h, 0.5) for h in holds])
     f["hold_logsd"] = _sd([math.log(max(h, 0.5)) for h in holds])
     f["hold_cv"] = _cv(holds)
     f["short_hold_frac"] = _frac(lambda h: h <= 2.0, holds)
 
     f["strafe_taps_per_s"] = sum(1 for e in downs if e["key"] in ("left", "right")
-                                 and _tick_moving_at(ticks, tick_ms, e["ms"])) / seconds
+                                 and _tick_moving_at(ticks, tick_tk, e["tk"])) / seconds
     f["jump_per_s"] = len(jumps) / seconds
     f["jump_interval_cv"] = _cv([b - a for a, b in zip(jumps, jumps[1:])])
 
@@ -222,7 +276,7 @@ def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL
         f["jump_miss_frac"] = _edge_miss_frac(events, presses)
     elif mouse_ch:
         ledges = _ledges(ticks)
-        offsets, misses = _jump_offsets(ledges, presses)
+        offsets, misses = _jump_offsets(ledges, presses)  # both on the tick clock, tk in ms
         f["jump_offset_mean_ticks"] = _mean(offsets)
         f["jump_offset_sd_ticks"] = _sd(offsets)
         f["jump_miss_frac"] = misses / len(ledges) if ledges else NAN
@@ -238,7 +292,7 @@ def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL
                                                               min_speed=MOVE_SPEED_BPT)
 
     if mouse_ch:
-        acts = sorted([m["ms"] for m in mouse] + [e["ms"] for e in downs])
+        acts = sorted([m["tk"] for m in mouse] + [e["tk"] for e in downs])
         f["reaction_median_ticks"] = _reaction_ticks(ticks, acts)
         f["hesitation_per_min"] = _hesitations(events, seconds)
         f["look_ahead_blocks"] = _look_ahead(ticks)
@@ -283,27 +337,29 @@ def _moving(t):
     return _speed(t) > MOVE_SPEED_BPT
 
 
-def _tick_moving_at(ticks, tick_ms, ms):
-    """Whether the latest tick at or before ms is moving. A ms before the window's first tick uses that tick."""
+def _tick_moving_at(ticks, tick_tk, tk):
+    """Whether the latest tick at or before tk (tick clock) is moving. A tk before the window's first tick uses that tick."""
     if not ticks:
         return False
-    i = max(0, bisect.bisect_right(tick_ms, ms) - 1)
+    i = max(0, bisect.bisect_right(tick_tk, tk) - 1)
     return _moving(ticks[i])
 
 
 def _tick_dt(ticks):
-    """Median spacing of the window's ticks in ms (the recorder writes about every 34 ms), TICK_MS if unknown."""
-    gaps = [b["ms"] - a["ms"] for a, b in zip(ticks, ticks[1:]) if b["ms"] > a["ms"]]
+    """Median spacing of the window's ticks on the tick clock (TICK_MS when every tick is one tick apart), TICK_MS if
+    unknown."""
+    gaps = [b["tk"] - a["tk"] for a, b in zip(ticks, ticks[1:]) if b["tk"] > a["tk"]]
     return statistics.median(gaps) if gaps else TICK_MS
 
 
 def _yaw_samples(ticks):
-    """Per-tick yaw changes as mouse-like samples {ms, dx}, dx in degrees. Ticks with no yaw change are skipped."""
+    """Per-tick yaw changes as mouse-like samples {ms, dx}, where ms is the tick clock (tk) and dx is in degrees.
+    Ticks with no yaw change are skipped."""
     out = []
     for a, b in zip(ticks, ticks[1:]):
         d = _wrap(b["yaw"] - a["yaw"])
         if abs(d) > 1e-6:
-            out.append({"ms": b["ms"], "dx": d})
+            out.append({"ms": b["tk"], "dx": d})
     return out
 
 
@@ -375,15 +431,15 @@ def _turn_stats(burst, min_amp, merge_ms, first_dt):
 
 
 def _holds(keys):
-    """Completed presses as (key, start_ms, end_ms)."""
+    """Completed presses as (key, start_tk, end_tk), on the tick clock."""
     down, out = {}, []
     for e in keys:
         if e["down"]:
-            down.setdefault(e["key"], e["ms"])
+            down.setdefault(e["key"], e["tk"])
         else:
             start = down.pop(e["key"], None)
             if start is not None:
-                out.append((e["key"], start, e["ms"]))
+                out.append((e["key"], start, e["tk"]))
     return out
 
 
@@ -399,7 +455,7 @@ def _ledges(ticks):
         close = math.hypot(t["nextX"] - t["x"], t["nextZ"] - t["z"]) <= LEDGE_RANGE
         if close and t["nextY"] - t["y"] >= LEDGE_DY:
             seen.add(node)
-            out.append(t["ms"])
+            out.append(t["tk"])
     return out
 
 
@@ -515,10 +571,10 @@ def jump_edge_ticks(events):
     _edge_tick) are skipped.
     """
     ticks = [e for e in events if e["t"] == "tick"]
-    tick_ms = [t["ms"] for t in ticks]
+    tick_tk = [t["tk"] for t in ticks]
     out = []
-    for ms in _jump_presses(events):
-        i = bisect.bisect_right(tick_ms, ms) - 1
+    for tk in _jump_presses(events):
+        i = bisect.bisect_right(tick_tk, tk) - 1
         if i < 0:
             continue
         t = ticks[i]
@@ -529,7 +585,8 @@ def jump_edge_ticks(events):
 
 
 def _jump_presses(events):
-    return sorted(e["ms"] for e in events if e["t"] == "key" and e["down"] and e["key"] == "jump"
+    """Jump press times on the tick clock, sorted."""
+    return sorted(e["tk"] for e in events if e["t"] == "key" and e["down"] and e["key"] == "jump"
                   and not e.get("carry"))
 
 
@@ -538,7 +595,7 @@ def _edge_miss_frac(events, presses):
 
     An approach starts on the first tick of a run of edge ticks (see _edge_tick) whose edge is under EDGE_NEAR blocks.
     It is counted only if FALL_TICKS further ticks are in the window. It is a miss if some tick in those FALL_TICKS is
-    more than FALL_DY below the approach and no jump press (presses, sorted ms) falls in the span.
+    more than FALL_DY below the approach and no jump press (presses, sorted tick clock) falls in the span.
     """
     ticks = [e for e in events if e["t"] == "tick"]
     approaches = misses = 0
@@ -551,9 +608,9 @@ def _edge_miss_frac(events, presses):
             continue
         approaches += 1
         y0 = t["y"]
-        end_ms = ticks[i + FALL_TICKS]["ms"]
+        end_tk = ticks[i + FALL_TICKS]["tk"]
         fell = any(ticks[j]["y"] < y0 - FALL_DY for j in range(i + 1, i + FALL_TICKS + 1))
-        pressed = any(t["ms"] <= p <= end_ms for p in presses)
+        pressed = any(t["tk"] <= p <= end_tk for p in presses)
         if fell and not pressed:
             misses += 1
     return misses / approaches if approaches else NAN
@@ -599,12 +656,15 @@ def _heading_wander(events, forward_gate, min_speed):
 
 
 def _reaction_ticks(ticks, acts):
-    """Ticks from a path-node change to the next camera or key activity (median over changes). Mouse channel only."""
+    """Ticks from a path-node change to the next camera or key activity (median over changes). Mouse channel only.
+
+    acts and the starts are on the tick clock (tk, ms).
+    """
     starts, last = [], None
     for t in ticks:
         node = (t.get("nextX"), t.get("nextZ"))
         if last is not None and node != last and node[0] is not None:
-            starts.append(t["ms"])
+            starts.append(t["tk"])
         last = node
     lat = []
     for s in starts:

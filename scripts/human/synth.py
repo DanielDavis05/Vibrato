@@ -246,6 +246,50 @@ def simulate(source, seed, seconds):
     return lines
 
 
+SAMPLER_JITTER_MS = 30.0  # the tick sampler's timestamp error, uniform +- this, before the monotone clamp
+SAMPLER_MIN_GAP_MS = 20   # samples are at least this far apart. A 1 ms gap would turn 0.5 ms of ms rounding into half a tick
+
+
+def apply_sampler_clock(lines, clock_seed):
+    """Replace the game-time 'ms' of every event with wall-clock ms from a bursty tick sampler, as the real recorder has.
+
+    Tick n is game time n * TICK_MS, and it is sampled at a wall-clock time that jitters around that. The sample times are
+    strictly increasing, so ticks stay in order, and 'n' is exact. A key or mouse event is stamped on the same wall clock:
+    its game time is mapped through the (game time, sample time) pairs of the ticks, so it sits where the sampler would
+    place it. Only the 'ms' of each event changes. The game content (n, keys, mouse deltas, positions) is the same for
+    every clock_seed, so the tick channel's features can be compared across clock seeds.
+    """
+    rng = random.Random(clock_seed)
+    ticks = sorted((ev for ev in lines if ev["t"] == "tick"), key=lambda ev: ev["n"])
+    game_ms, wall_ms = [], []
+    prev = None
+    for t in ticks:
+        s = round(t["n"] * TICK_MS + rng.uniform(-SAMPLER_JITTER_MS, SAMPLER_JITTER_MS))
+        if prev is not None and s < prev + SAMPLER_MIN_GAP_MS:
+            s = prev + SAMPLER_MIN_GAP_MS
+        game_ms.append(t["n"] * TICK_MS)
+        wall_ms.append(s)
+        prev = s
+    wall_of_n = {t["n"]: w for t, w in zip(ticks, wall_ms)}
+    for ev in lines[1:]:
+        if ev["t"] == "tick":
+            ev["ms"] = wall_of_n[ev["n"]]
+        elif ev["t"] in ("key", "mouse") and game_ms:
+            ev["ms"] = _to_wall(ev["ms"], game_ms, wall_ms)
+    return lines[:1] + sorted(lines[1:], key=lambda ev: ev["ms"])
+
+
+def _to_wall(g, game_ms, wall_ms):
+    """Wall-clock ms of game time g, linear between the tick samples and at the nominal rate outside them."""
+    i = bisect.bisect_right(game_ms, g) - 1
+    if i < 0:
+        return int(round(wall_ms[0] + (g - game_ms[0])))
+    if i + 1 >= len(game_ms):
+        return int(round(wall_ms[-1] + (g - game_ms[-1])))
+    frac = (g - game_ms[i]) / (game_ms[i + 1] - game_ms[i])
+    return int(round(wall_ms[i] + (wall_ms[i + 1] - wall_ms[i]) * frac))
+
+
 def write_trace(path, lines):
     with open(path, "w", encoding="utf-8") as f:
         for ev in lines:
@@ -259,13 +303,16 @@ def main():
     ap.add_argument("--bots", type=int, default=8)
     ap.add_argument("--seconds", type=float, default=90.0)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--clock-seed", type=int, default=0,
+                    help="seed for the tick sampler's wall-clock jitter; the game content does not change with it")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
     for source, count in (("human", args.humans), ("bot", args.bots)):
         for i in range(count):
             seed = args.seed * 1000 + i + (0 if source == "human" else 500)
             path = os.path.join(args.out_dir, f"synth{i:02d}-{source}.jsonl")
-            write_trace(path, simulate(source, seed, args.seconds))
+            lines = apply_sampler_clock(simulate(source, seed, args.seconds), seed * 7919 + args.clock_seed)
+            write_trace(path, lines)
             print(f"wrote {path}")
 
 
