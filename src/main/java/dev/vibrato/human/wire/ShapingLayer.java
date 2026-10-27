@@ -33,7 +33,7 @@ public final class ShapingLayer {
     }
 
     public KeyAdapter.Flags apply(KeyAdapter.Flags intended, PathView view, Bypass bypass) {
-        if (bypass.any() || !view.onGround()
+        if (bypass.any() || intended.jump() || !view.onGround()
                 || (view.kind() != MovementKind.TRAVERSE && view.kind() != MovementKind.DIAGONAL)) {
             retireShaper();
             return intended;

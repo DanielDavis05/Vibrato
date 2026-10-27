@@ -45,6 +45,7 @@ class ShapingLayerTest {
         }
         var airborne = new PathView(MovementKind.TRAVERSE, FLAT.nodes(), .5, 65, .5, .2, .1, 0, false);
         for (int i = 0; i < 200; i++) assertEquals(precision, layer.apply(precision, airborne, Bypass.NONE));
+        for (int i = 0; i < 200; i++) assertEquals(precision, layer.apply(precision, FLAT, Bypass.NONE));
     }
 
     @Test
