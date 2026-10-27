@@ -18,6 +18,62 @@ class PlanSamplerTest {
     private static final Fact PLANKS = Fact.has("planks");
 
     @Test
+    void areaProbabilityDoesNotDependOnRegistrySize() {
+        ActivityRegistry registry = new ActivityRegistry();
+        for (int i = 0; i < 80; i++) registry.register(SyntheticActivity.of("gather_" + i, FeatureArea.GATHER));
+        registry.register(SyntheticActivity.of("rare", FeatureArea.TRADE));
+        PlanSampler sampler = new PlanSampler(registry);
+        int rare = 0;
+        for (int seed = 0; seed < 400; seed++) {
+            if (sampler.sample(seed, 1, Personas.GENERALIST, Set.of(), new CoverageTracker())
+                    .steps().get(0).activity().area() == FeatureArea.TRADE) rare++;
+        }
+        assertTrue(rare > 140 && rare < 260, "rare area count: " + rare);
+    }
+
+    @Test
+    void plannedStepsPreferUnusedAreasWithoutChangingCoverage() {
+        ActivityRegistry registry = new ActivityRegistry();
+        for (FeatureArea area : List.of(FeatureArea.GATHER, FeatureArea.COMBAT, FeatureArea.TRADE,
+                FeatureArea.BUILD, FeatureArea.EXPLORE, FeatureArea.FARM)) {
+            for (int i = 0; i < 4; i++) registry.register(SyntheticActivity.of(area + "_" + i, area));
+        }
+        PlanSampler sampler = new PlanSampler(registry);
+        CoverageTracker coverage = new CoverageTracker();
+        int distinctTotal = 0;
+        for (int seed = 0; seed < 100; seed++) {
+            Plan plan = sampler.sample(seed, 6, Personas.GENERALIST, Set.of(), coverage);
+            distinctTotal += plan.steps().stream().map(step -> step.activity().area()).distinct().count();
+        }
+        assertTrue(distinctTotal >= 420, "distinct areas: " + distinctTotal);
+        assertTrue(coverage.snapshot().values().stream().allMatch(uses -> uses == 0));
+    }
+
+    @Test
+    void personaStillBiasesAreaAndActivityNoveltyMattersWithinArea() {
+        Activity old = SyntheticActivity.of("old", FeatureArea.GATHER);
+        Activity fresh = SyntheticActivity.of("fresh", FeatureArea.GATHER);
+        Activity trade = SyntheticActivity.of("trade", FeatureArea.TRADE);
+        PlanSampler sampler = new PlanSampler(registry(old, fresh, trade));
+        CoverageTracker coverage = new CoverageTracker();
+        for (int i = 0; i < 40; i++) coverage.record(old);
+        int freshCount = 0, oldCount = 0;
+        for (int seed = 0; seed < 500; seed++) {
+            String id = sampler.sample(seed, 1, Personas.GENERALIST, Set.of(), coverage).steps().get(0).activity().id();
+            if (id.equals("fresh")) freshCount++;
+            if (id.equals("old")) oldCount++;
+        }
+        assertTrue(freshCount > oldCount, "fresh=" + freshCount + ", old=" + oldCount);
+
+        int trader = 0, miner = 0;
+        for (int seed = 0; seed < 400; seed++) {
+            if (sampler.sample(seed, 1, Personas.TRADER, Set.of(), new CoverageTracker()).steps().get(0).activity().area() == FeatureArea.TRADE) trader++;
+            if (sampler.sample(seed, 1, Personas.MINER, Set.of(), new CoverageTracker()).steps().get(0).activity().area() == FeatureArea.TRADE) miner++;
+        }
+        assertTrue(trader > miner + 150, "trader=" + trader + ", miner=" + miner);
+    }
+
+    @Test
     void preplannedStepsAreRecheckedAfterFailureAndCooldown() {
         Activity provider = SyntheticActivity.of("gather_planks", FeatureArea.GATHER, Set.of(), Set.of(PLANKS));
         Activity consumer = SyntheticActivity.of("craft_pick", FeatureArea.CRAFT, Set.of(PLANKS), Set.of());

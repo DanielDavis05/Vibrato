@@ -2,6 +2,7 @@ package dev.vibrato.director;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,10 +70,6 @@ public final class PlanSampler {
         return new ParamValues(values);
     }
 
-    static double weight(Activity activity, Persona persona, CoverageTracker coverage) {
-        return activity.weight(persona) * 2.0 / (1 + coverage.uses(activity.area()));
-    }
-
     static List<Fact> sortedFacts(Set<Fact> facts) {
         return facts.stream().sorted(Comparator.comparing(Fact::key)).toList();
     }
@@ -81,7 +78,7 @@ public final class PlanSampler {
                                     Persona persona, CoverageTracker coverage) {
         List<Activity> pool = eligibleFromPool(registry.all(), coverage);
         while (!pool.isEmpty()) {
-            Activity candidate = pick(pool, rng, persona, coverage);
+            Activity candidate = pick(pool, rng, persona, coverage, steps);
             pool.remove(candidate);
             List<PlannedStep> trial = new ArrayList<>(steps);
             Set<Fact> trialFacts = new HashSet<>(facts);
@@ -120,7 +117,7 @@ public final class PlanSampler {
                                    RandomGenerator rng, Persona persona, CoverageTracker coverage) {
         List<Activity> pool = eligibleFromPool(registry.providersOf(fact), coverage);
         while (!pool.isEmpty()) {
-            Activity provider = pick(pool, rng, persona, coverage);
+            Activity provider = pick(pool, rng, persona, coverage, steps);
             pool.remove(provider);
             List<PlannedStep> trial = new ArrayList<>(steps);
             Set<Fact> trialFacts = new HashSet<>(facts);
@@ -151,19 +148,41 @@ public final class PlanSampler {
         return pool;
     }
 
-    private static Activity pick(List<Activity> pool, RandomGenerator rng, Persona persona, CoverageTracker coverage) {
+    private static Activity pick(List<Activity> pool, RandomGenerator rng, Persona persona,
+                                 CoverageTracker coverage, List<PlannedStep> steps) {
+        Map<FeatureArea, Integer> plannedAreas = new EnumMap<>(FeatureArea.class);
+        Map<String, Integer> plannedActivities = new HashMap<>();
+        for (PlannedStep step : steps) {
+            Activity activity = step.activity();
+            plannedAreas.merge(activity.area(), 1, Integer::sum);
+            plannedActivities.merge(activity.id(), 1, Integer::sum);
+        }
+
+        // Divide each area's share among its eligible activities. A large registry area
+        // therefore does not gain probability simply by having more entries. Novelty
+        // changes the distribution within an area without starving single-entry areas.
+        Map<FeatureArea, Double> areaTotals = new EnumMap<>(FeatureArea.class);
         double[] weights = new double[pool.size()];
+        for (int i = 0; i < pool.size(); i++) {
+            Activity activity = pool.get(i);
+            int used = coverage.uses(activity.id());
+            int planned = plannedActivities.getOrDefault(activity.id(), 0);
+            weights[i] = activity.weight(persona) / Math.sqrt(1.0 + used + 3.0 * planned);
+            areaTotals.merge(activity.area(), weights[i], Double::sum);
+        }
         double total = 0;
         for (int i = 0; i < pool.size(); i++) {
-            weights[i] = weight(pool.get(i), persona, coverage);
+            FeatureArea area = pool.get(i).area();
+            int used = coverage.uses(area);
+            int planned = plannedAreas.getOrDefault(area, 0);
+            double areaWeight = persona.weightFor(area) / (1.0 + used + planned * (1.0 + used / 4.0));
+            weights[i] = weights[i] / areaTotals.get(area) * areaWeight;
             total += weights[i];
         }
         double roll = rng.nextDouble() * total;
         for (int i = 0; i < pool.size(); i++) {
             roll -= weights[i];
-            if (roll < 0) {
-                return pool.get(i);
-            }
+            if (roll < 0) return pool.get(i);
         }
         return pool.get(pool.size() - 1);
     }
