@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "vibrato_protocol_fixture",
+  "version": "0.1.0",
+  "name": "Vibrato Protocol Fixture",
+  "description": "Isolated local protocol coverage fixture",
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {"server": ["dev.vibrato.fixture.ProtocolFixture"]},
+  "mixins": ["protocol-fixture-lifecycle.mixins.json"],
+  "depends": {"fabricloader": ">=0.16.14", "fabric-api": "*", "minecraft": "1.21.1", "java": ">=21"}
+}
