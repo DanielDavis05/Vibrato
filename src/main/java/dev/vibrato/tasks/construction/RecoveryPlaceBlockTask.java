@@ -63,6 +63,14 @@ public class RecoveryPlaceBlockTask extends Task {
                         break;
                     }
                 }
+                // The builder needs the material ready on the hotbar before it
+                // begins planning. Wait for the swap to become visible rather than
+                // treating the slot click itself as proof that it completed.
+                mod.getSlotHandler().forceEquipItem(selected.asItem());
+                if (!StorageHelper.isEquipped(mod, selected.asItem())) {
+                    setDebugState("Moving recovery material to hotbar");
+                    return null;
+                }
                 Debug.logInternal("Recovery step material=" + selected + " target=" + target.toShortString()
                         + " inventorySlot=" + inventorySlot + " hotbar=" + (inventorySlot < 9)
                         + " protected=false");
