@@ -1,0 +1,856 @@
+{
+  "schema_version": 1,
+  "kind": "external-testing-coverage-specification",
+  "source_revision": "a060b187215227a33835b48dee5ca02cd69373c1",
+  "discovery": "Static source inventory; external implementation must reconcile this with the runtime registry and registered commands.",
+  "execution_status": "No campaign was launched for this specification. All rows begin not_run; prior reports remain separate historical evidence.",
+  "activity_count": 146,
+  "command_count": 25,
+  "activities": {
+    "anvil_combine": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Use an anvil to combine target equipment and second input; verify changed resulting equipment.",
+      "status": "not_run"
+    },
+    "anvil_rename": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Rename requested item in an anvil; verify its custom name.",
+      "status": "not_run"
+    },
+    "ask_for_help": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Emit a local help request mentioning the selected item.",
+      "status": "not_run"
+    },
+    "blaze_rods": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Acquire requested blaze rods by hunting blazes; inspect inventory.",
+      "status": "not_run"
+    },
+    "bow_practice": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Use a bow to defeat a selected mob; verify target death.",
+      "status": "not_run"
+    },
+    "breed_animals": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Breed a selected pair; verify a baby or breeding advancement.",
+      "status": "not_run"
+    },
+    "brew_potion": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Brew the selected potion; verify potion contents in inventory.",
+      "status": "not_run"
+    },
+    "build_bed": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Construct bed with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_bridge": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct bridge with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_farm": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct farm with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_house": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct house with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_hut": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct hut with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_nether_portal": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Construct a functional Nether portal; inspect portal blocks.",
+      "status": "not_run"
+    },
+    "build_obelisk": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct obelisk with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_pen": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct pen with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_portal_frame": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct a portal frame; inspect obsidian frame.",
+      "status": "not_run"
+    },
+    "build_pyramid": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct pyramid with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_tower": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct tower with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "build_wall": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Construct wall with chosen dimensions and palette; inspect placed blocks.",
+      "status": "not_run"
+    },
+    "chat_small_talk": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Send selected small-talk message to local chat.",
+      "status": "not_run"
+    },
+    "check_progress": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Report advancement progress in client chat.",
+      "status": "not_run"
+    },
+    "chest_store_items": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Store selected item quantity in a chest; inspect chest inventory.",
+      "status": "not_run"
+    },
+    "clear_nearby_hostiles": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Defeat all hostiles within the chosen radius; verify no targets remain.",
+      "status": "not_run"
+    },
+    "collect_milk": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Milk cows into requested number of buckets; inspect inventory.",
+      "status": "not_run"
+    },
+    "collect_xp_levels": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Reach selected XP level through gameplay; verify player XP level.",
+      "status": "not_run"
+    },
+    "cook_food": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Cook selected raw food quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "craft_bed": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft bed using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_boat": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft boat using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_bucket": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft bucket using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_chest": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft chest using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_crafting_table": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft crafting table using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_diamond_armor_set": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft diamond armor set using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_diamond_pickaxe": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft diamond pickaxe using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_diamond_tool": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft diamond tool using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_ender_eye": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft ender eye using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_fishing_rod": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Craft fishing rod using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_furnace": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft furnace using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_iron_armor_set": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft iron armor set using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_iron_pickaxe": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft iron pickaxe using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_iron_tool": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft iron tool using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_shield": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft shield using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_stone_pickaxe": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft stone pickaxe using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_torches": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft torches using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "craft_wooden_pickaxe": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Craft wooden pickaxe using chosen parameters; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "defend_position": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Defend the current location for the selected duration; verify survival and duration.",
+      "status": "not_run"
+    },
+    "emote": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Perform the selected jump, sneak or spin action; observe player motion.",
+      "status": "not_run"
+    },
+    "enchant_item": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Enchant selected equipment at an enchanting table; verify enchantments.",
+      "status": "not_run"
+    },
+    "equip_diamond_armor": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Equip full diamond armor; inspect armor slots.",
+      "status": "not_run"
+    },
+    "equip_iron_armor": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Equip full iron armor; inspect armor slots.",
+      "status": "not_run"
+    },
+    "escape_underground": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Navigate from an enclosed underground location to surface; verify location.",
+      "status": "not_run"
+    },
+    "explore_far": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Move the selected X/Z offset; verify player coordinates.",
+      "status": "not_run"
+    },
+    "explore_offset": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Move the selected X/Z offset; verify player coordinates.",
+      "status": "not_run"
+    },
+    "farm_crop": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Create and plant a farm of the selected crop and size; inspect farmland and planted crops.",
+      "status": "not_run"
+    },
+    "farm_drop": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Collect selected mob drop quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "fish": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Fish the selected number of catches; inspect caught items.",
+      "status": "not_run"
+    },
+    "follow_friend": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Follow another player for selected duration; observe proximity and movement.",
+      "status": "not_run"
+    },
+    "gain_xp_levels": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Earn selected XP level; inspect player level.",
+      "status": "not_run"
+    },
+    "gather_blaze_rods": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire blaze rods in required quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_building_blocks": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Acquire selected count of building blocks; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_crop": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire requested crop quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_diamond": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire diamond in required quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_ender_pearls": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire ender pearls in required quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_item": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire selected item quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_obsidian": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire obsidian in required quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_string": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire string in required quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "gather_wood": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Acquire selected wood log quantity; inspect inventory.",
+      "status": "not_run"
+    },
+    "get_eggs": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Collect requested number of eggs; inspect inventory.",
+      "status": "not_run"
+    },
+    "get_emeralds": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Acquire requested emeralds; inspect inventory.",
+      "status": "not_run"
+    },
+    "get_lapis": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Acquire requested lapis lazuli; inspect inventory.",
+      "status": "not_run"
+    },
+    "get_weapon": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Obtain selected sword tier; inspect inventory.",
+      "status": "not_run"
+    },
+    "go_nether": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Travel into the Nether; inspect dimension.",
+      "status": "not_run"
+    },
+    "go_overworld": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Travel into the Overworld; inspect dimension.",
+      "status": "not_run"
+    },
+    "greet_players": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Send greetings to nearby players; observe local chat.",
+      "status": "not_run"
+    },
+    "grindstone_disenchant": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Remove enchantments from selected item using a grindstone; inspect item components.",
+      "status": "not_run"
+    },
+    "harvest_food": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Collect requested food units; inspect inventory.",
+      "status": "not_run"
+    },
+    "harvest_melon": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Harvest requested melon slices; inspect inventory.",
+      "status": "not_run"
+    },
+    "harvest_pumpkin": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Harvest requested pumpkins; inspect inventory.",
+      "status": "not_run"
+    },
+    "harvest_sugar_cane": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Harvest requested sugar cane; inspect inventory.",
+      "status": "not_run"
+    },
+    "hunt_animals": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Hunt selected animals until requested raw meat quantity is acquired.",
+      "status": "not_run"
+    },
+    "hunt_for_food": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Hunt animals for requested food units; inspect inventory.",
+      "status": "not_run"
+    },
+    "inventory_stash_items": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Store selected item quantity in a container; inspect container inventory.",
+      "status": "not_run"
+    },
+    "level_10": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Earn XP level 10; inspect player level.",
+      "status": "not_run"
+    },
+    "level_20": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Earn XP level 20; inspect player level.",
+      "status": "not_run"
+    },
+    "level_30": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Earn XP level 30; inspect player level.",
+      "status": "not_run"
+    },
+    "list_players": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Execute list command and observe player-list response.",
+      "status": "not_run"
+    },
+    "loot_chests": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Loot nearby containers; verify inventory and chest contents.",
+      "status": "not_run"
+    },
+    "loot_nearby_chests": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Loot nearby containers; verify inventory and chest contents.",
+      "status": "not_run"
+    },
+    "night_shelter": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Build an overnight shelter; inspect placed structure.",
+      "status": "not_run"
+    },
+    "organize_inventory": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Arrange tools and food in hotbar and discard junk; inspect slots.",
+      "status": "not_run"
+    },
+    "place_bed_and_set_spawn": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Place a bed and establish player respawn point; inspect bed and respawn state.",
+      "status": "not_run"
+    },
+    "place_chest_and_stash": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Place chest and store loot; inspect chest and contents.",
+      "status": "not_run"
+    },
+    "pursue_advancement_husbandry_make_a_sign": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:husbandry/make_a_sign by get sign 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_deflect_arrow": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/deflect_arrow by get shield 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_form_obsidian": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/form_obsidian by get obsidian 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_iron_tools": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/iron_tools by get iron_pickaxe 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_lava_bucket": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/lava_bucket by get lava_bucket 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_mine_diamond": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/mine_diamond by get diamond 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_mine_stone": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/mine_stone by get cobblestone 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_obtain_armor": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/obtain_armor by get iron_chestplate 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_shiny_gear": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/shiny_gear by get diamond_chestplate 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_smelt_iron": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/smelt_iron by get iron_ingot 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_advancement_story_upgrade_tools": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Complete advancement minecraft:story/upgrade_tools by get stone_pickaxe 1; verify advancement grant independently.",
+      "status": "not_run"
+    },
+    "pursue_iron_tools": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Complete minecraft:story/iron_tools advancement; inspect advancement state.",
+      "status": "not_run"
+    },
+    "pursue_lava_bucket": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Complete minecraft:story/lava_bucket advancement; inspect advancement state.",
+      "status": "not_run"
+    },
+    "pursue_mine_diamond": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Complete minecraft:story/mine_diamond advancement; inspect advancement state.",
+      "status": "not_run"
+    },
+    "reply_whispers": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Reply to a real local incoming whisper; observe response.",
+      "status": "not_run"
+    },
+    "run_safe_command": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Execute selected allowed command and observe its response.",
+      "status": "not_run"
+    },
+    "sell_surplus": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Sell selected item to a villager and receive emeralds; inspect inventory and trade.",
+      "status": "not_run"
+    },
+    "set_spawn_point": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Place a bed and establish respawn point; inspect player spawn.",
+      "status": "not_run"
+    },
+    "share_items": {
+      "source": "src/main/java/dev/vibrato/director/SocialActivities.java",
+      "proposed_goal": "Give selected item quantity to a nearby player; inspect recipient inventory.",
+      "status": "not_run"
+    },
+    "shear_sheep": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Shear sheep and acquire requested wool; inspect sheep and inventory.",
+      "status": "not_run"
+    },
+    "slay_mob": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Defeat selected mob count; verify target death.",
+      "status": "not_run"
+    },
+    "sleep_through_night": {
+      "source": "src/main/java/dev/vibrato/director/LifeActivities.java",
+      "proposed_goal": "Sleep in bed until morning; verify time and bed interaction.",
+      "status": "not_run"
+    },
+    "smelt_charcoal": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Smelt charcoal to the chosen quantity; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "smelt_glass": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Smelt glass to the chosen quantity; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "smelt_gold_ingot": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Smelt gold ingot to the chosen quantity; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "smelt_iron_ingot": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Smelt iron ingot to the chosen quantity; inspect resulting inventory.",
+      "status": "not_run"
+    },
+    "stash_valuables": {
+      "source": "src/main/java/dev/vibrato/director/BuildActivities.java",
+      "proposed_goal": "Move a threshold of valuables to a chest; inspect chest inventory.",
+      "status": "not_run"
+    },
+    "trade_for_enchanted_book": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Trade with villager for enchanted book; inspect inventory.",
+      "status": "not_run"
+    },
+    "trade_for_item": {
+      "source": "src/main/java/dev/vibrato/director/TradeEnchantActivities.java",
+      "proposed_goal": "Trade with villager for selected item; inspect inventory and trade.",
+      "status": "not_run"
+    },
+    "travel_boat_cross": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Cross a prepared water course toward selected destination; verify position and boat use.",
+      "status": "not_run"
+    },
+    "travel_climb_mountain_peak": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Reach selected Y altitude; inspect position.",
+      "status": "not_run"
+    },
+    "travel_elytra_glide": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Glide toward selected destination using an elytra; verify motion and position.",
+      "status": "not_run"
+    },
+    "travel_explore_biome": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Reach selected biome; verify current biome.",
+      "status": "not_run"
+    },
+    "travel_find_desert_temple": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated desert_temple structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_jungle_temple": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated jungle_temple structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_mineshaft": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated mineshaft structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_ruined_portal": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated ruined_portal structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_shipwreck": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated shipwreck structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_stronghold": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find generated stronghold structure and record its location.",
+      "status": "not_run"
+    },
+    "travel_find_village": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Locate village; verify recorded location against generated village.",
+      "status": "not_run"
+    },
+    "travel_minecart_ride": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Ride a minecart toward selected destination; verify vehicle and position.",
+      "status": "not_run"
+    },
+    "travel_nether_ancient_debris": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Search the Nether and acquire ancient debris; inspect inventory.",
+      "status": "not_run"
+    },
+    "travel_nether_fortress_search": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Find a Nether fortress; verify recorded location.",
+      "status": "not_run"
+    },
+    "travel_portal_to_nether": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Travel through a portal into the Nether; inspect dimension.",
+      "status": "not_run"
+    },
+    "travel_portal_to_overworld": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Travel through a portal into the Overworld; inspect dimension.",
+      "status": "not_run"
+    },
+    "travel_return_to_home": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Return to saved home; verify coordinates.",
+      "status": "not_run"
+    },
+    "travel_return_to_spawn": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Return to saved spawn; verify coordinates.",
+      "status": "not_run"
+    },
+    "travel_return_to_village": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Return to saved village; verify coordinates.",
+      "status": "not_run"
+    },
+    "travel_ride_horse": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Ride a horse toward selected destination; verify vehicle and position.",
+      "status": "not_run"
+    },
+    "travel_ride_pig": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Ride a pig toward selected destination; verify vehicle and position.",
+      "status": "not_run"
+    },
+    "travel_wander_exploration": {
+      "source": "src/main/java/dev/vibrato/director/TravelActivities.java",
+      "proposed_goal": "Wander within selected radius; observe displacement and timing.",
+      "status": "not_run"
+    },
+    "upgrade_diamond_armor": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Upgrade to diamond armor; inspect equipped gear and tools.",
+      "status": "not_run"
+    },
+    "upgrade_iron_armor": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Upgrade to iron armor; inspect equipped gear and tools.",
+      "status": "not_run"
+    },
+    "upgrade_netherite_armor": {
+      "source": "src/main/java/dev/vibrato/director/CombatActivities.java",
+      "proposed_goal": "Upgrade to netherite armor; inspect equipped gear and tools.",
+      "status": "not_run"
+    },
+    "wait_out_night": {
+      "source": "src/main/java/dev/vibrato/director/CoreActivities.java",
+      "proposed_goal": "Sleep through the night; verify morning time.",
+      "status": "not_run"
+    }
+  },
+  "commands": {
+    "coords": {
+      "proposed_goal": "Report current position",
+      "status": "not_run"
+    },
+    "custom": {
+      "proposed_goal": "Invoke a configured custom task prefix",
+      "status": "not_run"
+    },
+    "deposit": {
+      "proposed_goal": "Deposit selected items in a container",
+      "status": "not_run"
+    },
+    "equip": {
+      "proposed_goal": "Equip requested armor",
+      "status": "not_run"
+    },
+    "follow": {
+      "proposed_goal": "Follow named other player",
+      "status": "not_run"
+    },
+    "food": {
+      "proposed_goal": "Collect requested food units",
+      "status": "not_run"
+    },
+    "gamer": {
+      "proposed_goal": "Pursue game completion",
+      "status": "not_run"
+    },
+    "gamma": {
+      "proposed_goal": "Set client brightness",
+      "status": "not_run"
+    },
+    "get": {
+      "proposed_goal": "Collect requested item and quantity",
+      "status": "not_run"
+    },
+    "give": {
+      "proposed_goal": "Collect item and give to named other player",
+      "status": "not_run"
+    },
+    "goto": {
+      "proposed_goal": "Navigate to requested coordinates",
+      "status": "not_run"
+    },
+    "help": {
+      "proposed_goal": "Print command list or usage",
+      "status": "not_run"
+    },
+    "idle": {
+      "proposed_goal": "Remain idle",
+      "status": "not_run"
+    },
+    "inventory": {
+      "proposed_goal": "Report inventory or item count",
+      "status": "not_run"
+    },
+    "list": {
+      "proposed_goal": "List obtainable items",
+      "status": "not_run"
+    },
+    "locate_structure": {
+      "proposed_goal": "Locate a generated structure",
+      "status": "not_run"
+    },
+    "play": {
+      "proposed_goal": "Start autonomous play with selected persona",
+      "status": "not_run"
+    },
+    "protocol": {
+      "proposed_goal": "Exercise and report protocol coverage on isolated fixture",
+      "status": "not_run"
+    },
+    "punk": {
+      "proposed_goal": "Attack named player",
+      "status": "not_run"
+    },
+    "record": {
+      "proposed_goal": "Start or stop a motion trace",
+      "status": "not_run"
+    },
+    "reload_settings": {
+      "proposed_goal": "Reload settings and access lists",
+      "status": "not_run"
+    },
+    "stash": {
+      "proposed_goal": "Stash selected items in a container",
+      "status": "not_run"
+    },
+    "status": {
+      "proposed_goal": "Report current running command",
+      "status": "not_run"
+    },
+    "stop": {
+      "proposed_goal": "Stop current task and pause autonomous play",
+      "status": "not_run"
+    },
+    "test": {
+      "proposed_goal": "Run diagnostic hook",
+      "status": "not_run"
+    }
+  },
+  "default_required_evidence": {
+    "activities": [
+      "validated preconditions",
+      "actual invocation",
+      "independent player/world/entity goal proof",
+      "terminal outcome and failure record"
+    ],
+    "commands": [
+      "normal command/UI path",
+      "independent effect or response",
+      "control and cancellation behavior where applicable"
+    ]
+  }
+}

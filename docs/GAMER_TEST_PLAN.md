@@ -1,5 +1,7 @@
 # `@gamer` test campaign: parallel instances, rounds, and what "works" means
 
+Architecture update: the testing system must live in a separate project. [External testing specification](EXTERNAL_TESTING_SPEC.md) defines that boundary and supersedes the infrastructure placement proposed below. This file remains useful for historical failures and long-term reliability targets.
+
 Written for the agent (or agents) who will build the test harness and run the rounds. Companion docs: `docs/NETHER_FIX_PLAN.md` (the
 Nether-specific analysis), `docs/NETHER_FIX_VALIDATION_2026-10-27.md` (what upstream already fixed and tested), `docs/smoke-test.md` (the script
 runner and single-instance smoke tests), `scripts/fleet/README.md` (an untested multi-client launcher).
