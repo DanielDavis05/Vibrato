@@ -17,6 +17,7 @@ import baritone.pathing.movement.CalculationContext;
 import baritone.process.MineProcess;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
@@ -375,6 +376,36 @@ public class BlockTracker extends Tracker {
                 currentCache().smartPurge(_mod, _mod.getPlayer().getPos());
             }
         }
+        if (Boolean.getBoolean("vibrato.debugNavigation") && _mod.getPlayer() != null && _mod.getWorld() != null) {
+            traceFluidScan(blocksToScan, found);
+        }
+    }
+
+    private void traceFluidScan(Block[] tracked, List<BlockPos> found) {
+        List<String> details = new ArrayList<>();
+        Vec3d player = _mod.getPlayer().getPos();
+        for (Block fluid : new Block[]{Blocks.WATER, Blocks.LAVA}) {
+            if (Arrays.stream(tracked).noneMatch(block -> block == fluid)) continue;
+            List<BlockPos> raw = found.stream()
+                    .filter(pos -> _mod.getChunkTracker().isChunkLoaded(pos)
+                            && _mod.getWorld().getBlockState(pos).isOf(fluid))
+                    .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(player)))
+                    .collect(Collectors.toList());
+            List<BlockPos> cached;
+            synchronized (_scanMutex) {
+                cached = currentCache().getKnownLocations(fluid);
+            }
+            cached.sort(Comparator.comparingDouble(pos -> pos.getSquaredDistance(player)));
+            Optional<BlockPos> nearby = getNearestWithinRange(player, 16,
+                    pos -> WorldHelper.isSourceBlock(_mod, pos, false), fluid);
+            details.add((fluid == Blocks.WATER ? "water" : "lava")
+                    + " rawLoaded=" + raw.size() + " rawNearest=" + raw.stream().limit(3).toList()
+                    + " cached=" + cached.size() + " cachedNearest=" + cached.stream().limit(3).toList()
+                    + " directSource=" + nearby.map(Object::toString).orElse("none"));
+        }
+        if (!details.isEmpty()) {
+            System.out.println("[FluidScan] rawTotal=" + found.size() + " " + String.join("; ", details));
+        }
     }
 
     // Checks whether it would be WRONG to say "at pos the block is block"
@@ -501,20 +532,7 @@ public class BlockTracker extends Tracker {
 
         public void addBlock(Block block, BlockPos pos) {
             if (blockUnreachable(pos)) return;
-            if (_cachedByPosition.containsKey(pos)) {
-                if (_cachedByPosition.get(pos) == block) {
-                    // We're already tracked
-                    return;
-                } else {
-                    // We're tracked incorrectly, fix
-                    removeBlock(pos, block);
-                }
-            }
-            if (!anyFound(block)) {
-                _cachedBlocks.put(block, new ArrayList<>());
-            }
-            _cachedBlocks.get(block).add(pos);
-            _cachedByPosition.put(pos, block);
+            BlockCacheIndex.add(_cachedBlocks, _cachedByPosition, block, pos);
         }
 
 
