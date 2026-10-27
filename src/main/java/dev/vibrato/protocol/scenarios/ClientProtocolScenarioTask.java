@@ -8,6 +8,16 @@ import java.util.Set;
 import net.minecraft.advancement.PlacedAdvancement;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.advancement.AdvancementsScreen;
+import net.minecraft.client.gui.screen.StatsScreen;
+import net.minecraft.client.gui.screen.ingame.CrafterScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
+import net.minecraft.network.packet.c2s.play.SpectatorTeleportC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateDifficultyC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateDifficultyLockC2SPacket;
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.client.gui.screen.ingame.CommandBlockScreen;
 import net.minecraft.client.gui.screen.ingame.MinecartCommandBlockScreen;
 import net.minecraft.world.GameMode;
@@ -29,6 +39,19 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("advancements", new Requirement("Join a world with an available root advancement", List.of("Seen Advancements"))),
             Map.entry("pick_item", new Requirement("Join a world with an item in inventory slot 9", List.of("Pick Item"))),
             Map.entry("creative_slot", new Requirement("Join a world in creative mode with an item in the first hotbar slot", List.of("Set Creative Mode Slot"))),
+            Map.entry("query_block", new Requirement("Aim at a block entity as an operator", List.of("Query Block Entity Tag"))),
+            Map.entry("query_entity", new Requirement("Aim at an entity as an operator", List.of("Query Entity Tag"))),
+            Map.entry("difficulty", new Requirement("Join an isolated unlocked fixture world as an operator", List.of("Change Difficulty"))),
+            Map.entry("difficulty_lock", new Requirement("Join an isolated fixture world as an operator; lock state is restored", List.of("Lock Difficulty"))),
+            Map.entry("suggestions", new Requirement("Join a world with commands enabled", List.of("Command Suggestions Request"))),
+            Map.entry("crafter_slot", new Requirement("Open a crafter with empty first slot and cursor", List.of("Change Container Slot State"))),
+            Map.entry("recipe_seen", new Requirement("Open player inventory with an unlocked, newly highlighted recipe", List.of("Set Seen Recipe"))),
+            Map.entry("spectator_teleport", new Requirement("Enter spectator mode and aim at an entity", List.of("Teleport To Entity"))),
+            Map.entry("ping", new Requirement("Join a Play connection", List.of("Ping Request (play)"))),
+            Map.entry("statistics", new Requirement("Join a Play connection with no screen open", List.of("Client Status"))),
+            Map.entry("chat", new Requirement("Join a server that permits chat", List.of("Chat Message"))),
+            Map.entry("command", new Requirement("Join a server with the help command", List.of("Chat Command"))),
+            Map.entry("signed_command", new Requirement("Join an authenticated server with profile keys and the msg command", List.of("Signed Chat Command"))),
             Map.entry("abilities", new Requirement("Join a world with flight permitted", List.of("Player Abilities (serverbound)")))
     );
     private final String action;
@@ -42,6 +65,17 @@ public final class ClientProtocolScenarioTask extends Task {
     public static Set<String> supportedActions() { return ACTIONS.keySet(); }
     public static String requirements(String action) { return requirement(action).context(); }
     public static List<String> expectedPackets(String action) { return requirement(action).packets(); }
+    /** Server fixture command group, or "none" when no server fixture setup is required. */
+    public static String fixtureSetup(String action) {
+        requirement(action);
+        return switch (action) {
+            case "command_block", "jigsaw", "jigsaw_generate", "structure", "beacon", "crafter_slot", "query_block" -> "blocks";
+            case "query_entity", "spectator_teleport", "command_minecart" -> "entities";
+            case "book_edit", "book_sign", "pick_item", "creative_slot", "recipe_seen" -> "inventory";
+            case "difficulty", "difficulty_lock" -> "world";
+            default -> "none";
+        };
+    }
     private static Requirement requirement(String action) {
         Requirement result = ACTIONS.get(action);
         if (result == null) throw new IllegalArgumentException("Unknown protocol scenario: " + action);
@@ -79,6 +113,66 @@ public final class ClientProtocolScenarioTask extends Task {
                 client.interactionManager.clickCreativeStack(client.player.getInventory().getStack(0).copy(), 36);
                 yield true;
             }
+            case "query_block" -> {
+                if (!client.player.hasPermissionLevel(2) || client.world == null
+                        || !(client.crosshairTarget instanceof BlockHitResult hit)
+                        || hit.getType() != HitResult.Type.BLOCK
+                        || client.world.getBlockEntity(hit.getBlockPos()) == null) yield false;
+                client.getNetworkHandler().getDataQueryHandler().queryBlockNbt(hit.getBlockPos(), ignored -> { });
+                yield true;
+            }
+            case "query_entity" -> {
+                if (!client.player.hasPermissionLevel(2) || client.targetedEntity == null) yield false;
+                client.getNetworkHandler().getDataQueryHandler().queryEntityNbt(client.targetedEntity.getId(), ignored -> { });
+                yield true;
+            }
+            case "difficulty" -> {
+                if (!client.player.hasPermissionLevel(2) || client.world == null || client.world.getLevelProperties().isDifficultyLocked()) yield false;
+                var current = client.world.getDifficulty();
+                var next = current == net.minecraft.world.Difficulty.NORMAL ? net.minecraft.world.Difficulty.EASY : net.minecraft.world.Difficulty.NORMAL;
+                client.getNetworkHandler().sendPacket(new UpdateDifficultyC2SPacket(next));
+                yield true;
+            }
+            case "difficulty_lock" -> {
+                if (!client.player.hasPermissionLevel(2) || client.world == null) yield false;
+                boolean previous = client.world.getLevelProperties().isDifficultyLocked();
+                client.getNetworkHandler().sendPacket(new UpdateDifficultyLockC2SPacket(!previous));
+                client.getNetworkHandler().sendPacket(new UpdateDifficultyLockC2SPacket(previous));
+                yield true;
+            }
+            case "suggestions" -> {
+                client.getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(0, "help "));
+                yield true;
+            }
+            case "crafter_slot" -> toggleCrafterSlot(client);
+            case "recipe_seen" -> displayRecipe(client);
+            case "spectator_teleport" -> {
+                if (!client.player.isSpectator() || client.targetedEntity == null) yield false;
+                client.getNetworkHandler().sendPacket(new SpectatorTeleportC2SPacket(client.targetedEntity.getUuid()));
+                yield true;
+            }
+            case "ping" -> {
+                client.getNetworkHandler().sendPacket(new QueryPingC2SPacket(net.minecraft.util.Util.getMeasuringTimeMs()));
+                yield true;
+            }
+            case "statistics" -> {
+                if (client.currentScreen != null) yield false;
+                client.setScreen(new StatsScreen(null, client.player.getStatHandler()));
+                yield true;
+            }
+            case "chat" -> {
+                client.getNetworkHandler().sendChatMessage("Protocol fixture message");
+                yield true;
+            }
+            case "command" -> {
+                client.getNetworkHandler().sendChatCommand("help");
+                yield true;
+            }
+            case "signed_command" -> {
+                if (!client.providesProfileKeys()) yield false;
+                client.getNetworkHandler().sendChatCommand("msg " + client.player.getGameProfile().getName() + " protocol fixture");
+                yield true;
+            }
             case "abilities" -> {
                 if (!client.player.getAbilities().allowFlying) yield false;
                 client.player.getAbilities().flying = !client.player.getAbilities().flying;
@@ -89,6 +183,28 @@ public final class ClientProtocolScenarioTask extends Task {
         };
         if (!done) setDebugState("Waiting for fixture: " + requirements(action));
         return null;
+    }
+    private static boolean toggleCrafterSlot(MinecraftClient client) {
+        if (!(client.currentScreen instanceof CrafterScreen screen) || client.player.isSpectator()) return false;
+        var handler = screen.getScreenHandler();
+        if (!handler.getSlot(0).getStack().isEmpty() || !handler.getCursorStack().isEmpty()) return false;
+        boolean enabled = handler.isSlotDisabled(0);
+        handler.setSlotEnabled(0, enabled);
+        client.interactionManager.slotChangedState(0, handler.syncId, enabled);
+        return true;
+    }
+    private static boolean displayRecipe(MinecraftClient client) {
+        if (!(client.currentScreen instanceof InventoryScreen screen)) return false;
+        var book = client.player.getRecipeBook();
+        for (var recipe : client.getNetworkHandler().getRecipeManager().values()) {
+            if (book.contains(recipe) && book.shouldDisplay(recipe)) {
+                var widget = screen.getRecipeBookWidget();
+                if (widget.isOpen()) widget.toggleOpen();
+                widget.toggleOpen();
+                return true;
+            }
+        }
+        return false;
     }
     private static boolean openAdvancements(MinecraftClient client) {
         if (client.currentScreen != null) return false;

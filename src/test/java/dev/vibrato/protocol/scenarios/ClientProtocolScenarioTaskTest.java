@@ -22,6 +22,8 @@ class ClientProtocolScenarioTaskTest {
         for (String action : ClientProtocolScenarioTask.supportedActions()) {
             assertFalse(ClientProtocolScenarioTask.requirements(action).isBlank(), action);
             assertFalse(ClientProtocolScenarioTask.expectedPackets(action).isEmpty(), action);
+            assertTrue(java.util.Set.of("none", "blocks", "entities", "inventory", "world")
+                    .contains(ClientProtocolScenarioTask.fixtureSetup(action)), action);
         }
     }
 }
