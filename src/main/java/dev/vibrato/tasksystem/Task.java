@@ -186,6 +186,11 @@ public abstract class Task {
         return _sub != null;
     }
 
+    /** True while this task or an active descendant owns the crafting grid. */
+    protected final boolean hasActiveCraftingGridUser() {
+        return thisOrChildSatisfies(task -> task.isActive() && task instanceof ITaskUsesCraftingGrid);
+    }
+
     public boolean thisOrChildSatisfies(Predicate<Task> pred) {
         Task t = this;
         while (t != null) {

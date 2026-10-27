@@ -7,7 +7,6 @@ import dev.vibrato.tasks.movement.PickupDroppedItemTask;
 import dev.vibrato.tasks.resources.MineAndCollectTask;
 import dev.vibrato.tasks.slot.*;
 import dev.vibrato.tasksystem.ITaskCanForce;
-import dev.vibrato.tasksystem.ITaskUsesCraftingGrid;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.trackers.storage.ContainerCache;
 import dev.vibrato.util.Dimension;
@@ -68,7 +67,8 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     @Override
     public boolean shouldForce(Vibrato mod, Task interruptingCandidate) {
         // We have an important item target in our cursor.
-        return StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && !isFinished(mod)
+        return !hasActiveCraftingGridUser()
+                && StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && !isFinished(mod)
                 // This _should_ be redundant, but it'll be a guard just to make 100% sure.
                 && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()));
     }
@@ -104,15 +104,18 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
     protected Task onTick(Vibrato mod) {
         // If we have an item in an INACCESSIBLE inventory slot
 
-        for (ItemTarget target : _itemTargets) {
-            if (StorageHelper.isItemInaccessibleToContainer(mod, target)) {
-                setDebugState("Moving from SPECIAL inventory slot");
-                return new MoveInaccessibleItemToInventoryTask(target);
+        boolean craftingOwnsGrid = hasActiveCraftingGridUser();
+        if (!craftingOwnsGrid) {
+            for (ItemTarget target : _itemTargets) {
+                if (StorageHelper.isItemInaccessibleToContainer(mod, target)) {
+                    setDebugState("Moving from SPECIAL inventory slot");
+                    return new MoveInaccessibleItemToInventoryTask(target);
+                }
             }
         }
 
-        // We have enough items COUNTING the cursor slot, we just need to move an item from our cursor.
-        if (StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()))) {
+        // Let a crafting descendant finish with ingredients in the cursor/grid.
+        if (!craftingOwnsGrid && StorageHelper.itemTargetsMetInventory(mod, _itemTargets) && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(StorageHelper.getItemStackInCursorSlot().getItem()))) {
             Optional<Slot> toMove = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(StorageHelper.getItemStackInCursorSlot(), true).or(() -> StorageHelper.getGarbageSlot(mod));
             if (toMove.isEmpty()) {
                 setDebugState("STUCK! No slot can fit our item.");
@@ -201,7 +204,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
 
         // Make sure that items don't get stuck in the player crafting grid. May be an issue if a future task isn't a resource task.
         if(StorageHelper.isPlayerInventoryOpen()){
-            if (!(thisOrChildSatisfies(task -> task instanceof ITaskUsesCraftingGrid)) || _ensureFreeCraftingGridTask.isActive()){
+            if (!craftingOwnsGrid || _ensureFreeCraftingGridTask.isActive()){
                 for(Slot slot : PlayerSlot.CRAFT_INPUT_SLOTS){
                     if(!StorageHelper.getItemStackInSlot(slot).isEmpty()) {
                         return _ensureFreeCraftingGridTask;

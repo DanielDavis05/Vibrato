@@ -21,6 +21,7 @@ class TaskInterruptionTest {
         Task next;
         int ticks;
         int stops;
+        boolean craftingOwnsGrid() { return hasActiveCraftingGridUser(); }
 
         @Override protected void onStart(Vibrato mod) {}
         @Override protected Task onTick(Vibrato mod) { ticks++; return next; }
@@ -28,6 +29,8 @@ class TaskInterruptionTest {
         @Override protected boolean isEqual(Task other) { return this == other; }
         @Override protected String toDebugString() { return "fake"; }
     }
+
+    private static final class GridTask extends FakeTask implements ITaskUsesCraftingGrid {}
 
     private static final class FailingStartTask extends FakeTask {
         boolean fail = true;
@@ -92,6 +95,25 @@ class TaskInterruptionTest {
         assertEquals(2, protectedChild.ticks);
         assertEquals(1, protectedChild.stops);
         assertEquals(1, wrapper.stops);
+    }
+
+    @Test
+    void activeNestedCraftingKeepsGridOwnershipUntilStopped() {
+        TestChain chain = new TestChain();
+        FakeTask gatherLogs = new FakeTask();
+        FakeTask acquireAxe = new FakeTask();
+        GridTask craftPlanks = new GridTask();
+        gatherLogs.next = acquireAxe;
+        acquireAxe.next = craftPlanks;
+        assertFalse(gatherLogs.craftingOwnsGrid());
+        gatherLogs.tick(null, chain);
+        assertTrue(gatherLogs.craftingOwnsGrid());
+        gatherLogs.tick(null, chain);
+        assertEquals(2, craftPlanks.ticks);
+        acquireAxe.next = null;
+        gatherLogs.tick(null, chain);
+        assertEquals(1, craftPlanks.stops);
+        assertFalse(gatherLogs.craftingOwnsGrid());
     }
 
     @Test
