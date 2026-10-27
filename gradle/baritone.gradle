@@ -56,34 +56,50 @@ if (!overriddenDist) {
     def tempDir = Files.createTempDirectory('vibrato-baritone-patches-').toFile()
     try {
         def tempIndex = new File(tempDir, 'index')
-        def aggregate = new File(tempDir, 'stack.patch')
         def tempEnv = ['GIT_INDEX_FILE': tempIndex.absolutePath]
         def readTree = run(baritoneDir, true, ['git', 'read-tree', headResult.out], tempEnv)
         if (readTree.code != 0) throw new GradleException("Cannot prepare temporary Baritone index: ${readTree.out}")
+        def trees = [headResult.out]
         patches.each { patch ->
             def applied = run(baritoneDir, true, ['git', 'apply', '--cached', patch.absolutePath], tempEnv)
             if (applied.code != 0) {
                 throw new GradleException("Cannot compose Baritone patch ${patch.name} against HEAD and preceding patches: ${applied.out}")
             }
+            def tree = run(baritoneDir, true, ['git', 'write-tree'], tempEnv)
+            if (tree.code != 0) throw new GradleException("Cannot record Baritone patch ${patch.name}: ${tree.out}")
+            trees.add(tree.out)
         }
-        def diffBuilder = new ProcessBuilder(['git', 'diff', '--cached', '--binary', headResult.out, '--']).directory(baritoneDir)
-        diffBuilder.environment().putAll(tempEnv)
-        diffBuilder.redirectOutput(aggregate)
-        diffBuilder.redirectError(ProcessBuilder.Redirect.INHERIT)
-        def diffProcess = diffBuilder.start()
-        if (diffProcess.waitFor() != 0) throw new GradleException('Cannot produce the combined Baritone patch')
+        def writeDiff = { String fromTree, String toTree, File output ->
+            def builder = new ProcessBuilder(['git', 'diff', '--binary', fromTree, toTree, '--']).directory(baritoneDir)
+            builder.environment().putAll(tempEnv)
+            builder.redirectOutput(output)
+            builder.redirectError(ProcessBuilder.Redirect.INHERIT)
+            if (builder.start().waitFor() != 0) throw new GradleException('Cannot produce combined Baritone patch')
+        }
 
-        if (aggregate.length() != 0) {
-            def reverse = run(baritoneDir, true, ['git', 'apply', '--check', '--reverse', aggregate.absolutePath])
-            if (reverse.code != 0) {
-                def forward = run(baritoneDir, true, ['git', 'apply', '--check', aggregate.absolutePath])
+        // Identify the newest complete prefix present in the live tree, then only
+        // apply its missing suffix. This also handles upgrades to the patch stack.
+        int appliedCount = 0
+        for (int i = patches.size(); i > 0; i--) {
+            def prefixPatch = new File(tempDir, "prefix-${i}.patch")
+            writeDiff(headResult.out, trees[i], prefixPatch)
+            if (prefixPatch.length() == 0 || run(baritoneDir, true, ['git', 'apply', '--check', '--reverse', prefixPatch.absolutePath]).code == 0) {
+                appliedCount = i
+                break
+            }
+        }
+        if (appliedCount < patches.size()) {
+            def suffixPatch = new File(tempDir, 'suffix.patch')
+            writeDiff(trees[appliedCount], trees.last(), suffixPatch)
+            if (suffixPatch.length() != 0) {
+                def forward = run(baritoneDir, true, ['git', 'apply', '--check', suffixPatch.absolutePath])
                 if (forward.code != 0) {
                     throw new GradleException("Baritone patch stack does not match the working tree. " +
                             "Preserve your edits, then resolve changes overlapping patches/baritone before retrying. " +
-                            "Reverse check: ${reverse.out}; forward check: ${forward.out}")
+                            "Unable to apply patches after prefix ${appliedCount}: ${forward.out}")
                 }
-                logger.lifecycle('[vibrato] applying combined Baritone patch stack')
-                def apply = run(baritoneDir, true, ['git', 'apply', aggregate.absolutePath])
+                logger.lifecycle("[vibrato] applying Baritone patch stack after prefix ${appliedCount}")
+                def apply = run(baritoneDir, true, ['git', 'apply', suffixPatch.absolutePath])
                 if (apply.code != 0) throw new GradleException("Could not apply Baritone patch stack: ${apply.out}")
             }
         }
