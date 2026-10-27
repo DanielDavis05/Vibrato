@@ -114,6 +114,12 @@ class TaskInterruptionTest {
         gatherLogs.tick(null, chain);
         assertEquals(1, craftPlanks.stops);
         assertFalse(gatherLogs.craftingOwnsGrid());
+        acquireAxe.next = craftPlanks;
+        gatherLogs.tick(null, chain);
+        assertTrue(gatherLogs.craftingOwnsGrid());
+        gatherLogs.stop(null);
+        // Stopped children remain attached for possible reuse, but do not own the grid.
+        assertFalse(gatherLogs.craftingOwnsGrid());
     }
 
     @Test

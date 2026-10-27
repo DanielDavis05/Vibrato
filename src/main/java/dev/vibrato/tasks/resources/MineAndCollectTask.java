@@ -20,6 +20,7 @@ import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import dev.vibrato.util.slots.CursorSlot;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
@@ -40,6 +41,7 @@ public class MineAndCollectTask extends ResourceTask {
     private final TimerGame _cursorStackTimer = new TimerGame(3);
 
     private final MineOrCollectTask _subtask;
+    private Item _acquiringGatherTool;
 
     public MineAndCollectTask(ItemTarget[] itemTargets, Block[] blocksToMine, MiningRequirement requirement) {
         super(itemTargets);
@@ -81,6 +83,7 @@ public class MineAndCollectTask extends ResourceTask {
         // We're mining, so don't throw away pickaxes.
         mod.getBehaviour().addProtectedItems(Items.WOODEN_PICKAXE, Items.STONE_PICKAXE, Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
 
+        _acquiringGatherTool = null;
         _subtask.resetSearch();
     }
 
@@ -100,9 +103,14 @@ public class MineAndCollectTask extends ResourceTask {
         // Hand-harvestable blocks can still be much faster with a tool. Only
         // invest in one for a substantial request; small bootstrap collections
         // needed to craft the tool itself must remain possible by hand.
-        Item usefulTool = bulkHandHarvestTool(mod);
-        if (usefulTool != null) {
-            return TaskCatalogue.getItemTask(usefulTool, 1);
+        if (_acquiringGatherTool != null && hasUsefulGatherTool(mod)) {
+            _acquiringGatherTool = null;
+        }
+        if (_acquiringGatherTool == null) _acquiringGatherTool = bulkHandHarvestTool(mod);
+        if (_acquiringGatherTool != null) {
+            // Keep the commitment while its ingredients move into the crafting
+            // grid; rechecking their inventory counts would cancel it mid-craft.
+            return TaskCatalogue.getItemTask(_acquiringGatherTool, 1);
         }
 
         if (_subtask.isMining()) {
@@ -143,20 +151,45 @@ public class MineAndCollectTask extends ResourceTask {
             remaining += Math.max(0, target.getTargetCount()
                     - mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()));
         }
-        if (!worthCraftingGatherTool(remaining)) return null;
+        if (remaining < 4) return null;
 
         // A tool is useful only if it speeds up every block in this request.
         // This avoids crafting an axe for a mixed set of unrelated blocks.
-        for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
-            if (speedsEveryBlock(stack)) return null;
-        }
-        if (speedsEveryBlock(new ItemStack(Items.WOODEN_AXE))) return Items.WOODEN_AXE;
-        if (speedsEveryBlock(new ItemStack(Items.WOODEN_SHOVEL))) return Items.WOODEN_SHOVEL;
-        return null;
+        if (hasUsefulGatherTool(mod)) return null;
+        Item tool = speedsEveryBlock(new ItemStack(Items.WOODEN_AXE)) ? Items.WOODEN_AXE
+                : speedsEveryBlock(new ItemStack(Items.WOODEN_SHOVEL)) ? Items.WOODEN_SHOVEL : null;
+        if (tool == null) return null;
+        boolean ready = remaining < 16 && hasReadyToolMaterials(mod, tool) && hasNearbyCraftingTable(mod);
+        return worthCraftingGatherTool(remaining, ready) ? tool : null;
     }
 
-    static boolean worthCraftingGatherTool(int remaining) {
-        return remaining >= 16;
+    private boolean hasUsefulGatherTool(Vibrato mod) {
+        for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
+            if (speedsEveryBlock(stack)) return true;
+        }
+        return false;
+    }
+
+    private boolean hasReadyToolMaterials(Vibrato mod, Item tool) {
+        if (mod.getItemStorage().getItemCountInventoryOnly(Items.STICK) < 2) return false;
+        int neededPlanks = tool == Items.WOODEN_AXE ? 3 : 1;
+        for (Item plank : ItemHelper.PLANKS) {
+            if (mod.getItemStorage().getItemCountInventoryOnly(plank) >= neededPlanks) return true;
+        }
+        return false;
+    }
+
+    private boolean hasNearbyCraftingTable(Vibrato mod) {
+        if (StorageHelper.isBigCraftingOpen() || mod.getItemStorage().hasItemInventoryOnly(Items.CRAFTING_TABLE)) return true;
+        BlockPos center = mod.getPlayer().getBlockPos();
+        for (BlockPos pos : BlockPos.iterateOutwards(center, 4, 3, 4)) {
+            if (mod.getWorld().getBlockState(pos).isOf(Blocks.CRAFTING_TABLE)) return true;
+        }
+        return false;
+    }
+
+    static boolean worthCraftingGatherTool(int remaining, boolean materialsAndTableReady) {
+        return remaining >= 16 || (remaining >= 4 && materialsAndTableReady);
     }
 
     private boolean speedsEveryBlock(ItemStack stack) {
