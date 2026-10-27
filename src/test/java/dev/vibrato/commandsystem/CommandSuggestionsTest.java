@@ -27,6 +27,12 @@ class CommandSuggestionsTest {
         assertEquals(List.of("!get"), completions("!", "!ge"));
     }
 
+    @Test void preservesTextAfterCursor() {
+        String input = "@ge;goto nether";
+        var suggestions = CommandSuggestions.suggest("@", COMMANDS, input, 3).join().getList();
+        assertEquals(List.of("@get;goto nether"), suggestions.stream().map(suggestion -> suggestion.apply(input)).toList());
+    }
+
     @Test void completesOnlySupportedArgumentPositions() {
         assertEquals(List.of("@goto 20 nether"), completions("@", "@goto 20 ne"));
         assertTrue(completions("@", "@goto nether ne").isEmpty());

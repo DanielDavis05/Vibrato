@@ -42,10 +42,22 @@ public abstract class ChatSuggestionsMixin {
         if (!(owner instanceof ChatScreen) || executor == null || !executor.isClientCommand(input) || cursor < executor.getCommandPrefix().length()) return;
 
         ci.cancel();
-        if (!completingSuggestions) clearWindow();
+        if (!completingSuggestions) {
+            textField.setSuggestion(null);
+            clearWindow();
+        }
         messages.clear();
         parse = null;
         pendingSuggestions = CommandSuggestions.suggest(executor, input, cursor);
         if (!completingSuggestions && windowActive && !pendingSuggestions.join().isEmpty()) show(false);
+    }
+    // A vanilla server suggestion request can finish after the input has changed to
+    // a local command. Its callback reads the current fields, including our null parse.
+    @Inject(method = "showCommandSuggestions", at = @At("HEAD"), cancellable = true)
+    private void vibrato$ignoreServerCallbackForLocalInput(CallbackInfo ci) {
+        CommandExecutor executor = Vibrato.getCommandExecutor();
+        if (owner instanceof ChatScreen && executor != null && executor.isClientCommand(textField.getText())) {
+            ci.cancel();
+        }
     }
 }
