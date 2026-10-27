@@ -14,6 +14,8 @@ import java.util.List;
 
 /** Looks for unsearched loaded grassland before falling back to ordinary exploration. */
 final class LandAnimalSearchTask extends Task {
+    // This search reads client chunks. The no-leaves map is server-only and may be unprimed here.
+    static final Heightmap.Type SURFACE_HEIGHTMAP = Heightmap.Type.MOTION_BLOCKING;
     private static final int RADIUS = 128;
     private static final int SCAN_INTERVAL = 20;
     private static final int[] SAMPLE_OFFSETS = {4, 12};
@@ -61,7 +63,7 @@ final class LandAnimalSearchTask extends Task {
                     || Math.abs(chunk.getStartZ() + 8 - here.getZ()) > RADIUS) continue;
             for (int dx : SAMPLE_OFFSETS) for (int dz : SAMPLE_OFFSETS) {
                 int x = chunk.getStartX() + dx, z = chunk.getStartZ() + dz;
-                int y = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+                int y = mod.getWorld().getTopY(SURFACE_HEIGHTMAP, x, z);
                 BlockPos feet = new BlockPos(x, y, z);
                 if (mod.getWorld().getBlockState(feet.down()).isOf(Blocks.GRASS_BLOCK)) {
                     result.add(candidate(mod, feet));
