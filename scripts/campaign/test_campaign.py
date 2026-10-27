@@ -54,6 +54,13 @@ class CampaignTest(unittest.TestCase):
         e.server_tps = [17] * 10
         self.assertTrue(e.overloaded())
 
+    def test_cumulative_death_survives_alive_respawn_heartbeat(self):
+        e = Evidence(0)
+        e.heartbeat({'position':[0,64,0], 'health':20, 'dead':False, 'deaths':1}, 1)
+        self.assertEqual(1, e.deaths)
+        e.heartbeat({'position':[0,64,0], 'health':20, 'dead':False, 'deaths':1, 'tps':20}, 2)
+        self.assertEqual(1, e.deaths)
+
     def test_redaction(self):
         line = 'Player123 /home/alice/private 192.168.1.20 a@b.com token=secret 01234567-89ab-cdef-0123-456789abcdef'
         clean = redact(line)

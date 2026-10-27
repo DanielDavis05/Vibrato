@@ -32,6 +32,7 @@ public final class ScriptRunner {
     private long heartbeatNanos;
     private int heartbeatTicks;
     private int previousServerTicks = -1;
+    private final CampaignDeathCounter<net.minecraft.client.network.ClientPlayerEntity> campaignDeaths = new CampaignDeathCounter<>();
     private boolean forward, sprint, haveSample;
     private double x, z, movingDistance;
     private long movingTicks, samples, pathStationaryTicks, forwardReleases, sprintRestarts;
@@ -68,6 +69,8 @@ public final class ScriptRunner {
         if (startNanos == 0) startNanos = now;
         double dt = previousNanos == 0 ? 0 : Math.max(0, (now - previousNanos) / 1e9);
         previousNanos = now;
+        int deaths = Boolean.getBoolean("vibrato.campaignTelemetry")
+                ? campaignDeaths.observe(client.player, player -> player.isDead() || player.getHealth() <= 0) : 0;
         if (client.player != null && client.world != null) {
             if (Boolean.getBoolean("vibrato.campaignTelemetry")) heartbeatTicks++;
             if (heartbeatNanos == 0) heartbeatNanos = now;
@@ -80,6 +83,7 @@ public final class ScriptRunner {
                 heartbeat.put("position", List.of(client.player.getX(), client.player.getY(), client.player.getZ()));
                 heartbeat.put("health", client.player.getHealth());
                 heartbeat.put("dead", client.player.isDead());
+                heartbeat.put("deaths", deaths);
                 heartbeat.put("dimension", client.world.getRegistryKey().getValue().toString());
                 heartbeat.put("leaf", currentLeaf == null ? null : currentLeaf.toString());
                 heartbeat.put("leafClass", currentLeaf == null ? null : currentLeaf.getClass().getSimpleName());

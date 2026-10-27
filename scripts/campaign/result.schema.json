@@ -127,7 +127,7 @@
       ]
     },
     "telemetry_version": {
-      "const": 2
+      "const": 3
     },
     "server_tps_mean": {
       "type": [

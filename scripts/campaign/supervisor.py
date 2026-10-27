@@ -52,7 +52,7 @@ class Evidence:
         self.stuck = False
         self.unstuck_count = 0
         self.abandon_count = 0
-        self.deaths = 0
+        self.deaths = None
         self.was_dead = False
         self.tps = []
         self.server_tps = []
@@ -110,7 +110,9 @@ class Evidence:
                 self.last_pos = pos
                 self.last_progress = now
         dead = bool(data.get('dead') or data.get('health', 1) <= 0)
-        if dead and not self.was_dead: self.deaths += 1
+        count = data.get('deaths')
+        if isinstance(count, int) and count >= 0:
+            self.deaths = max(self.deaths or 0, count)
         self.was_dead = dead
         identity = leaf_identity(data.get('leaf'))
         cls = data.get('leafClass')
@@ -194,7 +196,7 @@ def run(args):
                                        stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
             metadata = {'schema_version':1, 'run_id':run_id, 'git_sha':sha, 'jar_sha256':jar_hash,
                         'world_seed':seed, 'profile_seed':seed, 'bot_id':bot, 'stage':'full-to-nether',
-                        'budget_seconds':args.budget, 'telemetry_version':2, 'display':args.display, 'pid':process.pid,
+                        'budget_seconds':args.budget, 'telemetry_version':3, 'display':args.display, 'pid':process.pid,
                         'start_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                         'goal':'enter minecraft:the_nether', 'control':'default'}
             (path / 'metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
@@ -217,7 +219,7 @@ def run(args):
                     r['cpu'], rss = stats
                     r['peak_rss'] = max(r['peak_rss'], rss)
                 goal = bool(hb and hb.get('dimension') == 'minecraft:the_nether')
-                death = bool(hb and (hb.get('dead') or hb.get('health', 1) <= 0))
+                death = bool(hb and (hb.get('deaths', 0) > 0 or hb.get('dead') or hb.get('health', 1) <= 0))
                 stall = evidence.start is not None and now - evidence.last_progress >= 60
                 timeout = (evidence.start is not None and now - evidence.start >= args.budget) or now - r['started'] >= args.startup_timeout + args.budget
                 cause = ('death' if death else 'pass' if goal else 'stuck' if evidence.stuck else
@@ -264,7 +266,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--install', required=True, help='fleet install root with minecraft/ and mods/')
     p.add_argument('--campaign', required=True, choices=['round0'])
-    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'single-v2', 'four', 'four-v2', 'six', 'six-v2'])
+    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'single-v2', 'single-final', 'four', 'four-v2', 'four-final', 'six', 'six-v2', 'six-final'])
     p.add_argument('--count', type=int, required=True, choices=[1, 4, 6])
     p.add_argument('--budget', type=int, default=60)
     p.add_argument('--startup-timeout', type=int, default=180)
