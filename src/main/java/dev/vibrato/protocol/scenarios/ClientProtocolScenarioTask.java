@@ -422,8 +422,9 @@ public final class ClientProtocolScenarioTask extends Task {
     }
     @Override protected void onStop(Vibrato mod, Task interruptTask) {
         var client = MinecraftClient.getInstance();
-        client.options.forwardKey.setPressed(false);
-        client.options.sprintKey.setPressed(false);
+        if (action.equals("move_position") || action.equals("move_full") || action.equals("boat")) {
+            client.options.forwardKey.setPressed(false);
+        }
     }
     @Override public boolean isFinished(Vibrato mod) { return done; }
     @Override protected boolean isEqual(Task other) {
