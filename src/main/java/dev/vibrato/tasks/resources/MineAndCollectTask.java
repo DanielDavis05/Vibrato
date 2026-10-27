@@ -216,12 +216,12 @@ public class MineAndCollectTask extends ResourceTask {
             // Prefer a nearby block we can already see and mine without removing our own footing.
             // This is only a preference: distant or buried ore remains eligible in the fallback.
             BlockPos feet = mod.getPlayer().getBlockPos();
-            Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
+            Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestWithinRange(pos, 4, check -> {
                 if (check.getY() < feet.getY()) return false;
                 if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
                 return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
             }, _blocks);
-            if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
+            if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestWithinRange(pos, 4, check -> {
                 if (check.getX() == feet.getX() && check.getZ() == feet.getZ() && check.getY() < feet.getY()) return false;
                 if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
                 return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);

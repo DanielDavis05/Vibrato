@@ -249,6 +249,11 @@ public class BlockTracker extends Tracker {
      * @param blocks What blocks to check for
      */
     public Optional<BlockPos> getNearestWithinRange(Vec3d pos, double range, Block... blocks) {
+        return getNearestWithinRange(pos, range, check -> true, blocks);
+    }
+
+    /** Scans loaded world blocks directly, independent of the capped tracker cache. */
+    public Optional<BlockPos> getNearestWithinRange(Vec3d pos, double range, Predicate<BlockPos> isValid, Block... blocks) {
         int minX = (int) Math.floor(pos.x - range),
                 maxX = (int) Math.floor(pos.x + range),
                 minY = (int) Math.floor(pos.y - range),
@@ -261,9 +266,9 @@ public class BlockTracker extends Tracker {
             for (int y = minY; y <= maxY; ++y) {
                 for (int z = minZ; z <= maxZ; ++z) {
                     BlockPos check = new BlockPos(x, y, z);
-                    synchronized (_scanMutex) {
-                        if (currentCache().blockUnreachable(check)) continue;
-                    }
+                    if (!check.isWithinDistance(pos, range)) continue;
+                    double sq = check.getSquaredDistance(pos);
+                    if (sq >= closestDistance || !_mod.getChunkTracker().isChunkLoaded(check)) continue;
 
                     assert MinecraftClient.getInstance().world != null;
                     Block b = MinecraftClient.getInstance().world.getBlockState(check).getBlock();
@@ -275,13 +280,12 @@ public class BlockTracker extends Tracker {
                         }
                     }
                     if (!valid) continue;
-                    if (check.isWithinDistance(pos, range)) {
-                        double sq = check.getSquaredDistance(pos);
-                        if (sq < closestDistance) {
-                            closestDistance = sq;
-                            nearest = check;
-                        }
+                    synchronized (_scanMutex) {
+                        if (currentCache().blockUnreachable(check)) continue;
                     }
+                    if (!isValid.test(check)) continue;
+                    closestDistance = sq;
+                    nearest = check;
                 }
             }
         }
