@@ -8,7 +8,7 @@ import dev.vibrato.commandsystem.Command;
 public class StopCommand extends Command {
 
     public StopCommand() {
-        super("stop", "Stop the current task and pause Director autostart for this session");
+        super("stop", "Stop the current task and pause autonomous play");
     }
 
     @Override
