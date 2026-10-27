@@ -180,6 +180,10 @@ def run(args):
                     r['out'].close()
                     result = read_json(path / 'script-result.json')
                     crash = exited and proc.returncode != 0
+                    # The script may reach its own wait timeout before the
+                    # supervisor gets a poll, especially during staggered startup.
+                    if result and any(c.get('status') == 'timeout' for c in result.get('commands', [])):
+                        timeout = True
                     status = classify(death=death, crash=crash, failure=evidence.failure, stuck=evidence.stuck,
                                       churn=evidence.churn, stall=stall, timeout=timeout, pass_goal=goal,
                                       overloaded=evidence.overloaded())
