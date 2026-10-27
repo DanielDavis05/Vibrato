@@ -166,6 +166,11 @@ public abstract class Task {
         return false;
     }
 
+    /** Whether a child is still attached, including one retained by an interruption veto. */
+    protected final boolean hasChild() {
+        return _sub != null;
+    }
+
     public boolean thisOrChildSatisfies(Predicate<Task> pred) {
         Task t = this;
         while (t != null) {

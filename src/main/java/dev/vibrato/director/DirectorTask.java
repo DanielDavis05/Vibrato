@@ -156,6 +156,12 @@ public class DirectorTask extends Task implements StepAbandonable {
                 completeStep(false, "stuck in " + _stuckWitness);
             }
         }
+        // Let Task.tick detach the previous step before constructing another. Equal tasks otherwise
+        // retain the old child while the director observes a different, inactive task instance.
+        // A forced child may veto null and keep running until the protected action can stop.
+        if (hasChild()) {
+            return null;
+        }
         return nextStepTask(mod);
     }
 
@@ -262,7 +268,7 @@ public class DirectorTask extends Task implements StepAbandonable {
         _coverage.recordFailure(step.activity().id(), cooldown);
     }
 
-    private Task nextStepTask(Vibrato mod) {
+    protected Task nextStepTask(Vibrato mod) {
         if (_breatherPending) {
             _breatherPending = false;
             _onBreather = true;
