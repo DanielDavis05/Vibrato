@@ -6,7 +6,7 @@ Keep in mind this project is still in rapid development. A lot of features are p
 
 ## Commands
 
-Local Vibrato commands start with `@` by default. Type `@` in chat to browse commands, and use Tab to complete a name or a suggested argument. Hover a command suggestion for its usage and description, or run `@help` for the complete list. These commands are handled by the client and are not sent to the server. The prefix can be changed in settings.
+Local Vibrato commands start with `@` by default. Type `@` in chat to browse commands, and use Tab to complete a name or a suggested argument. Hover a command suggestion for its usage and description, or run `@help` for a quick guide, `@help all` for the complete list, and `@help get` for a specific command. Select a command in the chat guide to put it in your input. These commands are handled by the client and are not sent to the server. The prefix can be changed in settings.
 
 Baritone commands use `#` and are separate from Vibrato commands. For example, `@stop` stops Vibrato's current task; use Baritone's own commands to control Baritone directly.
 

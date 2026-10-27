@@ -2,6 +2,13 @@ package dev.vibrato;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.util.Formatting;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // TODO: Debug library or use Minecraft's built in debugger
 public class Debug {
@@ -23,13 +30,32 @@ public class Debug {
         return "[Vibrato] ";
     }
 
+    private static MutableText chatPrefix() {
+        return Text.literal(getLogPrefix()).formatted(Formatting.AQUA, Formatting.BOLD);
+    }
+
+    /** Command references can be selected to edit them in chat without executing them. */
+    private static MutableText chatBody(String message) {
+        MutableText result = Text.empty();
+        String commandPrefix = jankModInstance == null ? "@" : jankModInstance.getModSettings().getCommandPrefix();
+        if (commandPrefix.isEmpty()) return result.append(message);
+        Matcher matcher = Pattern.compile(Pattern.quote(commandPrefix) + "[a-zA-Z0-9_]+").matcher(message);
+        int end = 0;
+        while (matcher.find()) {
+            result.append(message.substring(end, matcher.start()));
+            String command = matcher.group();
+            result.append(Text.literal(command).styled(style -> style.withColor(Formatting.AQUA)
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command + " "))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Select to edit in chat")))));
+            end = matcher.end();
+        }
+        return result.append(message.substring(end));
+    }
+
     public static void logMessage(String message, boolean prefix) {
         if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-            if (prefix) {
-                message = "\u00A72\u00A7l\u00A7o" + getLogPrefix() + "\u00A7r" + message;
-            }
-            MinecraftClient.getInstance().player.sendMessage(Text.of(message), false);
-            //MinecraftClient.getInstance().player.sendChatMessage(msg);
+            MutableText text = prefix ? chatPrefix() : Text.empty();
+            MinecraftClient.getInstance().player.sendMessage(text.append(chatBody(message)), false);
         } else {
             logInternal(message);
         }
@@ -47,8 +73,7 @@ public class Debug {
         logInternal("WARNING: " + message);
         if (jankModInstance != null && !jankModInstance.getModSettings().shouldHideAllWarningLogs()) {
             if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-                String msg = "\u00A72\u00A7l\u00A7o" + getLogPrefix() + "\u00A7c" + message + "\u00A7r";
-                MinecraftClient.getInstance().player.sendMessage(Text.of(msg), false);
+                MinecraftClient.getInstance().player.sendMessage(chatPrefix().append(chatBody(message).formatted(Formatting.RED)), false);
                 //MinecraftClient.getInstance().player.sendChatMessage(msg);
             }
         }
@@ -64,8 +89,7 @@ public class Debug {
         System.err.println("at:");
         System.err.println(stacktrace);
         if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-            String msg = "\u00A72\u00A7l\u00A7c" + getLogPrefix() + "[ERROR] " + message + "\nat:\n" + stacktrace + "\u00A7r";
-            MinecraftClient.getInstance().player.sendMessage(Text.of(msg), false);
+            MinecraftClient.getInstance().player.sendMessage(chatPrefix().append(Text.literal("[ERROR] " + message + "\nat:\n" + stacktrace).formatted(Formatting.RED)), false);
         }
     }
 

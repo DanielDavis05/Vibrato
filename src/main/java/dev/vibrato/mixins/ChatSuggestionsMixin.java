@@ -42,11 +42,10 @@ public abstract class ChatSuggestionsMixin {
         if (!(owner instanceof ChatScreen) || executor == null || !executor.isClientCommand(input) || cursor < executor.getCommandPrefix().length()) return;
 
         ci.cancel();
-        if (completingSuggestions) return;
-        clearWindow();
+        if (!completingSuggestions) clearWindow();
         messages.clear();
         parse = null;
         pendingSuggestions = CommandSuggestions.suggest(executor, input, cursor);
-        if (windowActive && !pendingSuggestions.join().isEmpty()) show(false);
+        if (!completingSuggestions && windowActive && !pendingSuggestions.join().isEmpty()) show(false);
     }
 }
