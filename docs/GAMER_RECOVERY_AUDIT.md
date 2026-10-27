@@ -1,9 +1,11 @@
 # Gamer food and failure audit
 
-This audit is based on `gamer-run-2026-10-27-1620.txt` and source at `0da0d76`. The log's build is unknown and no in-game reproduction was run for this change.
+This audit is based on `gamer-run-2026-10-27-1620.txt` and source at `0da0d76`. The log's build is unknown. A controlled food-stage reproduction has since passed; it does not reproduce that log's exact terrain or whole gamer run.
 
 The food selector requested a `KillAndLootTask` with an absolute target of one raw item even when that item was already in inventory. `ResourceTask.isFinished` compares the target with inventory, so a newly selected task could already be finished. The repeated sheep/mutton-one starts are consistent with this bug, but the redacted log does not establish whether each drop was collected or prove that this was the only cause. Each new animal attempt requests one more than the currently held count. The existing ten-second rescan explicitly detaches an unfinished animal attempt before choosing again; a protected pickup remains attached and keeps running until it releases. This bounds reconsideration even if path recalculation repeatedly resets the movement watchdog.
 
 The observed furnace placement failure propagated from the food stage through `BeatMinecraft2Task` and ended the whole command. The original cause is not established; later placement handoff fixes may already address it. The food stage boundary now retries the specific missing-placement-material failure at most twice by rebuilding the failed stage against current inventory, and otherwise propagates failure. On exhaustion, the error identifies the stage and original cause. Other cached stage tasks and their progress are not reset. This is a bounded retry, not evidence that an unrecoverable placement can succeed.
 
-Remaining validation: reproduce the old food and furnace scenarios, then run the seeded food and full-to-Nether campaign in `GAMER_TEST_PLAN.md`. The 95%/90% campaign targets have not been measured by these unit tests.
+Live check on the integrated changes: a disposable enclosed platform started with one raw mutton, an iron sword, coal, a furnace and eight sheep. `@food 24` collected additional mutton and cooked four pieces, completing in 50.533 seconds with full health and no timeout. Animal targets advanced from two to three as inventory grew, rather than repeatedly targeting one. The specific food-stage retry after an injected placement failure remains unit-tested only.
+
+Remaining validation: reproduce the original terrain/furnace failure if that save becomes available, then run the seeded food and full-to-Nether campaign in `GAMER_TEST_PLAN.md`. The 95%/90% campaign targets have not been measured by these unit tests.

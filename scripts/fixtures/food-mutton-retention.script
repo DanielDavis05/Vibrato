@@ -16,6 +16,8 @@
 0.2 /fill 8 150 -7 8 153 7 glass
 0.2 /tp @s 0.5 150 0.5
 0.2 /setblock 6 150 0 furnace
+0.2 /tp @s 0.5 150 0.5
+0.2 /gamemode survival @s
 0.2 /give @s minecraft:mutton 1
 0.2 /give @s minecraft:iron_sword 1
 0.2 /give @s minecraft:coal 8
@@ -27,7 +29,7 @@
 0.2 /summon minecraft:sheep 4.5 150 -2.5 {Age:0}
 0.2 /summon minecraft:sheep -2.5 150 -2.5 {Age:0}
 0.2 /summon minecraft:sheep -4.5 150 -2.5 {Age:0}
-0.2 /gamemode survival @s
+0.2 /gamemode creative @s
 1 @food 24
 0 wait-idle 240
 0 @inventory cooked_mutton

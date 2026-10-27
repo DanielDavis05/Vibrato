@@ -1,5 +1,7 @@
 # Nether task: fix plan
 
+Implementation follow-up: [Nether plan validation](NETHER_PLAN_VALIDATION_2026-10-27.md) records the changes, controlled cast results, and the remaining failed survival run. The original analysis below is historical. Related food/cursor failures are tracked in [the gamer campaign plan](GAMER_TEST_PLAN.md) and [recovery audit](GAMER_RECOVERY_AUDIT.md).
+
 Written for the agent continuing work on `master`. Evidence is from two in-game runs of `@get`-style `Going to dimension: NETHER` on the
 `human` test world on 2026-10-27, read from `run/logs/latest.log` and `debug.log`. Run A (12:18) is written up in
 `docs/NETHER_RUN_2026-10-27.md`. Run B (15:52-15:56) is summarised below. Nothing was reproduced or fixed yet; every cause below is a reading of
