@@ -153,3 +153,38 @@ branches for parallel workstreams are merged by the Lead.
 * **Licensing**: Vibrato stays MIT; UnionClef (GPL-3.0) is idea-only. Copying its code would make the combined
   work GPL-3.0 — say so if you want that.
 * **Fleet** = N game clients, not N bots in one JVM (the mod is bound to the client singleton).
+
+## 9. Status (updated 2026-10-27)
+
+`./gradlew build` is green on `master` with 99 unit tests. **Nothing has been run in the game yet**: every
+runtime behavior below is compile-checked and unit-tested for its pure logic only.
+
+| Workstream | State | Notes |
+|---|---|---|
+| P0 rename, Baritone submodule + patch, Director contract | done | |
+| D Director (sampler, Knuth estimator, coverage, personas, `DirectorTask`, 34 core activities) | done | follow-up in progress: `FleetBootstrap` (autostart on join, auto-connect) |
+| N nav safety (stuck detector, unstuck ladder, waste guard, waypoints, `NavSafetyChain`) | done | thresholds untuned; chain interplay with `PlayerInteractionFixChain`/`WorldSurvivalChain` unverified |
+| H human camera (`HumanLook`, input timing, idle glances) | done | `LookHelper.lookAt` is smoothed; use `lookAtInstant` only for same-tick aim-and-act (MLG clutch) |
+| F fleet (`FleetConfig`, `PerformanceProfile`, `scripts/fleet/launch.py`) | done | launcher install/up paths untested; unfocused 20 FPS cap not implemented |
+| T1 trade / enchant / anvil / brew | in progress | helpers + tests written, tasks and activities pending |
+| T2 sleep / shelter / farm / breed / fish / xp | in progress | crop/breeding/xp helpers, sleep + night shelter written |
+| T5 chat / commands / advancements | paused (only `TypingDelay`) | see findings below |
+| T6 combat / mob tactics / gear | paused (no code) | see findings below |
+| T4 building / chests / inventory | paused (no code; design settled) | blueprint coordinates: dy=0 ground, doors dy=1..2, palette is item-id strings only |
+| T3 transport / exploration | paused (`WaterCrossingPlanner`, `CompassDirection`, `DiscoveryLog` written) | |
+
+Resume order once slots free up (max 2-3 agents at a time): T5, T6, T4, T3.
+
+Findings carried over from the paused agents:
+* Advancement progress: `MinecraftClient.getNetworkHandler().getAdvancementHandler()`, map field
+  `ClientAdvancementManager.advancementProgresses` (needs one accessor mixin). Only about 11 overworld advancements
+  map onto existing `get` commands; the rest need new tasks (sleep, trade, breed, kill, plant), so the advancement
+  table must not fake specs. `Activity.provides()` cannot depend on params, so each advancement is its own activity.
+* Entities in `EntityTracker` are keyed by exact class; `EntityType` lookups must iterate `getWorld().getEntities()`.
+* `ArmorRequirement` is deprecated; combat gear upgrades use a tier enum with catalogue names, one activity per tier.
+* The brief's "SCP/ShootArrow" trajectory code does not exist; use `ProjectileHelper.calculateAnglesForSimpleProjectileMotion`.
+* Boat/minecart/elytra/horse behavior is the least certain area; the planner decides swim vs boat vs bridge.
+
+Open items for the lead: run a single-bot smoke test in the game (needs the user's go-ahead because it opens a
+window); decide whether to build a headless test stand (Docker, software GL, offline server) so agents can verify
+in-game behavior without touching the user's display.
