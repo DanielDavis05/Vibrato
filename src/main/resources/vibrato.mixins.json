@@ -28,7 +28,9 @@
     "ClientOpenScreenMixin",
     "ClientTickMixin",
     "EntryMixin",
+    "KeyShapeMixin",
     "LoadChunkMixin",
+    "MouseRecorderMixin",
     "PlayerCollidesWithEntityMixin",
     "SimpleOptionAccessor"
   ],

@@ -2,50 +2,82 @@ package dev.vibrato.human;
 
 import baritone.api.utils.Rotation;
 import baritone.vibrato.RotationSmoother;
+import dev.vibrato.human.motion.HumanProfile;
+import dev.vibrato.human.motion.Population;
+import dev.vibrato.human.motion.SensitivityGrid;
+import dev.vibrato.human.motion.Submovements;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SplittableRandom;
+import java.util.function.DoubleSupplier;
 import java.util.random.RandomGenerator;
 
 /**
  * Human-like camera for Baritone. Each axis follows a WindMouse-style model: a pull toward the target, a decaying wind
- * term and a speed cap. The acceleration limit gives a bell-shaped speed profile (ease in, cruise, ease out). Turns
- * over 60 degrees may overshoot the target slightly before correcting back onto it.
+ * term and a speed cap. The acceleration limit gives a bell-shaped speed profile (ease in, cruise, ease out).
+ * <p>
+ * A new target (one that has moved more than {@link #RETARGET_DEG} from the last planned target) is split by
+ * {@link Submovements} into a ballistic primary move and a few corrections. Each submovement caps the axis speed on a
+ * sine bell over its ticks, so a turn is a short sequence of bell-shaped moves. Overshoot comes from that plan: a primary
+ * that passes the target is brought back by the corrections, with the chance and size the profile sets. A plan is
+ * drawn from the seed and the turn count, so the first tick of a turn already follows it and {@link #fork} predicts it.
+ * <p>
+ * With a mouse sensitivity source set, each tick's yaw and pitch move snaps to the mouse grid. The sub-step remainder
+ * carries to the next tick, so the average speed is unchanged.
  * <p>
  * {@link #smooth} only reads the axis state, so Baritone can call it several times per tick. The state advances once
  * per tick in {@link #onTick}, from the last request.
  */
 public final class HumanLook implements RotationSmoother {
 
-    private static final double OVERSHOOT_TURN_DEG = 60;
-    private static final double REARM_DEG = 10;
+    /** A target that moves further than this from the last planned target starts a new plan. */
+    private static final double RETARGET_DEG = 2;
     private static final double WIND_FULL_DISTANCE_DEG = 10;
     private static final double WIND_DAMPING = 0.7;
 
+    private final long seed;
     private final HumanLookConfig cfg;
+    private final HumanProfile profile;
     private final RandomGenerator rng;
     private final Axis yaw;
     private final Axis pitch;
     private final boolean simulation;
+    private DoubleSupplier sensitivity;
     private Rotation lastPrevious;
     private Rotation lastDesired;
 
     public HumanLook(long seed, HumanLookConfig cfg) {
-        this(seed, cfg, false);
+        this(seed, cfg, HumanProfile.typical(Population.DEFAULT));
     }
 
-    private HumanLook(long seed, HumanLookConfig cfg, boolean simulation) {
+    public HumanLook(long seed, HumanLookConfig cfg, HumanProfile profile) {
+        this(seed, cfg, profile, false);
+    }
+
+    private HumanLook(long seed, HumanLookConfig cfg, HumanProfile profile, boolean simulation) {
+        this.seed = seed;
         this.cfg = cfg;
+        this.profile = profile;
         this.rng = new SplittableRandom(seed);
         this.simulation = simulation;
-        this.yaw = new Axis(cfg.maxYawDegPerTick(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
-        this.pitch = new Axis(cfg.maxPitchDegPerTick(), -90, 90);
+        this.yaw = new Axis(cfg.maxYawDegPerTick(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, 1);
+        this.pitch = new Axis(cfg.maxPitchDegPerTick(), -90, 90, false, 2);
+    }
+
+    /**
+     * Sets the mouse sensitivity, in [0, 1], that each tick's turn snaps to. Null turns the quantization off.
+     */
+    public void setSensitivitySource(DoubleSupplier mouseSensitivity) {
+        this.sensitivity = mouseSensitivity;
     }
 
     @Override
     public HumanLook fork() {
-        // Simulation randomness must never consume the live stream. Its future wind and overshoot
-        // are estimates, but the already accumulated motion and pending request are exact snapshots.
-        HumanLook copy = new HumanLook(0, cfg, true);
+        // The copy shares the seed, so it draws the same plans for the same turns. Only the wind noise to come is an
+        // estimate: the live stream is never touched. The motion, the current plan and the pending request are exact.
+        HumanLook copy = new HumanLook(seed, cfg, profile, true);
+        copy.sensitivity = sensitivity;
         copy.yaw.copyState(yaw);
         copy.pitch.copyState(pitch);
         copy.lastPrevious = lastPrevious;
@@ -75,8 +107,9 @@ public final class HumanLook implements RotationSmoother {
         lastPrevious = null;
         lastDesired = null;
         Rotation applied = next(previous, desired);
-        yaw.advance(previous.getYaw(), shortestYawTarget(previous, desired), applied.getYaw());
-        pitch.advance(previous.getPitch(), desired.getPitch(), applied.getPitch());
+        double yawTarget = shortestYawTarget(previous, desired);
+        yaw.advance(previous.getYaw(), yawTarget, yaw.next(previous.getYaw(), yawTarget), applied.getYaw());
+        pitch.advance(previous.getPitch(), desired.getPitch(), pitch.next(previous.getPitch(), desired.getPitch()), applied.getPitch());
     }
 
     /**
@@ -86,10 +119,57 @@ public final class HumanLook implements RotationSmoother {
         return previous.getYaw() + Rotation.normalizeYaw(desired.getYaw() - previous.getYaw());
     }
 
+    /**
+     * Pure: the rotation the camera takes on this tick, given the current one and the desired one.
+     */
     private Rotation next(Rotation previous, Rotation desired) {
-        double yawNext = yaw.next(previous.getYaw(), shortestYawTarget(previous, desired));
-        double pitchNext = pitch.next(previous.getPitch(), desired.getPitch());
-        return new Rotation((float) yawNext, (float) pitchNext);
+        double sens = sensitivity();
+        double yawRaw = yaw.next(previous.getYaw(), shortestYawTarget(previous, desired));
+        double pitchRaw = pitch.next(previous.getPitch(), desired.getPitch());
+        return new Rotation(
+                (float) yaw.snap(previous.getYaw(), yawRaw, sens),
+                (float) pitch.snap(previous.getPitch(), pitchRaw, sens)
+        );
+    }
+
+    /** Mouse sensitivity clamped to [0, 1], or NaN when there is no source, which means no quantization. */
+    private double sensitivity() {
+        if (sensitivity == null) {
+            return Double.NaN;
+        }
+        double value = sensitivity.getAsDouble();
+        return Double.isNaN(value) ? Double.NaN : Math.max(0, Math.min(1, value));
+    }
+
+    /**
+     * Where an axis is in its plan: the submovements, their absolute end angles, and the current submovement and the
+     * ticks spent on it. Immutable, so forks can share it.
+     */
+    private record Plan(List<Submovements.Step> moves, double[] ends, int index, int elapsed) {
+
+        /** The plan one tick later. */
+        Plan stepped() {
+            if (index >= moves.size()) {
+                return this;
+            }
+            if (elapsed + 1 >= moves.get(index).ticks()) {
+                return new Plan(moves, ends, index + 1, 0);
+            }
+            return new Plan(moves, ends, index, elapsed + 1);
+        }
+    }
+
+    /**
+     * The signed move of one submovement on tick {@code elapsed}. It is a sine bell over the submovement's ticks, so the
+     * moves of one submovement sum to its amplitude.
+     */
+    private static double bell(Submovements.Step step, int elapsed) {
+        int ticks = step.ticks();
+        double total = 0;
+        for (int j = 0; j < ticks; j++) {
+            total += Math.sin(Math.PI * (j + 0.5) / ticks);
+        }
+        return step.amplitude() * Math.sin(Math.PI * (elapsed + 0.5) / ticks) / total;
     }
 
     /**
@@ -101,40 +181,53 @@ public final class HumanLook implements RotationSmoother {
         private final double accel;
         private final double min;
         private final double max;
+        private final boolean circular;
+        private final long salt;
         private double velocity;
         private double wind;
-        private double overshoot;
-        private double overshootTarget;
-        private boolean armed;
+        private double carry;
+        private long turns;
+        private double plannedTarget;
+        private Plan plan;
 
-        Axis(double maxSpeed, double min, double max) {
+        Axis(double maxSpeed, double min, double max, boolean circular, long salt) {
             this.maxSpeed = maxSpeed;
             this.accel = cfg.gain() * maxSpeed;
             this.min = min;
             this.max = max;
+            this.circular = circular;
+            this.salt = salt;
         }
 
         void copyState(Axis source) {
             velocity = source.velocity;
             wind = source.wind;
-            overshoot = source.overshoot;
-            overshootTarget = source.overshootTarget;
-            armed = source.armed;
+            carry = source.carry;
+            turns = source.turns;
+            plannedTarget = source.plannedTarget;
+            plan = source.plan;
         }
 
         /**
-         * Pure: the angle this axis moves to on this tick, given the current angle and the desired one.
+         * Pure: the angle this axis moves to on this tick, before the mouse grid. While a plan is running the axis
+         * heads for the current submovement's end, at most as fast as that submovement's bell. Otherwise it heads for
+         * the desired angle.
          */
         double next(double current, double desired) {
-            double target = limit(desired + (overshooting(current, desired) ? overshoot : 0));
+            Plan active = activePlan(current, desired);
+            boolean following = active.index() < active.moves().size();
+            double target = following ? limit(active.ends()[active.index()]) : desired;
             double error = target - current;
             if (error == 0) {
                 return current;
             }
             double dir = Math.signum(error);
             double distance = Math.abs(error);
+            double cap = following
+                    ? Math.min(maxSpeed, Math.abs(bell(active.moves().get(active.index()), active.elapsed())))
+                    : maxSpeed;
+            double brakeLimited = following ? cap : Math.min(cap, brakingSpeed(distance));
             double along = velocity * dir;
-            double brakeLimited = Math.min(maxSpeed, brakingSpeed(distance));
             double speed = Math.max(along - accel, Math.min(along + accel, brakeLimited));
             double windPush = wind * Math.min(1, distance / WIND_FULL_DISTANCE_DEG);
             double move = Math.max(-maxSpeed, Math.min(maxSpeed, dir * speed + windPush));
@@ -143,42 +236,36 @@ public final class HumanLook implements RotationSmoother {
         }
 
         /**
-         * Largest speed from which the axis can still brake to a stop inside {@code distance}, given the accel limit.
+         * Pure: snaps a raw move to the mouse grid, adding the remainder carried from earlier ticks. Returns the raw move
+         * when {@code sens} is NaN (no source).
          */
-        private double brakingSpeed(double distance) {
-            return (-3 * accel + Math.sqrt(9 * accel * accel + 8 * accel * distance)) / 2;
-        }
-
-        private boolean overshooting(double current, double desired) {
-            if (overshoot == 0 || Math.abs(desired - overshootTarget) > 5) {
-                return false;
+        double snap(double current, double raw, double sens) {
+            if (Double.isNaN(sens) || raw == current) {
+                return raw;
             }
-            double remaining = limit(desired + overshoot) - current;
-            return Math.abs(remaining) > cfg.arrivalToleranceDeg() && Math.signum(remaining) == Math.signum(overshoot);
+            double step = SensitivityGrid.degreesPerPixel(sens);
+            double largest = Math.floor(maxSpeed / step) * step;
+            double delta = SensitivityGrid.quantize(raw - current + carry, sens);
+            delta = Math.max(-largest, Math.min(largest, delta));
+            return limit(current + delta);
         }
 
         /**
-         * Commits one tick: {@code applied} is the angle the camera actually took from {@code previous}.
+         * Commits one tick. {@code raw} is the move before the mouse grid and {@code applied} the one the camera took
+         * from {@code previous}.
          */
-        void advance(double previous, double desired, double applied) {
+        void advance(double previous, double desired, double raw, double applied) {
             velocity = applied - previous;
+            carry = raw == applied ? 0 : carry + raw - applied;
             if (cfg.windStrength() > 0) {
                 wind = WIND_DAMPING * wind + cfg.windStrength() * rng.nextGaussian();
             }
-            if (!overshooting(applied, desired)) {
-                overshoot = 0;
-            }
-            double error = desired - applied;
-            if (!armed) {
-                if (Math.abs(error) > OVERSHOOT_TURN_DEG) {
-                    armed = true;
-                    if (rng.nextDouble() < cfg.overshootChance()) {
-                        overshoot = Math.signum(error) * cfg.overshootMaxDeg() * (0.4 + 0.6 * rng.nextDouble());
-                        overshootTarget = desired;
-                    }
-                }
-            } else if (Math.abs(error) < REARM_DEG) {
-                armed = false;
+            if (isNewTarget(desired)) {
+                plan = planFor(previous, desired).stepped();
+                plannedTarget = desired;
+                turns++;
+            } else {
+                plan = plan.stepped();
             }
         }
 
@@ -188,8 +275,52 @@ public final class HumanLook implements RotationSmoother {
         void rest() {
             velocity = 0;
             wind = 0;
-            overshoot = 0;
-            armed = false;
+            carry = 0;
+            plan = null;
+        }
+
+        /** The plan this tick follows: the stored one while the target stays put, otherwise a fresh plan from {@code start}. */
+        private Plan activePlan(double start, double target) {
+            if (isNewTarget(target)) {
+                return planFor(start, target);
+            }
+            return plan;
+        }
+
+        private boolean isNewTarget(double target) {
+            return plan == null || Math.abs(difference(target, plannedTarget)) > RETARGET_DEG;
+        }
+
+        /**
+         * Splits the error from {@code start} into submovements, drawn from this axis's seed for the current turn. Pure:
+         * the same inputs always give the same plan. Zero-amplitude moves are dropped.
+         */
+        private Plan planFor(double start, double target) {
+            RandomGenerator planRng = new SplittableRandom(seed + salt * 0x9E3779B97F4A7C15L + turns * 0xBF58476D1CE4E5B9L);
+            List<Submovements.Step> kept = new ArrayList<>();
+            List<Double> endAngles = new ArrayList<>();
+            double position = start;
+            for (Submovements.Step step : Submovements.plan(difference(target, start), profile, planRng)) {
+                if (step.amplitude() == 0) {
+                    continue;
+                }
+                position += step.amplitude();
+                kept.add(step);
+                endAngles.add(position);
+            }
+            return new Plan(List.copyOf(kept), endAngles.stream().mapToDouble(Double::doubleValue).toArray(), 0, 0);
+        }
+
+        /**
+         * Largest speed from which the axis can still brake to a stop inside {@code distance}, given the accel limit.
+         */
+        private double brakingSpeed(double distance) {
+            return (-3 * accel + Math.sqrt(9 * accel * accel + 8 * accel * distance)) / 2;
+        }
+
+        /** The signed gap from {@code b} to {@code a}, on the shortest arc for yaw. */
+        private double difference(double a, double b) {
+            return circular ? Rotation.normalizeYaw((float) (a - b)) : a - b;
         }
 
         private double limit(double angle) {

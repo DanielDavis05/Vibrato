@@ -1,0 +1,19 @@
+{
+  "traits": {
+    "reactionMedianTicks": {"mean": 5, "spread": 1},
+    "jumpTimingBiasTicks": {"mean": 0, "spread": 0.8},
+    "jumpTimingSigmaTicks": {"mean": 1, "spread": 0.4},
+    "jumpMissChance": {"mean": 0.02, "spread": 0.01},
+    "strafeTapRate": {"mean": 0.04, "spread": 0.01},
+    "keyHoldMedianTicks": {"mean": 6, "spread": 1.5},
+    "keyHoldSigma": {"mean": 0.3, "spread": 0.08},
+    "hesitationRate": {"mean": 0.002, "spread": 0.001},
+    "lateralSigma": {"mean": 0.03, "spread": 0.01},
+    "lateralReversion": {"mean": 0.1, "spread": 0.03},
+    "lookAheadBlocks": {"mean": 3, "spread": 0.8},
+    "primaryFraction": {"mean": 0.92, "spread": 0.02},
+    "correctionCountMean": {"mean": 1.2, "spread": 0.6},
+    "overshootScale": {"mean": 1, "spread": 0.2},
+    "turnPeakSpeedScale": {"mean": 1, "spread": 0.15}
+  }
+}
