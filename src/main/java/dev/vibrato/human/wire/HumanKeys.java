@@ -8,6 +8,8 @@ import baritone.api.pathing.path.IPathExecutor;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.input.Input;
 import baritone.utils.PlayerMovementInput;
+import baritone.vibrato.OptionalHopPolicy;
+import baritone.vibrato.VibratoSettings;
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.chains.MLGBucketFallChain;
@@ -60,10 +62,13 @@ public final class HumanKeys {
     private static long lastDebugTick = Long.MIN_VALUE;
     private static long lastSummaryTick = Long.MIN_VALUE;
     private static boolean failed;
+    private static final OptionalHopPolicy optionalHop = new OptionalHopPolicy();
 
     private HumanKeys() {}
 
     public static void install(ShapingLayer shapingLayer, boolean debugKeys) {
+        optionalHop.clear();
+        VibratoSettings.getInstance().setOptionalHop(null, false, 0);
         layer = shapingLayer;
         debug = debugKeys;
     }
@@ -75,8 +80,12 @@ public final class HumanKeys {
     public static void afterInputTick(ClientPlayerEntity player) {
         ShapingLayer active = layer;
         Vibrato mod = Debug.jankModInstance;
-        if (mod == null || player != mod.getPlayer()) return;
+        if (mod == null || player != mod.getPlayer()) {
+            clearOptionalHop();
+            return;
+        }
         if (active == null || failed) {
+            clearOptionalHop();
             KeyAdapter.Flags flags = intended(player, BaritoneAPI.getProvider().getBaritoneForPlayer(player));
             MotionRecorder.recordInputs(KeyAdapter.toKeys(flags), KeyAdapter.toKeys(flags));
             if (Human.look() != null) Human.look().setTravelYawOffset(0);
@@ -86,6 +95,7 @@ public final class HumanKeys {
             shape(active, mod, player);
         } catch (RuntimeException e) {
             failed = true;
+            clearOptionalHop();
             KeyAdapter.Flags flags = intended(player, BaritoneAPI.getProvider().getBaritoneForPlayer(player));
             MotionRecorder.recordInputs(KeyAdapter.toKeys(flags), KeyAdapter.toKeys(flags));
             if (Human.look() != null) Human.look().setTravelYawOffset(0);
@@ -120,8 +130,16 @@ public final class HumanKeys {
         List<MovementKind> movements = movements(executor);
         boolean clear = !bypass.any() && player.getHungerManager().getFoodLevel() > 6
                 && SprintHop.straightFlat(pathView.nodes(), movements) && clearCorridor(mod, pathView);
+        boolean hopsEnabled = HumanComponents.enabled("humanHops");
+        optionalHop.update(clear && hopsEnabled, player.isOnGround());
+        VibratoSettings.getInstance().setOptionalHop(player, optionalHop.active(), optionalHop.originY());
         KeyAdapter.Flags shaped = active.apply(intended, pathView, bypass);
-        shaped = active.addHop(shaped, pathView, movements, clear, HumanComponents.enabled("humanHops"));
+        boolean shapedJump = shaped.jump();
+        shaped = active.addHop(shaped, pathView, movements, clear, hopsEnabled);
+        if (shaped.jump() && !shapedJump && !intended.jump() && clear && hopsEnabled && player.isOnGround()) {
+            optionalHop.begin(player.getBlockY());
+            VibratoSettings.getInstance().setOptionalHop(player, true, optionalHop.originY());
+        }
         MotionRecorder.recordInputs(KeyAdapter.toKeys(intended), KeyAdapter.toKeys(shaped));
         if (Human.look() != null) Human.look().setTravelYawOffset(active.visualOffsetDegrees(clear));
         if (debug && tick - lastSummaryTick >= SUMMARY_INTERVAL_TICKS) {
@@ -142,6 +160,11 @@ public final class HumanKeys {
             lastDebugTick = tick;
             Debug.logMessage("Keys intended " + intended + " shaped " + shaped);
         }
+    }
+
+    private static void clearOptionalHop() {
+        optionalHop.clear();
+        VibratoSettings.getInstance().setOptionalHop(null, false, 0);
     }
 
     private static KeyAdapter.Flags intended(ClientPlayerEntity player, IBaritone baritone) {
