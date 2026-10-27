@@ -51,6 +51,18 @@ class BuiltinRegistryIntegrityTest {
     }
 
     @Test
+    void xpActivitiesRequireBasicToolsAndRemainPlannable() {
+        ActivityRegistry registry = builtRegistry();
+        for (String id : List.of("gain_xp_levels", "level_10", "level_20", "level_30", "collect_xp_levels")) {
+            Activity activity = registry.get(id);
+            assertTrue(activity.requires().contains(WorldFacts.BASIC_PICKAXE), id);
+            assertTrue(!PlanSampler.canRunNow(activity, START_FACTS, new CoverageTracker()), id);
+        }
+        assertTrue(registry.providersOf(WorldFacts.BASIC_PICKAXE).stream()
+                .anyMatch(activity -> activity.id().equals("craft_stone_pickaxe")));
+    }
+
+    @Test
     void idsAreUnique() {
         ActivityRegistry registry = builtRegistry();
         Set<String> ids = new HashSet<>();

@@ -148,7 +148,8 @@ public class DirectorTask extends Task implements StepAbandonable {
                     }
                     return false;
                 });
-                _health.tick(stuckNow);
+                var position = mod.getPlayer().getPos();
+                _health.tick(stuckNow, position.x, position.y, position.z);
                 if (!_health.verdict()) {
                     return _stepTask;
                 }

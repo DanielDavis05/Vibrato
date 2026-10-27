@@ -13,6 +13,7 @@ public final class WorldFacts {
 
     public static final Fact UNDERGROUND = Fact.of("loc:underground");
     public static final Fact SURFACE = Fact.of("loc:surface");
+    public static final Fact BASIC_PICKAXE = Fact.of("tool:stone_or_better");
 
     private static final List<String> PICKAXES = List.of(
             "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
@@ -39,6 +40,9 @@ public final class WorldFacts {
             facts.add(atSurface ? SURFACE : UNDERGROUND);
         }
         for (String item : heldItems) {
+            if (PICKAXES.contains(item) && !item.equals("wooden_pickaxe")) {
+                facts.add(BASIC_PICKAXE);
+            }
             if (PICKAXES.contains(item) || RARE_ITEMS.contains(item)) {
                 facts.add(Fact.has(item));
             }
@@ -49,7 +53,7 @@ public final class WorldFacts {
     /** Facts that are re-read from the world at every plan boundary; the rest persist across plans. */
     public static boolean isObservable(Fact fact) {
         String key = fact.key();
-        return key.startsWith("dim:") || key.startsWith("loc:") || isPickaxeFact(fact) || rareItemFacts().contains(fact);
+        return key.startsWith("dim:") || key.startsWith("loc:") || isPickaxeFact(fact) || fact.equals(BASIC_PICKAXE) || rareItemFacts().contains(fact);
     }
 
     /** Every {@code has:<rare item>} fact that the inventory can report. */

@@ -86,11 +86,11 @@ public final class CoreActivities {
                 () -> TaskCatalogue.getItemTask("crafting_table", 1));
         fixed(registry, "craft_wooden_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("wooden_pickaxe")), 3,
                 () -> TaskCatalogue.getItemTask("wooden_pick", 1));
-        fixed(registry, "craft_stone_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("stone_pickaxe")), 4,
+        fixed(registry, "craft_stone_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("stone_pickaxe"), WorldFacts.BASIC_PICKAXE), 4,
                 () -> TaskCatalogue.getItemTask("stone_pick", 1));
-        fixed(registry, "craft_iron_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("iron_pickaxe"), Fact.of("tool:iron")), 6,
+        fixed(registry, "craft_iron_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("iron_pickaxe"), Fact.of("tool:iron"), WorldFacts.BASIC_PICKAXE), 6,
                 () -> TaskCatalogue.getItemTask("iron_pick", 1));
-        fixed(registry, "craft_diamond_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("diamond")), Set.of(Fact.has("diamond_pickaxe"), Fact.of("tool:diamond")), 10,
+        fixed(registry, "craft_diamond_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("diamond")), Set.of(Fact.has("diamond_pickaxe"), Fact.of("tool:diamond"), WorldFacts.BASIC_PICKAXE), 10,
                 () -> TaskCatalogue.getItemTask("diamond_pick", 1));
         registry.register(new CoreActivity("craft_iron_tool", FeatureArea.CRAFT, Set.of(), Set.of(Fact.of("tool:iron")), List.of(
                 ParamSpec.choice("tool", "sword", "axe", "shovel", "hoe")),

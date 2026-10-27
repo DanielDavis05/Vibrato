@@ -81,22 +81,22 @@ public final class LifeActivities {
                 values -> Duration.ofMinutes(Math.min(20, 4 + values.getInt("count") / 4)),
                 (mod, values) -> new CookFoodTask(values.getString("raw"), values.getInt("count")));
 
-        add(registry, "gain_xp_levels", FeatureArea.LEVEL, facts(), facts(),
+        add(registry, "gain_xp_levels", FeatureArea.LEVEL, Set.of(WorldFacts.BASIC_PICKAXE), facts(),
                 List.of(ParamSpec.ints("target", 5, 35)),
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new GainXpLevelsTask(values.getInt("target")));
 
-        add(registry, "level_10", FeatureArea.LEVEL, facts(), facts("level:10"),
+        add(registry, "level_10", FeatureArea.LEVEL, Set.of(WorldFacts.BASIC_PICKAXE), facts("level:10"),
                 List.of(),
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new GainXpLevelsTask(10));
 
-        add(registry, "level_20", FeatureArea.LEVEL, facts("level:10"), facts("level:20"),
+        add(registry, "level_20", FeatureArea.LEVEL, facts("level:10", "tool:stone_or_better"), facts("level:20"),
                 List.of(),
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new GainXpLevelsTask(20));
 
-        add(registry, "level_30", FeatureArea.LEVEL, facts("level:20"), facts("level:30"),
+        add(registry, "level_30", FeatureArea.LEVEL, facts("level:20", "tool:stone_or_better"), facts("level:30"),
                 List.of(),
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new GainXpLevelsTask(30));

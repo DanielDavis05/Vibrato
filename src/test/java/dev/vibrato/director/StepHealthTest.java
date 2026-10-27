@@ -44,9 +44,28 @@ class StepHealthTest {
             health.tick(true);
         }
         assertFalse(health.verdict());
-        for (int tick = 0; tick < 2 * 20; tick++) {
+        for (int tick = 0; tick < 12 * 20; tick++) {
             health.tick(true);
         }
+        assertTrue(health.verdict());
+    }
+    @Test
+    void movingWanderKeepsMakingProgress() {
+        StepHealth health = new StepHealth(100, 30);
+        for (int tick = 0; tick < 1000; tick++) {
+            health.tick(true, tick * 0.05, 64, 0);
+        }
+        assertFalse(health.verdict());
+    }
+
+    @Test
+    void stationaryWanderEventuallyFailsAndMovementResetsTheClock() {
+        StepHealth health = new StepHealth(10, 5);
+        for (int tick = 0; tick < 10; tick++) health.tick(true, 0, 64, 0);
+        assertTrue(health.verdict());
+        health.tick(true, 1, 64, 0);
+        assertFalse(health.verdict());
+        for (int tick = 0; tick < 5; tick++) health.tick(true, 1, 64, 0);
         assertTrue(health.verdict());
     }
 }

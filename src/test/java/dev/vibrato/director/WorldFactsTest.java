@@ -19,7 +19,8 @@ class WorldFactsTest {
         assertTrue(facts.contains(WorldFacts.SURFACE));
         assertTrue(facts.contains(Fact.has("iron_pickaxe")));
         assertFalse(facts.contains(WorldFacts.UNDERGROUND));
-        assertEquals(3, facts.size());
+        assertTrue(facts.contains(WorldFacts.BASIC_PICKAXE));
+        assertEquals(4, facts.size());
     }
 
     @Test
@@ -28,6 +29,15 @@ class WorldFactsTest {
 
         assertTrue(facts.contains(WorldFacts.UNDERGROUND));
         assertFalse(WorldFacts.hasPickaxe(facts));
+    }
+
+    @Test
+    void basicPickaxeRequiresStoneOrBetterAndIsObserved() {
+        assertFalse(WorldFacts.compose("overworld", true, List.of("wooden_pickaxe")).contains(WorldFacts.BASIC_PICKAXE));
+        for (String item : List.of("stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe")) {
+            assertTrue(WorldFacts.compose("overworld", true, List.of(item)).contains(WorldFacts.BASIC_PICKAXE));
+        }
+        assertTrue(WorldFacts.isObservable(WorldFacts.BASIC_PICKAXE));
     }
 
     @Test

@@ -4,7 +4,7 @@ import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.enchant.AnvilCombineTask;
 import dev.vibrato.tasks.enchant.BrewPotionTask;
-import dev.vibrato.tasks.enchant.CollectXpTask;
+import dev.vibrato.tasks.life.GainXpLevelsTask;
 import dev.vibrato.tasks.enchant.EnchantItemTask;
 import dev.vibrato.tasks.enchant.GrindstoneTask;
 import dev.vibrato.tasks.enchant.PotionRecipes.Potion;
@@ -97,9 +97,9 @@ public final class TradeEnchantActivities {
                 v -> new GrindstoneTask(item(v.getString("item"))),
                 v -> Duration.ofMinutes(4)));
 
-        registry.register(spec("collect_xp_levels", FeatureArea.LEVEL, Set.of(), Set.of(),
+        registry.register(spec("collect_xp_levels", FeatureArea.LEVEL, Set.of(WorldFacts.BASIC_PICKAXE), Set.of(),
                 List.of(ParamSpec.ints("level", 5, 30)),
-                v -> new CollectXpTask(v.getInt("level")),
+                v -> new GainXpLevelsTask(v.getInt("level")),
                 v -> Duration.ofMinutes(6)));
     }
 

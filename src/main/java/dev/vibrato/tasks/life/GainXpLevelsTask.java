@@ -14,11 +14,12 @@ import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.time.TimerGame;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.entity.Entity;
 import java.util.Arrays;
 
 /**
@@ -35,7 +36,7 @@ public class GainXpLevelsTask extends Task {
             Blocks.REDSTONE_ORE, Blocks.DEEPSLATE_REDSTONE_ORE,
             Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE
     };
-    private static final Class<?>[] HOSTILES = {ZombieEntity.class, SkeletonEntity.class, SpiderEntity.class, CreeperEntity.class};
+    private static final Class<?>[] HOSTILES = {ZombieEntity.class, SkeletonEntity.class, SpiderEntity.class};
 
     private final int _targetLevel;
     private final TimerGame _budget = new TimerGame(TIME_LIMIT_SECONDS);
@@ -82,7 +83,10 @@ public class GainXpLevelsTask extends Task {
                 .toArray(Block[]::new);
         boolean oreAvailable = mineable.length > 0 && mod.getBlockTracker()
                 .getNearestTracking(mod.getPlayer().getPos(), pos -> WorldHelper.canBreak(mod, pos), mineable).isPresent();
-        boolean mobsAvailable = mod.getEntityTracker().entityFound(HOSTILES);
+        boolean armed = mod.getItemStorage().hasItem(Items.WOODEN_SWORD, Items.STONE_SWORD, Items.IRON_SWORD,
+                Items.GOLDEN_SWORD, Items.DIAMOND_SWORD, Items.NETHERITE_SWORD);
+        boolean mobsAvailable = armed && mod.getEntityTracker().getClosestEntity(
+                entity -> nearbyHostile(mod, entity), HOSTILES).isPresent();
         _source = SourcePolicy.choose(_source, smeltActive || raw != null && cooked != null, oreAvailable, mobsAvailable);
 
         if (_source == Source.SMELT) {
@@ -102,7 +106,7 @@ public class GainXpLevelsTask extends Task {
 
         if (_source == Source.MOBS) {
             if (_kill == null) {
-                _kill = new KillEntitiesTask(HOSTILES);
+                _kill = new KillEntitiesTask(entity -> nearbyHostile(mod, entity), HOSTILES);
             }
             setDebugState("Killing hostile mobs for XP");
             return _kill;
@@ -110,6 +114,12 @@ public class GainXpLevelsTask extends Task {
 
         setDebugState("Searching for XP sources (level " + mod.getPlayer().experienceLevel + ")");
         return new TimeoutWanderTask();
+    }
+
+    private static boolean nearbyHostile(Vibrato mod, Entity entity) {
+        return entity.isAlive() && mod.getEntityTracker().isEntityReachable(entity)
+                && entity.squaredDistanceTo(mod.getPlayer()) <= 12 * 12
+                && Math.abs(entity.getY() - mod.getPlayer().getY()) <= 4;
     }
 
     @Override
