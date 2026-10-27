@@ -76,3 +76,25 @@ These are controlled regression checks, rather than an exhaustive playthrough of
 
 The same collection fixture with `vibrato.human=off` finished with eight cobblestone in 7.162 seconds; the human-camera
 run took 7.916 seconds. The final `./gradlew test build` passed 351 tests with no failures, errors or skips.
+
+## Normal survival follow-up, 2026-10-27
+
+The subsequent watch used normal survival worlds with seeds 424242 and 1, cheats off, and ordinary inventory loss on
+death. Seven sessions recorded about 49 minutes of client trace, including idle observations, autonomous generalist
+and explorer plans, and manual resource/travel requests. The structured record is
+`docs/survival-watch-2026-10-27.json`; capture hashes identify the accompanying evidence bundle.
+
+The watch reproduced unprepared XP combat, worn-out tools falling back to aimless searching, interrupted wanders
+resetting their origin and budget, recovery jumps during productive mining, and an indirect ocean search for sheep.
+It also exposed a death/respawn being counted as successful travel. Fixes preserve task progress across interruptions,
+require XP preparation, replace tools, recognize real mining work, choose dry bank and non-overlapping placement
+targets, and prefer nearby grassland for terrestrial animals. Projectile predictions now use future trajectories and
+evaluate each dodge candidate independently. Protected nested movement remains covered by interruption tests.
+
+The natural river check crossed roughly 28 water blocks in two travel legs and exited onto the bank with full air.
+Later ordinary requests completed a stone pickaxe, three wool, six wool, and a feather with full health. The last
+land-selector correction uses a heightmap transmitted to clients; selection stability and that data contract have
+regression tests. The final test/build run passed 399 tests, with no failures, errors or skips.
+
+Earlier night sessions included combat deaths, and one bed/spawn attempt exceeded its budget after a long animal
+search. These are recorded in the watch report. This sampled watch does not exhaust every activity or terrain.

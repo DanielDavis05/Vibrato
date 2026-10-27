@@ -1,0 +1,279 @@
+{
+  "recordedAtUtc": "2026-10-27T13:28:25.451257+00:00",
+  "sourceRevision": "30c9c756f96db757c49f96c8ffd814f1406aa840",
+  "observedTraceMinutes": 49.17,
+  "measurement": "Sum of client trace ticks / 20 across sessions; includes idle observations and excludes loading screens. This is a sampled survival watch.",
+  "worlds": [
+    {
+      "name": "survival-watch-20261027",
+      "seed": 424242,
+      "gameMode": "survival",
+      "difficulty": "normal",
+      "cheats": false,
+      "keepInventory": "false"
+    },
+    {
+      "name": "survival-fixed-20261027",
+      "seed": 424242,
+      "gameMode": "survival",
+      "difficulty": "normal",
+      "cheats": false,
+      "keepInventory": "false"
+    },
+    {
+      "name": "survival-final-20261027",
+      "seed": 1,
+      "gameMode": "survival",
+      "difficulty": "normal",
+      "cheats": false,
+      "keepInventory": "false"
+    },
+    {
+      "name": "survival-scout-20261027",
+      "seed": 1,
+      "gameMode": "survival",
+      "difficulty": "normal",
+      "cheats": false,
+      "keepInventory": "false"
+    }
+  ],
+  "tests": {
+    "tests": 399,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar": {
+    "name": "vibrato-survival-0.1.0.jar",
+    "sha256": "fc3ae3be848865654ca8a20bf37d3f1756942138a46d8418c79ebbd6a821c4d7"
+  },
+  "manualTravel": {
+    "naturalRiverWidthBlocks": 28,
+    "nearBank": [
+      -148,
+      63,
+      -64
+    ],
+    "midpointXZ": [
+      -148,
+      -50
+    ],
+    "farBank": [
+      -148,
+      63,
+      -35
+    ],
+    "result": "Both swim legs completed and exited onto dry ground; full air and no recovery actions during these legs."
+  },
+  "completedSurvivalRequests": [
+    "stone_pickaxe 1",
+    "wool 3",
+    "wool 6",
+    "feather 1"
+  ],
+  "fixes": [
+    "XP preparation and safe nearby source selection",
+    "Replacement of worn-out XP mining tools",
+    "Movement-aware wandering health checks",
+    "Recovery persistence across path cancellations and planning ahead",
+    "Dry reachable water-bank selection",
+    "Player collision excluded from nearby placement",
+    "Fresh director children and protected movement boundaries",
+    "Wander and activity budgets preserved across interruptions",
+    "Future projectile prediction and per-candidate dodge evaluation",
+    "Death/respawn cannot count as successful travel",
+    "Grassland preference for terrestrial-animal searches using client heightmaps",
+    "Actual mining progress protects useful work; stale events expire"
+  ],
+  "limits": [
+    "Earlier night runs included three combat deaths. The watch does not demonstrate invulnerability.",
+    "A bed/spawn attempt exceeded its budget after an indirect animal search before the land preference was added.",
+    "The final ordinary loot requests found nearby animals; land-target selection and the client-heightmap contract have regression tests.",
+    "Every activity, seed, and terrain combination has not been exhaustively exercised."
+  ],
+  "runs": [
+    {
+      "name": "baseline",
+      "revision": "54d5a67",
+      "clientTraceMinutes": 3.94,
+      "samples": 945,
+      "waterSamples": 0,
+      "minimumRecordedAirInWater": null,
+      "lastPosition": [
+        -8.886,
+        23.0,
+        -24.651
+      ],
+      "serverReportedDeaths": [
+        "Player196 was shot by Skeleton"
+      ],
+      "stepResults": [],
+      "blocksBroken": {
+        "minecraft:azalea": 1,
+        "minecraft:short_grass": 2,
+        "minecraft:moss_block": 1,
+        "minecraft:flowering_azalea": 2,
+        "minecraft:big_dripleaf": 1
+      },
+      "recoveryActions": {},
+      "fatalClientException": false,
+      "logSha256": "18cafe94d9493231c745154cf8a4c49c77783b3f49240f04ac99778ef0c97044"
+    },
+    {
+      "name": "fixed",
+      "revision": "7a7f965",
+      "clientTraceMinutes": 8.16,
+      "samples": 1958,
+      "waterSamples": 0,
+      "minimumRecordedAirInWater": null,
+      "lastPosition": [
+        -55.067,
+        103.0,
+        89.805
+      ],
+      "serverReportedDeaths": [],
+      "stepResults": [
+        "VIBRATO: Director step craft_stone_pickaxe{} succeeded after 49.4s: finished"
+      ],
+      "blocksBroken": {
+        "minecraft:dark_oak_log": 3,
+        "minecraft:oak_leaves": 1,
+        "minecraft:grass_block": 4,
+        "minecraft:dirt": 13,
+        "minecraft:stone": 72,
+        "minecraft:coal_ore": 117,
+        "minecraft:granite": 1
+      },
+      "recoveryActions": {
+        "JUMP": 7
+      },
+      "fatalClientException": false,
+      "logSha256": "073fc9a1617b56089e1f2f0457957e5bd5588fd7e3fc36ea8a70300165db82fe"
+    },
+    {
+      "name": "river",
+      "revision": "49f3c04",
+      "clientTraceMinutes": 9.55,
+      "samples": 2291,
+      "waterSamples": 840,
+      "minimumRecordedAirInWater": 110,
+      "lastPosition": [
+        -519.925,
+        63.0,
+        -229.909
+      ],
+      "serverReportedDeaths": [],
+      "stepResults": [
+        "VIBRATO: Director step travel_wander_exploration{radius=332} succeeded after 235.75s: finished"
+      ],
+      "blocksBroken": {
+        "minecraft:dark_oak_leaves": 2
+      },
+      "recoveryActions": {},
+      "fatalClientException": false,
+      "logSha256": "80db910c677da329daa44f26e63d2f11c84974e370aa5d0e23a29f56971ec7af"
+    },
+    {
+      "name": "verified",
+      "revision": "5aa03d2",
+      "clientTraceMinutes": 4.72,
+      "samples": 1132,
+      "waterSamples": 0,
+      "minimumRecordedAirInWater": null,
+      "lastPosition": [
+        -66.15,
+        77.0,
+        -68.855
+      ],
+      "serverReportedDeaths": [
+        "Player873 was shot by Skeleton",
+        "Player873 was slain by Zombie"
+      ],
+      "stepResults": [
+        "VIBRATO: Director step travel_wander_exploration{radius=332} succeeded after 14.65s: finished"
+      ],
+      "blocksBroken": {},
+      "recoveryActions": {},
+      "fatalClientException": false,
+      "logSha256": "1bc52f6a774829a9b4578758ec8e1d99c1533c4c38afb304fa01955834b45974"
+    },
+    {
+      "name": "final",
+      "revision": "cc1bfc7",
+      "clientTraceMinutes": 14.35,
+      "samples": 3444,
+      "waterSamples": 1314,
+      "minimumRecordedAirInWater": 288,
+      "lastPosition": [
+        381.502,
+        40.0,
+        125.794
+      ],
+      "serverReportedDeaths": [],
+      "stepResults": [
+        "VIBRATO: Director step travel_wander_exploration{radius=332} succeeded after 120.0s: finished",
+        "VIBRATO: Director step set_spawn_point{} failed after 360.0s: over budget"
+      ],
+      "blocksBroken": {
+        "minecraft:oak_log": 3,
+        "minecraft:grass_block": 1,
+        "minecraft:dirt": 4,
+        "minecraft:stone": 40,
+        "minecraft:iron_ore": 3,
+        "minecraft:andesite": 7,
+        "minecraft:cobblestone": 2
+      },
+      "recoveryActions": {
+        "JUMP": 4,
+        "BACK_OFF_AND_REPATH": 2
+      },
+      "fatalClientException": false,
+      "logSha256": "164cbdb09389f567162a96e2036e49bd9165ec6d16c27b9aebf2d8ad7cbac99f"
+    },
+    {
+      "name": "scout",
+      "revision": "69aa725",
+      "clientTraceMinutes": 4.52,
+      "samples": 1084,
+      "waterSamples": 54,
+      "minimumRecordedAirInWater": 300,
+      "lastPosition": [
+        269.587,
+        64.0,
+        278.7
+      ],
+      "serverReportedDeaths": [],
+      "stepResults": [],
+      "blocksBroken": {
+        "minecraft:oak_log": 4,
+        "minecraft:grass_block": 2,
+        "minecraft:dirt": 2,
+        "minecraft:stone": 3
+      },
+      "recoveryActions": {
+        "JUMP": 1
+      },
+      "fatalClientException": false,
+      "logSha256": "a69f3e30a973b6fdc89fc28353c189377f3df47ef669b0157e3dc7fa5ffea17b"
+    },
+    {
+      "name": "land",
+      "revision": "30c9c75",
+      "clientTraceMinutes": 3.93,
+      "samples": 944,
+      "waterSamples": 0,
+      "minimumRecordedAirInWater": null,
+      "lastPosition": [
+        297.182,
+        72.0,
+        230.663
+      ],
+      "serverReportedDeaths": [],
+      "stepResults": [],
+      "blocksBroken": {},
+      "recoveryActions": {},
+      "fatalClientException": false,
+      "logSha256": "850715018fba26eb96f522a9e20d5a48d23b508c45851b4a383d1c4115285301"
+    }
+  ]
+}
