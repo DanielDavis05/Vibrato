@@ -1,6 +1,7 @@
 package dev.vibrato.tasks.explore;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.nav.NavSafety;
 import dev.vibrato.tasks.movement.GetToBlockTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.WorldHelper;
@@ -8,10 +9,10 @@ import net.minecraft.util.math.BlockPos;
 
 /**
  * Walks back to a remembered point: {@code home} (the configured home base), or the nearest {@link DiscoveryLog} entry of
- * that kind (village, spawn, structure:&lt;id&gt;, biome:&lt;id&gt;).
+ * that kind (village, structure:&lt;id&gt;, biome:&lt;id&gt;). {@code spawn} is the bed the bot last slept in, read from the
+ * persisted waypoints that the bed task records.
  * <p>
- * The target is chosen once when the task starts. If nothing is remembered, the task ends at once. Nothing logs a
- * {@code spawn} entry yet: the bed-setting task would have to record it.
+ * The target is chosen once when the task starts. If nothing is remembered, the task ends at once.
  */
 public class ReturnToPointTask extends Task {
 
@@ -32,6 +33,10 @@ public class ReturnToPointTask extends Task {
     private BlockPos resolve(Vibrato mod) {
         if ("home".equals(_kind)) {
             return mod.getModSettings().getHomeBasePosition();
+        }
+        if ("spawn".equals(_kind)) {
+            String dimension = mod.getWorld().getRegistryKey().getValue().toString();
+            return SpawnPointLookup.bedIn(NavSafety.waypoints(), dimension).orElse(null);
         }
         return DiscoveryLog.nearest(_kind, mod.getPlayer().getBlockPos()).orElse(null);
     }
