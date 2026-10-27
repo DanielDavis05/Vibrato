@@ -39,12 +39,15 @@ public final class ProtocolScenarioTask extends Task {
     }
 
     @Override protected Task onTick(Vibrato mod) {
-        ticks++;
         var client = MinecraftClient.getInstance();
         if (client.player == null || client.getNetworkHandler() == null) return null;
+        ticks++;
         if (client.currentScreen instanceof DeathScreen) client.player.requestRespawn();
         if (ticks == 1) {
             client.setScreen(null);
+            // Native sneak input dismounts before a new fixture action, so prior boat steering
+            // cannot change the packet variants produced by later walking scenarios.
+            if (client.player.hasVehicle()) client.options.sneakKey.setPressed(true);
             if (server) {
                 client.getNetworkHandler().sendChatCommand("vprotocol run " + action);
                 dispatched = true;
@@ -55,6 +58,7 @@ public final class ProtocolScenarioTask extends Task {
                 if (!setup.equals("none")) client.getNetworkHandler().sendChatCommand("vprotocol run " + setup);
             }
         }
+        if (ticks == 10) client.options.sneakKey.setPressed(false);
         if (!server && ticks >= 20 && !dispatched && child.isFinished(mod)) dispatched = true;
         boolean observed = true;
         List<String> expected = expected();
@@ -75,17 +79,21 @@ public final class ProtocolScenarioTask extends Task {
     private List<String> expected() { return server ? List.of() : ClientProtocolScenarioTask.expectedPackets(action); }
     private long count(String heading) {
         try {
-            return ProtocolReports.current().packets().stream().filter(row -> row.packet().name().equals(heading))
+            return ProtocolReports.current().packets().stream().filter(row -> row.packet().name().equals(heading)
+                            && row.packet().direction().equals("serverbound"))
                     .flatMap(row -> row.attributions().stream()).filter(a -> a.scenario().equals(scenario)).mapToLong(PacketCoverageReport.Attribution::count).sum();
         } catch (IOException e) { throw new IllegalStateException(e); }
     }
     private void finishReport(Vibrato mod, boolean observed) {
         try {
             ProtocolReports.write();
-            mod.log("Protocol " + scenario + ": " + (server ? "fixture executed; inspect coverage report" : observed ? "expected packets observed" : "incomplete; expected packets were not observed"));
+            mod.log("Protocol " + scenario + ": " + (server ? "fixture command sent; inspect coverage report" : observed ? "expected packets observed" : "incomplete; expected packets were not observed"));
         } catch (IOException e) { Debug.logWarning("Protocol report failed: " + e.getMessage()); }
     }
-    @Override protected void onStop(Vibrato mod, Task interruptTask) { PacketCoverage.endScenario(); }
+    @Override protected void onStop(Vibrato mod, Task interruptTask) {
+        MinecraftClient.getInstance().options.sneakKey.setPressed(false);
+        PacketCoverage.endScenario();
+    }
     @Override public boolean isFinished(Vibrato mod) { return finished; }
     @Override protected boolean isEqual(Task other) { return other instanceof ProtocolScenarioTask task && scenario.equals(task.scenario); }
     @Override protected String toDebugString() { return "Protocol " + scenario; }

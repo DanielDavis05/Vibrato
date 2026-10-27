@@ -24,10 +24,11 @@ public final class ProtocolSuiteTask extends Task {
             }
             return;
         }
-        for (String group : List.of("ui", "scoreboard", "world", "entities", "blocks", "inventory", "client_state", "registry_state", "entity_motion", "container", "unknown_deleted_signature", "unknown_player_removed", "block_effects", "chunk_refresh", "sign_editor", "written_book", "horse_screen", "merchant_screen", "play_sync", "ghost_recipe", "projectile_spawn", "projectile_update", "chunk_unload", "death", "resource_pack_unavailable", "reconfigure")) steps.add(new Step(group, true));
+        for (String group : List.of("ui", "scoreboard", "world", "entities", "blocks", "inventory", "client_state", "registry_state", "entity_motion", "container", "unknown_deleted_signature", "unknown_player_removed", "block_effects", "chunk_refresh", "sign_editor", "written_book", "horse_screen", "merchant_screen", "play_sync", "ghost_recipe", "projectile_spawn", "projectile_update", "chunk_unload", "death", "resource_pack_unavailable", "unsigned_player_chat", "keepalive")) steps.add(new Step(group, true));
         ClientProtocolScenarioTask.supportedActions().stream()
                 .filter(action -> !action.equals("player_session_untrusted"))
                 .sorted().forEach(action -> steps.add(new Step(action, false)));
+        steps.add(new Step("reconfigure", true));
         // Common cookie requests intentionally take the native unexpected-response disconnect path.
         steps.add(new Step("common", true));
     }

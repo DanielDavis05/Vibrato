@@ -70,6 +70,7 @@ tasks.register('packetCoverageReport', JavaExec) {
 loom {
     runs {
         client {
+            if (project.hasProperty('clientRunDir')) runDir project.property('clientRunDir').toString()
             def gameProps = project.findProperty('gameProps')?.toString()?.trim()
             if (gameProps) {
                 gameProps.split(/\s+/).each { vmArg(it) }

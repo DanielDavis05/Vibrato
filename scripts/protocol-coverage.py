@@ -10,6 +10,7 @@ from pathlib import Path
 import signal
 import subprocess
 import time
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODES = ["login_query", "login_cookie", "login_disconnect", "login_encrypt",
@@ -64,6 +65,7 @@ def main():
     parser.add_argument("--display", default=os.environ.get("DISPLAY", ":99"))
     parser.add_argument("--steps", help="Override normal suite: fixture:name,client:name,...")
     args = parser.parse_args()
+    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     modes = args.modes.split(",")
     if any(mode not in DEFAULT_MODES for mode in modes):
         parser.error("Unknown fixture mode")
@@ -99,6 +101,8 @@ def main():
                      f"-Dvibrato.protocolReport=vibrato/reports/{mode}.json"]
             if steps: props.append(f"-Dvibrato.protocolSteps={steps}")
             log = args.logs / f"{mode}-client.log"
+            capture = ROOT / f"run/vibrato/captures/{mode}.json"
+            previous = json.loads(capture.read_text()).get("captureId") if capture.exists() else None
             client, handle = start(["./gradlew", ":runClient", "-PgameProps=" + " ".join(props),
                                    "--console=plain"], log, env)
             handles.append(handle)
@@ -106,8 +110,9 @@ def main():
             code = client.wait(timeout=args.timeout)
             if code:
                 raise RuntimeError(f"Client exited {code}: {log}")
-            capture = ROOT / f"run/vibrato/captures/{mode}.json"
             if not capture.exists(): raise RuntimeError(f"No capture: {capture}")
+            if json.loads(capture.read_text()).get("captureId") in (None, previous):
+                raise RuntimeError(f"Client did not produce a fresh capture: {capture}")
             print(f"Captured {mode}: {capture}", flush=True)
         finally:
             stop(client)
