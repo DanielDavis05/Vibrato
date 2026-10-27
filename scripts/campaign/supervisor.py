@@ -264,7 +264,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--install', required=True, help='fleet install root with minecraft/ and mods/')
     p.add_argument('--campaign', required=True, choices=['round0'])
-    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'four', 'six'])
+    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'single-v2', 'four', 'four-v2', 'six', 'six-v2'])
     p.add_argument('--count', type=int, required=True, choices=[1, 4, 6])
     p.add_argument('--budget', type=int, default=60)
     p.add_argument('--startup-timeout', type=int, default=180)
