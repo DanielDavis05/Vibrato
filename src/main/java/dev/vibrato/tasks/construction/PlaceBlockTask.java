@@ -17,6 +17,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.apache.commons.lang3.ArrayUtils;
@@ -181,19 +183,34 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                             && !_mod.getBehaviour().isProtected(possible.getBlock().asItem())) {
                         return possible;
                     }
-                    if (Arrays.asList(_toPlace).contains(possible.getBlock())) {
+                    if (!_useThrowaways && Arrays.asList(_toPlace).contains(possible.getBlock())) {
                         return possible;
+                    }
+                }
+                // Builder candidates can be transiently empty before its first
+                // calculation. Keep a solid goal from actual main inventory so it
+                // can plan and move the item to the hotbar. Inventory slot order is
+                // deterministic, and protected resources are never throwaways.
+                if (_mod.getPlayer() != null) {
+                    for (ItemStack stack : _mod.getPlayer().getInventory().main) {
+                        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) continue;
+                        Block block = item.getBlock();
+                        if (_useThrowaways
+                                ? _mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
+                                    && !_mod.getBehaviour().isProtected(stack.getItem())
+                                : Arrays.asList(_toPlace).contains(block)) {
+                            return block.getDefaultState();
+                        }
                     }
                 }
                 if (!_warnedNoThrowaway) {
                     _warnedNoThrowaway = true;
-                    Debug.logInternal("No requested placeable block in Baritone's inventory candidates at "
+                    Debug.logInternal("No requested placeable block in player inventory at "
                             + _target.toShortString() + "; throwaway=" + _useThrowaways
-                            + ", requested=" + Arrays.toString(_toPlace) + ", candidates=" + available);
+                            + ", requested=" + Arrays.toString(_toPlace));
                 }
                 // For explicit placement, keep the requested goal so the builder can
                 // report missing materials instead of silently substituting cobblestone.
-                // Never choose a protected fallback for throwaway placement.
                 if (!_useThrowaways && _toPlace.length > 0) {
                     return new BlockOptionalMeta(_toPlace[0]).getAnyBlockState();
                 }

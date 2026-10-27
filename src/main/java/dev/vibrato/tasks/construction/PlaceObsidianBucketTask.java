@@ -79,8 +79,21 @@ public class PlaceObsidianBucketTask extends Task {
             }
         }
 
+        // A completed placement or removal is real progress even when the
+        // player did not move. Account for it before deciding to wander.
+        boolean completedBlockChange = false;
+        if (_currentCastTarget != null && WorldHelper.isSolid(mod, _currentCastTarget)) {
+            _currentCastTarget = null;
+            completedBlockChange = true;
+        }
+        if (_currentDestroyTarget != null && !WorldHelper.isSolid(mod, _currentDestroyTarget)) {
+            _currentDestroyTarget = null;
+            completedBlockChange = true;
+        }
+        if (completedBlockChange) _progressChecker.reset();
+
         // Manual wander to try and make this godforesaken task work
-        if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+        if (!completedBlockChange && _wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             setDebugState("Wandering.");
             _progressChecker.reset();
             return _wanderTask;
@@ -91,25 +104,13 @@ public class PlaceObsidianBucketTask extends Task {
         }
 
         if (_currentCastTarget != null) {
-            if (WorldHelper.isSolid(mod, _currentCastTarget)) {
-                _currentCastTarget = null;
-            } else {
-                return new PlaceStructureBlockTask(_currentCastTarget);
-            }
+            return new PlaceStructureBlockTask(_currentCastTarget);
         }
         if (_currentDestroyTarget != null) {
-            if (!WorldHelper.isSolid(mod, _currentDestroyTarget)) {
-                _currentDestroyTarget = null;
-            } else {
-                return new DestroyBlockTask(_currentDestroyTarget);
-            }
+            return new DestroyBlockTask(_currentDestroyTarget);
         }
 
         // Build the cast frame
-        if (_currentCastTarget != null && WorldHelper.isSolid(mod, _currentCastTarget)) {
-            // Current cast frame already built.
-            _currentCastTarget = null;
-        }
         for (Vec3i castPosRelative : CAST_FRAME) {
             BlockPos castPos = _pos.add(castPosRelative);
             if (!WorldHelper.isSolid(mod, castPos)) {
