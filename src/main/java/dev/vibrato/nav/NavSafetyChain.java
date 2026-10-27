@@ -57,6 +57,7 @@ public class NavSafetyChain extends TaskChain {
     private Task _watchedTask;
     private int _watchedSerial;
     private long _lastBreakTick = NavGate.NEVER;
+    private final MiningProgressSignal _miningProgress = new MiningProgressSignal();
     private final MotionProgress _progress = new MotionProgress(PROGRESS_DISTANCE);
 
     private UnstuckAction _action;
@@ -98,7 +99,7 @@ public class NavSafetyChain extends TaskChain {
                 mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent());
         boolean wantsToMove = mod.getUserTaskChain().isActive() && pathing;
         // Breaking, placing, an open container and a path being calculated are all work: never stuck, always progress.
-        if (isBreakingBlock()) {
+        if (miningMadeProgress(mod)) {
             _lastBreakTick = _tick;
         }
         boolean containerOpen = MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>;
@@ -162,6 +163,8 @@ public class NavSafetyChain extends TaskChain {
         _detector.reset();
         _ladder.onProgress();
         _progress.reset();
+        _miningProgress.reset();
+        _lastBreakTick = NavGate.NEVER;
         _watchedTask = null;
     }
 
@@ -370,9 +373,14 @@ public class NavSafetyChain extends TaskChain {
         return task instanceof DirectorTask director && director.currentStepIs("escape_underground");
     }
 
-    private static boolean isBreakingBlock() {
-        var interactions = MinecraftClient.getInstance().interactionManager;
-        return interactions != null && interactions.isBreakingBlock();
+    private boolean miningMadeProgress(Vibrato mod) {
+        var controller = mod.getControllerExtras();
+        BlockPos current = controller.getBreakingBlockPos();
+        Long currentKey = current == null ? null : current.asLong();
+        Long trackedKey = _miningProgress.trackedPosition();
+        boolean currentIsAir = currentKey != null && mod.getWorld().getBlockState(BlockPos.fromLong(currentKey)).isAir();
+        boolean trackedIsAir = trackedKey != null && mod.getWorld().getBlockState(BlockPos.fromLong(trackedKey)).isAir();
+        return _miningProgress.observe(currentKey, controller.getBreakingBlockProgress(), currentIsAir, trackedIsAir);
     }
 
     private static void setKey(InputControls input, Input key, boolean pressed) {
