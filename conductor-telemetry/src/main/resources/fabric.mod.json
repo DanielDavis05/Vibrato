@@ -3,7 +3,7 @@
   "id": "vibrato_conductor_telemetry",
   "version": "0.1.0",
   "name": "Vibrato Conductor Telemetry",
-  "description": "Read-only dedicated-server tick telemetry; no gameplay or game-rule changes.",
+  "description": "Dedicated-server telemetry and explicit per-run game-mode bootstrap; no game-rule or mechanics changes.",
   "authors": ["Codex"],
   "environment": "server",
   "entrypoints": {"main": ["dev.vibrato.conductor.ServerTelemetry"]},

@@ -149,6 +149,18 @@ public final class ScriptRunner {
                     if (!stack.isEmpty()) inventory.merge(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
                 }
                 heartbeat.put("inventory", inventory);
+                String actualMode = client.interactionManager == null ? null : client.interactionManager.getCurrentGameMode().getName();
+                heartbeat.put("actualMode", actualMode);
+                var ability = client.player.getAbilities();
+                heartbeat.put("abilities", Map.of("creativeMode", ability.creativeMode, "allowFlying", ability.allowFlying,
+                        "flying", ability.flying, "invulnerable", ability.invulnerable, "allowModifyWorld", ability.allowModifyWorld));
+                heartbeat.put("noClip", client.player.noClip);
+                int permission = 0;
+                for (int level = 1; level <= 4; level++) if (client.player.hasPermissionLevel(level)) permission = level;
+                var serverPlayer = ConductorScenarioTask.serverPlayer(client);
+                heartbeat.put("permissionLevel", serverPlayer == null ? permission : serverPlayer.get("permissionLevel"));
+                heartbeat.put("permissionSource", serverPlayer == null ? "client_synced" : "server_observer");
+                heartbeat.put("serverMode", serverPlayer == null ? null : serverPlayer.get("mode"));
                 var blocks = new TreeSet<String>();
                 if (client.crosshairTarget instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK)
                     blocks.add(Registries.BLOCK.getId(client.world.getBlockState(hit.getBlockPos()).getBlock()).toString());
