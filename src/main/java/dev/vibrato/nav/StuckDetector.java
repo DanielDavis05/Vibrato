@@ -25,7 +25,7 @@ public final class StuckDetector {
         if (_size < _history.length) {
             _size++;
         }
-        _edgeRun = sample.horizontalCollision() && sample.wantsToMove() ? _edgeRun + 1 : 0;
+        _edgeRun = sample.horizontalCollision() && sample.wantsToMove() && !sample.productive() ? _edgeRun + 1 : 0;
         return classify(sample);
     }
 
@@ -38,6 +38,9 @@ public final class StuckDetector {
     private StuckState classify(MotionSample s) {
         if (s.underWater() && s.airTicksLeft() < _config.lowAirTicks()) {
             return StuckState.LOW_AIR;
+        }
+        if (s.productive()) {
+            return StuckState.OK;
         }
         if (s.inWater() && s.wantsToMove() && hasWindow(_config.waterTicks())
                 && horizontalDistance(ago(_config.waterTicks() - 1), s) < _config.waterMinMove()) {

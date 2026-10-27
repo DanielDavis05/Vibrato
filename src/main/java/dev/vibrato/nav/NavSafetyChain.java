@@ -50,6 +50,8 @@ public class NavSafetyChain extends TaskChain {
     private final StuckDetector _detector = new StuckDetector(StuckConfig.defaults());
     private final UnstuckLadder _ladder = new UnstuckLadder();
     private final WasteGuard _waste = WasteGuard.defaults();
+    private final ActionRateLimiter _rateLimit = new ActionRateLimiter();
+    private final PerStepCap _backOffCap = new PerStepCap(2);
 
     private long _tick;
     private Task _watchedTask;
@@ -95,8 +97,12 @@ public class NavSafetyChain extends TaskChain {
             _detector.reset();
         }
 
-        boolean wantsToMove = mod.getUserTaskChain().isActive() && mod.getClientBaritone().getPathingBehavior().isPathing();
-        MotionSample sample = sample(mod.getPlayer(), wantsToMove);
+        // A path still being calculated is not movement yet, but standing still for it is not stuck either.
+        boolean calculating = mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
+        boolean wantsToMove = mod.getUserTaskChain().isActive()
+                && mod.getClientBaritone().getPathingBehavior().isPathing() && !calculating;
+        boolean productive = calculating || isBreakingBlock() || mod.getClientBaritone().getBuilderProcess().isActive();
+        MotionSample sample = sample(mod.getPlayer(), wantsToMove, productive);
         StuckState state = _detector.update(sample);
         if (!wantsToMove) {
             _detector.reset();
@@ -114,10 +120,13 @@ public class NavSafetyChain extends TaskChain {
             updateWaterOverlay(mod, sample);
             if (suppressed) {
                 _detector.reset();
-            } else if (wantsToMove && _waste.isWasting(_tick)) {
-                startAction(mod, UnstuckAction.ABANDON_TASK, "no progress", PRIORITY_ACTION);
-            } else if (state != StuckState.OK && _ladder.ready(_tick)) {
+            } else if (wantsToMove && _waste.isWasting(_tick) && _rateLimit.tryAcquire(_tick)) {
+                startAction(mod, UnstuckAction.ABANDON_TASK, "the step made no progress", PRIORITY_ACTION);
+            } else if (state != StuckState.OK && _ladder.ready(_tick) && _rateLimit.tryAcquire(_tick)) {
                 UnstuckAction action = _ladder.next(state);
+                if (action == UnstuckAction.BACK_OFF_AND_REPATH && !_backOffCap.tryUse(_watchedSerial)) {
+                    action = UnstuckAction.ABANDON_TASK;
+                }
                 _ladder.markFired(_tick);
                 startAction(mod, action, state.name(), state == StuckState.LOW_AIR ? PRIORITY_AIR : PRIORITY_ACTION);
             }
@@ -211,7 +220,9 @@ public class NavSafetyChain extends TaskChain {
     private void startAction(Vibrato mod, UnstuckAction action, String reason, float priority) {
         Debug.logMessage("Unstuck " + action + " (" + reason + ")");
         setOverlay(mod, false, false, false);
-        mod.getClientBaritone().getPathingBehavior().cancelEverything();
+        if (action.cancelsPath()) {
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
+        }
 
         ClientPlayerEntity player = mod.getPlayer();
         _action = action;
@@ -365,10 +376,15 @@ public class NavSafetyChain extends TaskChain {
         return BlockPos.ofFloored(x - Math.sin(radians) * FRONT_REACH, y, z + Math.cos(radians) * FRONT_REACH);
     }
 
-    private MotionSample sample(ClientPlayerEntity player, boolean wantsToMove) {
+    private MotionSample sample(ClientPlayerEntity player, boolean wantsToMove, boolean productive) {
         return new MotionSample(_tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 player.isOnGround(), player.isTouchingWater(), player.isSubmergedInWater(),
-                player.horizontalCollision, wantsToMove, player.getAir());
+                player.horizontalCollision, wantsToMove, player.getAir(), productive);
+    }
+
+    private static boolean isBreakingBlock() {
+        var interactions = MinecraftClient.getInstance().interactionManager;
+        return interactions != null && interactions.isBreakingBlock();
     }
 
     private static void setKey(InputControls input, Input key, boolean pressed) {

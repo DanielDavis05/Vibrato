@@ -12,5 +12,10 @@ public enum UnstuckAction {
     DIG_DOWN,
     SWIM_TO_SURFACE,
     CLIMB_OUT_OF_WATER,
-    ABANDON_TASK
+    ABANDON_TASK;
+
+    /** Only these actions may cancel the path Baritone is following; the others move the bot around it. */
+    public boolean cancelsPath() {
+        return this == BACK_OFF_AND_REPATH || this == ABANDON_TASK;
+    }
 }
