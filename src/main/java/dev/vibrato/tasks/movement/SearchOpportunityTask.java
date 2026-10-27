@@ -9,33 +9,38 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.item.PickaxeItem;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
 /** One immediately reachable harvest, with no pathing or tool acquisition. */
 final class SearchOpportunityTask extends Task {
     private final BlockPos pos;
-    private final boolean berry;
+    private enum Kind { BERRY, ORE, GRASS }
+    private final Kind kind;
     private boolean done;
 
-    private SearchOpportunityTask(BlockPos pos, boolean berry) { this.pos = pos; this.berry = berry; }
+    private SearchOpportunityTask(BlockPos pos, Kind kind) { this.pos = pos; this.kind = kind; }
 
     static SearchOpportunityTask find(Vibrato mod) {
         BlockPos feet = mod.getPlayer().getBlockPos();
         SearchOpportunityTask ore = null;
+        SearchOpportunityTask grass = null;
         for (BlockPos p : BlockPos.iterate(feet.add(-3, 0, -3), feet.add(3, 2, 3))) {
             BlockState state = mod.getWorld().getBlockState(p);
             boolean berries = state.isOf(Blocks.SWEET_BERRY_BUSH) && state.get(SweetBerryBushBlock.AGE) >= 2;
             boolean mine = isOre(state) && mod.getPlayer().getMainHandStack().getItem() instanceof PickaxeItem
                     && mod.getPlayer().getMainHandStack().isSuitableFor(state)
                     && WorldHelper.canBreak(mod, p) && safeOre(mod, p);
-            if ((berries || mine) && LookHelper.getReach(p).isPresent()) {
-                SearchOpportunityTask result = new SearchOpportunityTask(p.toImmutable(), berries);
-                if (berries) return result;
-                if (ore == null) ore = result;
+            boolean seeds = state.isOf(Blocks.SHORT_GRASS) && !mod.getItemStorage().hasItem(Items.WHEAT_SEEDS)
+                    && WorldHelper.canBreak(mod, p);
+            if ((berries || mine || seeds) && LookHelper.getReach(p).isPresent()) {
+                if (berries) return new SearchOpportunityTask(p.toImmutable(), Kind.BERRY);
+                if (mine && ore == null) ore = new SearchOpportunityTask(p.toImmutable(), Kind.ORE);
+                if (seeds && grass == null) grass = new SearchOpportunityTask(p.toImmutable(), Kind.GRASS);
             }
         }
-        return ore;
+        return ore != null ? ore : grass;
     }
 
     private static boolean isOre(BlockState s) {
@@ -59,8 +64,13 @@ final class SearchOpportunityTask extends Task {
     @Override protected void onStart(Vibrato mod) { done = false; }
     @Override protected Task onTick(Vibrato mod) {
         BlockState state = mod.getWorld().getBlockState(pos);
-        if (berry ? !state.isOf(Blocks.SWEET_BERRY_BUSH) || state.get(SweetBerryBushBlock.AGE) < 2
-                : !isOre(state) || !mod.getPlayer().getMainHandStack().isSuitableFor(state) || !safeOre(mod, pos)) {
+        boolean valid = switch (kind) {
+            case BERRY -> state.isOf(Blocks.SWEET_BERRY_BUSH) && state.get(SweetBerryBushBlock.AGE) >= 2;
+            case ORE -> isOre(state) && mod.getPlayer().getMainHandStack().getItem() instanceof PickaxeItem
+                    && mod.getPlayer().getMainHandStack().isSuitableFor(state) && safeOre(mod, pos);
+            case GRASS -> state.isOf(Blocks.SHORT_GRASS) && !mod.getItemStorage().hasItem(Items.WHEAT_SEEDS);
+        };
+        if (!valid || (kind != Kind.BERRY && !WorldHelper.canBreak(mod, pos))) {
             done = true;
             return null;
         }
@@ -68,7 +78,7 @@ final class SearchOpportunityTask extends Task {
         if (reach.isEmpty()) { done = true; return null; }
         LookHelper.lookAt(mod, reach.get());
         if (LookHelper.isLookingAt(mod, pos) && LookHelper.isLookingAtNow(mod, pos)) {
-            if (berry) {
+            if (kind == Kind.BERRY) {
                 mod.getInputControls().tryPress(Input.CLICK_RIGHT);
                 done = true;
             } else {
@@ -83,6 +93,6 @@ final class SearchOpportunityTask extends Task {
         mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
     }
     @Override public boolean isFinished(Vibrato mod) { return done; }
-    @Override protected boolean isEqual(Task other) { return other instanceof SearchOpportunityTask task && pos.equals(task.pos) && berry == task.berry; }
-    @Override protected String toDebugString() { return (berry ? "Harvest berries at " : "Mine nearby ore at ") + pos.toShortString(); }
+    @Override protected boolean isEqual(Task other) { return other instanceof SearchOpportunityTask task && pos.equals(task.pos) && kind == task.kind; }
+    @Override protected String toDebugString() { return (kind == Kind.BERRY ? "Harvest berries at " : kind == Kind.ORE ? "Mine nearby ore at " : "Gather seeds from grass at ") + pos.toShortString(); }
 }

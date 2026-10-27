@@ -3,6 +3,7 @@ package dev.vibrato.tasks.resources;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.movement.GetToBlockTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.movement.SearchOpportunityController;
 import dev.vibrato.tasksystem.Task;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -24,10 +25,16 @@ final class LandAnimalSearchTask extends Task {
     private LandScoutPolicy.Candidate target;
     private Task travel;
     private int ticksUntilScan;
+    private final SearchOpportunityController opportunities = new SearchOpportunityController();
 
     @Override protected void onStart(Vibrato mod) {}
 
     @Override protected Task onTick(Vibrato mod) {
+        Task opportunity = opportunities.tick(mod, canBeInterruptedBy(mod, null));
+        if (opportunities.ownsControl()) {
+            setDebugState("Taking a short search opportunity");
+            return opportunity;
+        }
         BlockPos here = mod.getPlayer().getBlockPos();
         policy.visited(here.getX() >> 4, here.getZ() >> 4);
         boolean reached = target != null && travel != null && travel.isFinished(mod);
@@ -96,7 +103,7 @@ final class LandAnimalSearchTask extends Task {
         return new BlockPos(target.x(), target.y(), target.z());
     }
 
-    @Override protected void onStop(Vibrato mod, Task interruptTask) {}
+    @Override protected void onStop(Vibrato mod, Task interruptTask) { opportunities.stop(mod); }
     @Override protected boolean isEqual(Task other) { return this == other; }
     @Override protected String toDebugString() { return "Searching for land animals"; }
 }

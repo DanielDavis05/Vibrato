@@ -6,7 +6,6 @@ import dev.vibrato.director.DirectorTask;
 import dev.vibrato.tasks.ResourceTask;
 import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
 import dev.vibrato.tasksystem.TaskChain;
-import net.minecraft.client.MinecraftClient;
 import dev.vibrato.tasksystem.ITaskRequiresGrounded;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.ItemHelper;
@@ -22,6 +21,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.WeakHashMap;
 
 /**
  * Call this when the place you're currently at is bad for some reason and you just wanna get away.
@@ -70,9 +70,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     private Task _unstuckTask = null;
     private int _failCounter;
     private double _wanderDistanceExtension;
-    private final SearchDetourBudget _detourBudget = new SearchDetourBudget();
-    private SearchOpportunityTask _detour;
-    private Vec3d _lastDetourPosition;
+    private static final WeakHashMap<Task, SearchOpportunityController> SEARCH_SESSIONS = new WeakHashMap<>();
+    private SearchOpportunityController _opportunities;
 
     public TimeoutWanderTask(float distanceToWander, boolean increaseRange) {
         _distanceToWander = distanceToWander;
@@ -125,9 +124,6 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         _failCounter = 0;
         _executingPlanB = false;
         _unstuckTask = null;
-        _detour = null;
-        _lastDetourPosition = null;
-        _detourBudget.reset();
     }
 
     @Override
@@ -146,29 +142,14 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
             return _unstuckTask;
         }
 
-        if (_detour != null) {
-            if (!safeForDetour(mod) || !_detourBudget.canContinue(_timeCap.getDuration()) || _detour.isFinished(mod)) {
-                if (!_detour.canBeInterruptedBy(mod, null)) return _detour;
-                endDetour(mod);
-                // The child is stopped after this tick. Resume exploration on the next tick.
-                return null;
-            }
-            setDebugState("Taking a short search opportunity.");
-            return _detour;
-        }
-        double travelSquared = _lastDetourPosition == null ? Double.POSITIVE_INFINITY
-                : mod.getPlayer().getPos().squaredDistanceTo(_lastDetourPosition);
-        if (mod.getPlayer().age % 20 == 0 && isSearchContext(mod) && safeForDetour(mod)
-                && _detourBudget.canStart(_timeCap.getDuration(), travelSquared)) {
-            SearchOpportunityTask opportunity = SearchOpportunityTask.find(mod);
-            if (opportunity != null && canBeInterruptedBy(mod, opportunity)) {
-                _detour = opportunity;
-                _detourBudget.start(_timeCap.getDuration());
-                mod.getClientBaritone().getExploreProcess().onLostControl();
-                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-                mod.getClientBaritone().getPathingBehavior().cancelEverything();
+        Task searchOwner = searchContext(mod);
+        if (searchOwner != null) {
+            _opportunities = SEARCH_SESSIONS.computeIfAbsent(searchOwner, ignored -> new SearchOpportunityController());
+            Task opportunity = _opportunities.tick(mod, canBeInterruptedBy(mod, null));
+            if (_opportunities.ownsControl()) {
                 _progressChecker.reset();
-                return _detour;
+                setDebugState("Taking a short search opportunity.");
+                return opportunity;
             }
         }
 
@@ -213,43 +194,17 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         return null;
     }
 
-    private void endDetour(Vibrato mod) {
-        _detourBudget.end(_timeCap.getDuration());
-        _lastDetourPosition = mod.getPlayer().getPos();
-        _detour = null;
-        _progressChecker.reset();
-    }
-
-    private boolean isSearchContext(Vibrato mod) {
+    private Task searchContext(Vibrato mod) {
         TaskChain chain = mod.getTaskRunner().getCurrentTaskChain();
-        if (chain == null || chain.getTasks().size() < 2) return false;
+        if (chain == null || chain.getTasks().size() < 2) return null;
         var tasks = chain.getTasks();
         Task root = tasks.get(0);
         Task parent = tasks.get(tasks.size() - 2);
-        if (!(root instanceof DirectorTask) && !(root instanceof ResourceTask)) return false;
-        return parent instanceof ResourceTask || parent instanceof DirectorTask
+        if (!(root instanceof DirectorTask) && !(root instanceof ResourceTask)) return null;
+        if (parent instanceof ResourceTask || parent instanceof DirectorTask
                 || parent instanceof SearchChunksExploreTask
-                || (parent instanceof AbstractDoToClosestObjectTask<?> && !(parent instanceof PickupDroppedItemTask));
-    }
-
-    private boolean safeForDetour(Vibrato mod) {
-        var player = mod.getPlayer();
-        if (MinecraftClient.getInstance().currentScreen != null || !StorageHelper.getItemStackInCursorSlot().isEmpty()
-                || !player.isOnGround() || player.isTouchingWater() || player.isInLava() || player.isOnFire()
-                || player.getHealth() < player.getMaxHealth() * 0.75
-                || player.getVelocity().horizontalLengthSquared() > 0.02
-                || (_detour == null && mod.getControllerExtras().isBreakingBlock())
-                || mod.getClientBaritone().getBuilderProcess().isActive()) return false;
-        if (mod.getEntityTracker().getHostiles().stream().anyMatch(entity -> entity.isAlive() && entity.isInRange(player, 10))) return false;
-        BlockPos feet = player.getBlockPos();
-        for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) {
-            BlockPos below = feet.add(x, -1, z);
-            BlockPos standing = feet.add(x, 0, z);
-            if (!mod.getWorld().getBlockState(below).isSolidBlock(mod.getWorld(), below)
-                    || !mod.getWorld().getFluidState(standing).isEmpty()
-                    || !mod.getWorld().getFluidState(standing.up()).isEmpty()) return false;
-        }
-        return true;
+                || (parent instanceof AbstractDoToClosestObjectTask<?> && !(parent instanceof PickupDroppedItemTask))) return parent;
+        return null;
     }
 
     private Goal getRandomDirectionGoal(Vibrato mod) {
@@ -259,7 +214,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected void onStop(Vibrato mod, Task interruptTask) {
-        if (_detour != null && mod.getPlayer() != null) endDetour(mod);
+        if (_opportunities != null) _opportunities.stop(mod);
         mod.getClientBaritone().getExploreProcess().onLostControl();
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
         _completedAtStop = isFinished(mod);
