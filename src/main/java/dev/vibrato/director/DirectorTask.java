@@ -53,7 +53,8 @@ public class DirectorTask extends Task implements StepAbandonable {
     private int _stepIndex;
     private PlannedStep _currentStep;
     private Task _stepTask;
-    private TimerGame _stepTimer;
+    private TimerGame _stepTimer; // Breather only; activity budgets count active director ticks.
+    private ActiveStepBudget _stepBudget;
     private StepHealth _health = new StepHealth();
     private Task _stuckWitness;
     private final FailureChurn _churn = new FailureChurn();
@@ -86,7 +87,7 @@ public class DirectorTask extends Task implements StepAbandonable {
             _facts = observedFacts(mod);
             startNewPlan(mod);
         }
-        if (_stepTimer != null) {
+        if (_onBreather && _stepTimer != null) {
             _stepTimer.reset();
         }
         if (_stepTask != null && !_onBreather) {
@@ -136,7 +137,7 @@ public class DirectorTask extends Task implements StepAbandonable {
                 completeStep(false, "harassed by interruptions");
             } else if (_stepTask.isFinished(mod)) {
                 completeStep(true, "finished");
-            } else if (_stepTimer.elapsed()) {
+            } else if (_stepBudget.elapsed(_tick)) {
                 completeStep(false, "over budget");
             } else {
                 // A wander inside the step is normal (waiting for a path); only a persistent one counts as stuck.
@@ -311,8 +312,7 @@ public class DirectorTask extends Task implements StepAbandonable {
             _health = new StepHealth();
             _interrupts = new InterruptTracker();
             _stepSerial++;
-            _stepTimer = new TimerGame(step.activity().budget(step.params()).toMillis() / 1000.0);
-            _stepTimer.reset();
+            _stepBudget = new ActiveStepBudget(_stepStartTick, step.activity().budget(step.params()));
             return task;
         }
         return null;
