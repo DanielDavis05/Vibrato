@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.network.packet.s2c.common.*;
+import net.minecraft.network.packet.s2c.config.ResetChatS2CPacket;
 import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerConfigurationNetworkHandler;
 import net.minecraft.text.Text;
@@ -35,6 +36,7 @@ public abstract class ConfigurationFixtureMixin {
             self.sendPacket(new ResourcePackSendS2CPacket(UUID.fromString("99794d14-220a-4882-a609-38d4adf3b157"),
                     "http://127.0.0.1:1/fixture.zip", "", false, Optional.empty()));
         } else if (mode.equals("config_common")) {
+            self.sendPacket(ResetChatS2CPacket.INSTANCE);
             self.sendPacket(new CommonPingS2CPacket(123));
             self.sendPacket(new StoreCookieS2CPacket(Identifier.of("vibrato", "fixture"), new byte[] {1}));
             self.sendPacket(new CustomReportDetailsS2CPacket(Map.of("fixture", "test")));
