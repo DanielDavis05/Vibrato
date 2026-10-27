@@ -19,6 +19,7 @@ import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.item.Item;
+import java.util.Arrays;
 
 /**
  * Raises the experience level by the cheapest means at hand, in order: smelt raw ore or food in a furnace, mine
@@ -40,6 +41,19 @@ public class GainXpLevelsTask extends Task {
     private final TimerGame _budget = new TimerGame(TIME_LIMIT_SECONDS);
     private SmeltInFurnaceTask _smelt;
     private KillEntitiesTask _kill;
+    private Source _source;
+
+    enum Source { SMELT, ORE, MOBS, SEARCH }
+
+    static final class SourcePolicy {
+        /** Keep an available source until it finishes or disappears; otherwise choose by cost. */
+        static Source choose(Source current, boolean smelt, boolean ore, boolean mobs) {
+            if (current == Source.SMELT && smelt || current == Source.ORE && ore || current == Source.MOBS && mobs) {
+                return current;
+            }
+            return smelt ? Source.SMELT : ore ? Source.ORE : mobs ? Source.MOBS : Source.SEARCH;
+        }
+    }
 
     public GainXpLevelsTask(int targetLevel) {
         _targetLevel = targetLevel;
@@ -62,21 +76,31 @@ public class GainXpLevelsTask extends Task {
                 break;
             }
         }
-        if (raw != null && cooked != null) {
+        boolean smeltActive = _source == Source.SMELT && _smelt != null && !_smelt.isFinished(mod);
+        Block[] mineable = Arrays.stream(ORES).filter(block -> mod.getItemStorage()
+                .getItemStacksPlayerInventory(true).stream().anyMatch(stack -> stack.isSuitableFor(block.getDefaultState())))
+                .toArray(Block[]::new);
+        boolean oreAvailable = mineable.length > 0 && mod.getBlockTracker()
+                .getNearestTracking(mod.getPlayer().getPos(), pos -> WorldHelper.canBreak(mod, pos), mineable).isPresent();
+        boolean mobsAvailable = mod.getEntityTracker().entityFound(HOSTILES);
+        _source = SourcePolicy.choose(_source, smeltActive || raw != null && cooked != null, oreAvailable, mobsAvailable);
+
+        if (_source == Source.SMELT) {
             if (_smelt == null || _smelt.isFinished(mod)) {
-                _smelt = new SmeltInFurnaceTask(new SmeltTarget(new ItemTarget(cooked, 1), new ItemTarget(raw, 1)));
+                int targetCount = mod.getItemStorage().getItemCountInventoryOnly(cooked) + 1;
+                _smelt = new SmeltInFurnaceTask(new SmeltTarget(new ItemTarget(cooked, targetCount), new ItemTarget(raw, targetCount)));
                 _smelt.ignoreMaterials();
             }
             setDebugState("Smelting food for XP");
             return _smelt;
         }
 
-        if (mod.getBlockTracker().anyFound(ORES)) {
+        if (_source == Source.ORE) {
             setDebugState("Mining ore for XP");
-            return new DoToClosestBlockTask(DestroyBlockTask::new, pos -> WorldHelper.canBreak(mod, pos), ORES);
+            return new DoToClosestBlockTask(DestroyBlockTask::new, pos -> WorldHelper.canBreak(mod, pos), mineable);
         }
 
-        if (mod.getEntityTracker().entityFound(HOSTILES)) {
+        if (_source == Source.MOBS) {
             if (_kill == null) {
                 _kill = new KillEntitiesTask(HOSTILES);
             }

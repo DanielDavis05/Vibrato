@@ -22,6 +22,8 @@ public class CollectXpTask extends Task {
     private final TimerGame _budget = new TimerGame(BUDGET_SECONDS);
     private final TimeoutWanderTask _wander = new TimeoutWanderTask();
     private boolean _timedOut = false;
+    private Task _mine;
+    private boolean _mining;
 
     public CollectXpTask(int targetLevel) {
         _targetLevel = targetLevel;
@@ -46,14 +48,20 @@ public class CollectXpTask extends Task {
             _timedOut = true;
             return null;
         }
+        if (_mining && _mine != null && !_mine.isFinished(mod)) {
+            setDebugState("Mining lapis for XP");
+            return _mine;
+        }
+        _mining = false;
         if (mod.getEntityTracker().entityFound(HostileEntity.class)) {
             setDebugState("Killing mobs for XP");
             return new KillEntitiesTask(HostileEntity.class);
         }
         setDebugState("Mining lapis for XP");
         int lapis = mod.getItemStorage().getItemCount(Items.LAPIS_LAZULI);
-        Task mine = TaskCatalogue.getItemTask(Items.LAPIS_LAZULI, lapis + LAPIS_BATCH);
-        return mine != null ? mine : _wander;
+        _mine = TaskCatalogue.getItemTask(Items.LAPIS_LAZULI, lapis + LAPIS_BATCH);
+        _mining = _mine != null;
+        return _mining ? _mine : _wander;
     }
 
     private boolean reachedTarget(Vibrato mod) {
