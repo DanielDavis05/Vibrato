@@ -100,6 +100,9 @@ public final class TraceWriter implements Closeable {
         if (t.nextZ() != null) {
             json.append(",\"nextZ\":").append(number(t.nextZ()));
         }
+        if (t.edge() != null) {
+            json.append(",\"edge\":").append(number(t.edge()));
+        }
         return json.append('}').toString();
     }
 

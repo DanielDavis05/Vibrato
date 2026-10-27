@@ -52,7 +52,7 @@ public final class TraceReader {
                     decimal(fields, "yaw"), decimal(fields, "pitch"),
                     bool(fields, "ground"), bool(fields, "sprint"),
                     optionalDecimal(fields, "nextX"), optionalDecimal(fields, "nextY"),
-                    optionalDecimal(fields, "nextZ"));
+                    optionalDecimal(fields, "nextZ"), optionalDecimal(fields, "edge"));
             default -> throw new IllegalArgumentException("unknown trace event type: " + fields.get("t"));
         };
     }

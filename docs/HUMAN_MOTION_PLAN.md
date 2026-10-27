@@ -24,10 +24,13 @@ JSON Lines, one object per line, UTF-8. First line is a header, then events in t
 {"t":"mouse","ms":123456,"dx":3.0,"dy":-1.0}          raw mouse delta in pixels, frame rate, ms = monotonic millis
 {"t":"key","ms":123460,"key":"forward","down":true}   key: forward back left right jump sprint sneak attack use
 {"t":"tick","n":1042,"ms":123500,"x":0.0,"y":64.0,"z":0.0,"vx":0.0,"vy":0.0,"vz":0.0,
- "yaw":10.0,"pitch":5.0,"ground":true,"sprint":false,"nextX":1.5,"nextY":64.0,"nextZ":0.5}
+ "yaw":10.0,"pitch":5.0,"ground":true,"sprint":false,"nextX":1.5,"nextY":64.0,"nextZ":0.5,"edge":2.25}
 ```
 
-`next*` is the next path node (Baritone) when pathing, otherwise absent. Bot traces are written by the same recorder;
+`next*` is the next path node (Baritone) when pathing, otherwise absent. `edge` is the horizontal distance in blocks
+along the velocity heading (yaw when still) to the first column within 6 blocks, sampled every 0.25, whose ground is a
+gap or drop (top more than one block below feet, or no ground); absent when there is none or the column is unloaded.
+Bot traces are written by the same recorder;
 for a bot, `mouse` events are the applied camera deltas converted to pixels.
 
 ## Workstreams (disjoint files)

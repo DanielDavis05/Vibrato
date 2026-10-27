@@ -11,7 +11,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.chunk.EmptyChunk;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +22,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Records player motion to {@code run/traces/<name>-<source>.jsonl} for fitting the human motion model. Samples the
+ * Records player motion to {@code <game run directory>/traces/<name>-<source>.jsonl} for fitting the human motion model. Samples the
  * player once per client tick, emits key transitions by diffing the movement keys, and forwards raw mouse deltas from
  * {@link dev.vibrato.mixins.MouseRecorderMixin}. Everything runs on the client thread and never throws into the game
  * loop: an I/O or unexpected failure is logged and recording stops.
@@ -64,7 +67,8 @@ public final class MotionRecorder {
             throw new IllegalArgumentException("trace source must be human or bot: " + source);
         }
         stop();
-        Path file = Path.of("run", "traces", name + "-" + source + ".jsonl");
+        Path file = MinecraftClient.getInstance().runDirectory.toPath()
+                .resolve("traces").resolve(name + "-" + source + ".jsonl");
         TraceWriter writer = TraceWriter.open(file);
         try {
             GameOptions options = MinecraftClient.getInstance().options;
@@ -163,13 +167,46 @@ public final class MotionRecorder {
                 nextZ = node.getZ() + 0.5;
             }
         }
+        Double edge = edgeAhead(player, velocity);
         return new TraceEvent.Tick(
                 ++tickCount, ms,
                 player.getX(), player.getY(), player.getZ(),
                 velocity.x, velocity.y, velocity.z,
                 player.getYaw(), player.getPitch(),
                 player.isOnGround(), player.isSprinting(),
-                nextX, nextY, nextZ);
+                nextX, nextY, nextZ, edge);
+    }
+
+    /**
+     * Distance to the first gap or drop ahead of the player, or null when there is none or no world is loaded.
+     */
+    private static Double edgeAhead(ClientPlayerEntity player, Vec3d velocity) {
+        ClientWorld world = MinecraftClient.getInstance().world;
+        if (world == null) {
+            return null;
+        }
+        double[] heading = EdgeProbe.heading(velocity.x, velocity.z, player.getYaw());
+        int feetBlock = (int) Math.floor(player.getY());
+        return EdgeProbe.distanceToEdge(player.getX(), player.getY(), player.getZ(), heading[0], heading[1],
+                (x, z) -> highestSolidGround(world, x, z, feetBlock));
+    }
+
+    /**
+     * Highest solid block in the column from one block above feet level down to two below it. Returns
+     * {@link EdgeProbe#UNKNOWN} for an unloaded chunk and {@link EdgeProbe#NONE} when no solid block is in the window.
+     */
+    private static int highestSolidGround(ClientWorld world, int x, int z, int feetBlock) {
+        if (world.getChunk(x >> 4, z >> 4) instanceof EmptyChunk) {
+            return EdgeProbe.UNKNOWN;
+        }
+        BlockPos.Mutable pos = new BlockPos.Mutable(x, feetBlock, z);
+        for (int y = feetBlock + 1; y >= feetBlock - 2; y--) {
+            pos.setY(y);
+            if (world.getBlockState(pos).isSolidBlock(world, pos)) {
+                return y;
+            }
+        }
+        return EdgeProbe.NONE;
     }
 
     private void emit(TraceEvent event) {

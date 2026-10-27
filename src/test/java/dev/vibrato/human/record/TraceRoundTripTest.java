@@ -39,28 +39,40 @@ class TraceRoundTripTest {
                 new TraceEvent.Key(123460, "forward", true),
                 new TraceEvent.Key(123480, "sprint", false),
                 new TraceEvent.Tick(1042, 123500, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 10.0, 5.0,
-                        true, false, 1.5, 64.0, 0.5));
+                        true, false, 1.5, 64.0, 0.5, 2.25));
 
         assertEquals(events, read(write(events)));
     }
 
     @Test
+    void presentEdgeIsWrittenAndRead() throws IOException {
+        TraceEvent.Tick ahead = new TraceEvent.Tick(9, 150, 0.5, 64.0, 0.5, 0.2, 0.0, 0.0, 90.0, 0.0,
+                true, true, null, null, null, 3.5);
+
+        String text = write(List.of(ahead));
+
+        assertTrue(text.contains("\"edge\":3.5"), text);
+        assertEquals(ahead, read(text).get(0));
+    }
+
+    @Test
     void absentNextFieldsStayNullAndAreNotWritten() throws IOException {
         TraceEvent.Tick idle = new TraceEvent.Tick(7, 100, 1.25, 64.0, -3.5, 0.1, 0.0, -0.2, -45.0, 12.5,
-                false, true, null, null, null);
+                false, true, null, null, null, null);
 
         String text = write(List.of(idle));
 
         assertFalse(text.contains("nextX"), text);
         assertFalse(text.contains("nextY"), text);
         assertFalse(text.contains("nextZ"), text);
+        assertFalse(text.contains("edge"), text);
         assertEquals(idle, read(text).get(0));
     }
 
     @Test
     void partialNextFieldsRoundTrip() throws IOException {
         TraceEvent.Tick partial = new TraceEvent.Tick(8, 116, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                true, false, null, 65.0, null);
+                true, false, null, 65.0, null, null);
 
         assertEquals(partial, read(write(List.of(partial))).get(0));
     }

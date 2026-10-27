@@ -23,7 +23,8 @@ public sealed interface TraceEvent {
 
     /**
      * Player state sampled once per client tick. The {@code next*} fields are the next path node while pathing and
-     * {@code null} otherwise.
+     * {@code null} otherwise. {@code edge} is the horizontal distance in blocks to the first gap or drop ahead along
+     * the velocity heading, {@code null} when there is none within 6 blocks.
      */
     record Tick(
             long n, long ms,
@@ -31,6 +32,7 @@ public sealed interface TraceEvent {
             double vx, double vy, double vz,
             double yaw, double pitch,
             boolean ground, boolean sprint,
-            Double nextX, Double nextY, Double nextZ
+            Double nextX, Double nextY, Double nextZ,
+            Double edge
     ) implements TraceEvent {}
 }
