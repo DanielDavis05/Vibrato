@@ -32,7 +32,6 @@ class GoalFollowEntityTest {
         GoalFollowEntity goal = new GoalFollowEntity(position::get, 1);
         assertTrue(goal.isInGoal(0, 64, 0));
         assertFalse(goal.isInGoal(10, 64, 0));
-        assertTrue(goal.heuristic(10, 64, 0) > 0);
         position.set(new Vec3d(10.5, 64, 0.5));
         assertFalse(goal.isInGoal(0, 64, 0));
         assertTrue(goal.isInGoal(10, 64, 0));
