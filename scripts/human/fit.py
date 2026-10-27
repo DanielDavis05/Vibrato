@@ -16,7 +16,7 @@ import statistics
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from features import read_trace, split_windows, window_features, window_is_usable  # noqa: E402
+from features import jump_edge_ticks, read_trace, split_windows, window_features, window_is_usable  # noqa: E402
 
 # HumanProfile trait -> window feature it is estimated from.
 TRAITS = (
@@ -45,7 +45,7 @@ def main():
     ap.add_argument("--window", type=float, default=10.0, help="window length in seconds")
     args = ap.parse_args()
 
-    samples = {feat: [] for _, feat in TRAITS}
+    windows = []
     used = 0
     for path in args.traces:
         header, events = read_trace(path)
@@ -53,15 +53,23 @@ def main():
             print(f"skip {path}: source is {header.get('source')!r}", file=sys.stderr)
             continue
         used += 1
-        for _, window in split_windows(events, args.window):
-            if not window_is_usable(window):
-                continue
-            feats = window_features(window, args.window)
-            for feat in samples:
-                if not math.isnan(feats[feat]):
-                    samples[feat].append(feats[feat])
+        windows += [w for _, w in split_windows(events, args.window) if window_is_usable(w)]
     if not used:
         sys.exit("no human traces given")
+
+    # Edge jump timing is relative to a best case. Without a path that best case is taken as the median of all
+    # ticks-to-edge values in the human traces (a proxy; see features.py).
+    edge_samples = [x for w in windows for x in jump_edge_ticks(w)]
+    edge_ref = statistics.median(edge_samples) if edge_samples else None
+    if edge_ref is not None:
+        print(f"edge reference: median ticks-to-edge {edge_ref:.3f} over {len(edge_samples)} jump press(es)")
+
+    samples = {feat: [] for _, feat in TRAITS}
+    for window in windows:
+        feats = window_features(window, args.window, edge_ref=edge_ref)
+        for feat in samples:
+            if not math.isnan(feats[feat]):
+                samples[feat].append(feats[feat])
 
     profile = {}
     for trait, feat in TRAITS:

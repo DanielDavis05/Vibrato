@@ -40,6 +40,39 @@ Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps 
    ```
    Write `OUT_DIR` outside the repo.
 
+## Trace fields the tools read
+
+* `mouse`: deltas are cleaned on read (`features.clean_mouse`). A delta over 200 px in either axis is dropped
+  (cursor recentre or screen switch). After a silence of more than 500 ms with no mouse events, deltas over 50 px in
+  the first 100 ms are dropped (a huge first sample after a gap).
+* `tick.edge` (optional, blocks): distance along the movement heading to the first gap or drop within 6 blocks. Absent
+  when there is none. When any tick in a window has it, jump timing and jump misses are computed from edges, not path
+  nodes.
+* `tick.nextX/nextY/nextZ` (optional): the next Baritone path node. Human traces normally have none.
+
+## Trait mapping for human traces
+
+| Trait | Source on human traces without a path | Status |
+| --- | --- | --- |
+| `jumpTimingBiasTicks` | PROXY: mean of (ticks-to-edge minus a reference), ticks-to-edge = `edge` / horizontal speed at the nearest preceding grounded tick, for each jump press | needs `edge` |
+| `jumpTimingSigmaTicks` | PROXY: sd of the same values | needs `edge` |
+| `jumpMissChance` | PROXY: share of edge approaches (edge under 1.5 blocks, grounded, forward held, moving) with a drop over 1 block within 20 ticks and no jump press in that span | needs `edge` |
+| `lateralSigma` | PROXY: rms of the heading error times horizontal speed, in blocks per tick | pathless: heading wander |
+| `lateralReversion` | PROXY: 1 minus the lag-1 autocorrelation of the heading error, per tick (discrete OU) | pathless: heading wander |
+| `reactionMedianTicks` | none | stays no data (needs path nodes) |
+| `lookAheadBlocks` | none | stays no data (needs path nodes) |
+
+Jump timing reference: a sprint jump's best case is not known without a path, so the reference is the median of all
+ticks-to-edge values in the human traces (`fit.py` prints it). The bias is then the mean offset from that median, and
+the sigma is the sd of the offsets. This centres the bias near zero by construction. Read it as spread, not a bias.
+
+Lateral units match `HumanProfile` (per tick, blocks). Heading wander: each tick with forward held and speed over
+0.1 blocks per tick gets a heading error, the angle between its velocity and a centred 1 s moving average (10 ticks
+each side, excluding the tick). The rms of that error times the speed gives `lateralSigma`. The reversion is from the
+lag-1 autocorrelation of the errors, `k = 1 - rho`. Path-node traces use the same units now: the rms offset is
+converted to a per-tick sigma as `rms * sqrt(2k - k^2)`. Earlier fits wrote a per-second rate there, which did not
+match `HumanProfile`.
+
 ## Notes and limits
 
 * Several features are proxies, not direct measurements. `reaction_median_ticks` is the time from a path-node
@@ -51,6 +84,8 @@ Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps 
   inflates `jumpMissChance` slightly. Keep the window length as the default (10 s) unless there is a reason.
 * Bot mouse deltas must be whole pixels, as the game receives them. If bot traces carry fractional `dx`, the
   `dx_nonint_frac` feature separates them trivially.
+* `synth.py` puts `edge` only on human ticks, so a bot trace that lacks it is partly separable by that alone. Real
+  bot traces are written by the same recorder and should carry it too.
 * On synthetic data the discriminator reaches near-perfect accuracy and its top features mostly reflect how
   `synth.py` is written. That run checks the pipeline, not the realism of the synthetic traces. Real recordings
   decide whether the parametric model holds (plan: the discriminator is the trigger for any neural approach).

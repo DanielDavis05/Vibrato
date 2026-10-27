@@ -135,6 +135,10 @@ def simulate(source, seed, seconds):
     _, ax, az, _, _ = locate(P["look_ahead"])
     yaw = math.degrees(math.atan2(-(ax - bx), az - bz))
 
+    # Vertical steps along the path, as arc positions. Human ticks report "edge" as the distance to the next one
+    # within 6 blocks. Synthetic ledges are up and down steps alike; the real recorder reports gaps and drops.
+    steps = [arc[j - 1] for j in range(1, len(nodes)) if nodes[j][1] != nodes[j - 1][1]]
+
     lines = [{"t": "header", "v": 1, "source": source, "mcVersion": "1.21.1", "guiScale": 2,
               "sensitivity": 0.5, "fps": 144, "note": f"synthetic {source} seed={seed}"}]
     heap, counter = [], itertools.count()
@@ -212,6 +216,10 @@ def simulate(source, seed, seconds):
                 t["vx"] = round(t["x"] - prev["x"], 4)
                 t["vy"] = round(t["y"] - prev["y"], 4)
                 t["vz"] = round(t["z"] - prev["z"], 4)
+            if human:
+                k = bisect.bisect_left(steps, s)
+                if k < len(steps) and steps[k] - s <= 6.0:
+                    t["edge"] = round(steps[k] - s, 3)
             prev = t
             push(tms, t)
             node = (nx, ny, nz)
@@ -229,7 +237,7 @@ def simulate(source, seed, seconds):
                 press = tms + off_ticks * TICK_MS
                 push(press, _key(press, "jump", True))
                 push(press + hold, _key(press + hold, "jump", False))
-                air.append((press, press + 200.0))
+                air.append((press + 1.0, press + 200.0))  # the tick the jump is pressed on is still grounded
             t["ground"] = not any(a <= tms < b for a, b in air)
             next_tick += 1
         flush(ms)
