@@ -133,6 +133,25 @@ class KeyShaperTest {
         assertEquals(EnumSet.of(Key.FORWARD), keys);
     }
 
+    /** Every jump is missed unless it is gap-critical. No hesitation, taps, or timing shift. */
+    private static final HumanProfile ALWAYS_MISS = new HumanProfile(5, 0, 0, 1, 0, 6, 0.3, 0, 0.03, 0.1, 3, 0.92, 1.2, 1, 1);
+
+    @Test
+    void gapCriticalJumpIsNeverMissed() {
+        for (double gap : new double[] {0, 1.5}) {
+            KeyShaper shaper = new KeyShaper(1, ALWAYS_MISS);
+            KeyShaper.Context ctx = new KeyShaper.Context(true, 0.2, gap, KeyShaper.NO_JUMP, 0, 0);
+            assertTrue(shaper.shape(EnumSet.of(Key.FORWARD, Key.JUMP), ctx).contains(Key.JUMP), "gap " + gap);
+        }
+    }
+
+    @Test
+    void jumpWithDistantOrNoGapCanBeMissed() {
+        KeyShaper shaper = new KeyShaper(1, ALWAYS_MISS);
+        KeyShaper.Context ctx = new KeyShaper.Context(true, 0.2, INF, KeyShaper.NO_JUMP, 0, 0);
+        assertFalse(shaper.shape(EnumSet.of(Key.FORWARD, Key.JUMP), ctx).contains(Key.JUMP));
+    }
+
     @Test
     void emptyIntentPressesNothing() {
         KeyShaper shaper = new KeyShaper(5, QUIET);
