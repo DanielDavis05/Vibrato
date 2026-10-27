@@ -1,8 +1,11 @@
 package dev.vibrato.director;
 
 import dev.vibrato.TaskCatalogue;
+import dev.vibrato.advancement.AdvancementGoals;
+import dev.vibrato.advancement.PursueAdvancementTask;
 import dev.vibrato.Vibrato;
 import dev.vibrato.nav.EscapeUndergroundTask;
+import dev.vibrato.tasks.organize.LootNearbyChestsTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.container.StoreInAnyContainerTask;
@@ -58,6 +61,7 @@ public final class CoreActivities {
         registerFarm(registry);
         registerExplore(registry);
         registerRare(registry);
+        registerAdvancement(registry);
         registerTransport(registry);
         registerSleep(registry);
     }
@@ -146,6 +150,11 @@ public final class CoreActivities {
     }
 
     private static void registerStorage(ActivityRegistry registry) {
+        registry.register(new CoreActivity("loot_nearby_chests", FeatureArea.INVENTORY, Set.of(), Set.of(), List.of(
+                ParamSpec.ints("radius", 16, 48)),
+                values -> Duration.ofMinutes(8),
+                (mod, values) -> new LootNearbyChestsTask(values.getInt("radius"))));
+
         registry.register(new CoreActivity("chest_store_items", FeatureArea.CHEST, Set.of(), Set.of(), List.of(
                 ParamSpec.choice("item", STORED_ITEMS),
                 ParamSpec.ints("count", 1, 32)),
@@ -188,6 +197,22 @@ public final class CoreActivities {
                 () -> TaskCatalogue.getItemTask("ender_pearl", 12));
     }
 
+    /** Advancement goals the bots pursue: each one provides its advancement fact once it is done. */
+    private static void registerAdvancement(ActivityRegistry registry) {
+        pursueAdvancement(registry, "pursue_iron_tools", "story/iron_tools");
+        pursueAdvancement(registry, "pursue_mine_diamond", "story/mine_diamond");
+        pursueAdvancement(registry, "pursue_lava_bucket", "story/lava_bucket");
+    }
+
+    private static void pursueAdvancement(ActivityRegistry registry, String id, String path) {
+        String name = path.substring(path.indexOf('/') + 1);
+        fixed(registry, id, FeatureArea.ADVANCEMENT, Set.of(), Set.of(Fact.of("advancement:" + name + ":done")), 15,
+                () -> new PursueAdvancementTask(AdvancementGoals.ALL.stream()
+                        .filter(goal -> goal.path().equals(path))
+                        .findFirst()
+                        .orElseThrow()));
+    }
+
     private static void registerExplore(ActivityRegistry registry) {
         fixed(registry, "escape_underground", FeatureArea.EXPLORE, Set.of(), Set.of(WorldFacts.SURFACE), 8,
                 EscapeUndergroundTask::new);
@@ -196,6 +221,14 @@ public final class CoreActivities {
                 ParamSpec.ints("dx", -400, 400),
                 ParamSpec.ints("dz", -400, 400)),
                 values -> Duration.ofMinutes(Math.min(15, 3 + (Math.abs(values.getInt("dx")) + Math.abs(values.getInt("dz"))) / 100)),
+                (mod, values) -> {
+                    BlockPos from = mod.getPlayer().getBlockPos();
+                    return new GetToXZTask(from.getX() + values.getInt("dx"), from.getZ() + values.getInt("dz"));
+                }));
+        registry.register(new CoreActivity("explore_far", FeatureArea.EXPLORE, Set.of(), Set.of(), List.of(
+                ParamSpec.ints("dx", -1500, 1500),
+                ParamSpec.ints("dz", -1500, 1500)),
+                values -> Duration.ofMinutes(15),
                 (mod, values) -> {
                     BlockPos from = mod.getPlayer().getBlockPos();
                     return new GetToXZTask(from.getX() + values.getInt("dx"), from.getZ() + values.getInt("dz"));

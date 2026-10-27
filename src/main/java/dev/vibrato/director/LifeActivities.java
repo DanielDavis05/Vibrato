@@ -22,7 +22,6 @@ import net.minecraft.item.Items;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -31,13 +30,10 @@ import java.util.stream.Collectors;
 /** Owned by workstream T2 (see PLAN.md). Register this domain's activities here. */
 public final class LifeActivities {
 
-    private static final Map<String, Item> CROPS = Map.of(
-            "wheat", Items.WHEAT, "carrot", Items.CARROT, "potato", Items.POTATO, "beetroot", Items.BEETROOT);
-    private static final Map<String, EntityType<?>> ANIMALS = Map.of(
-            "cow", EntityType.COW, "sheep", EntityType.SHEEP, "pig", EntityType.PIG, "chicken", EntityType.CHICKEN);
-    private static final Map<String, Item> RAW_FOODS = Map.of(
-            "beef", Items.BEEF, "porkchop", Items.PORKCHOP, "mutton", Items.MUTTON,
-            "chicken", Items.CHICKEN, "cod", Items.COD, "potato", Items.POTATO);
+    // Names only: Minecraft objects are resolved inside the factories, so registering never bootstraps the game.
+    private static final String[] CROPS = {"wheat", "carrot", "potato", "beetroot"};
+    private static final String[] ANIMALS = {"cow", "sheep", "pig", "chicken"};
+    private static final String[] RAW_FOODS = {"beef", "porkchop", "mutton", "chicken", "cod", "potato"};
 
     private LifeActivities() {}
 
@@ -63,14 +59,14 @@ public final class LifeActivities {
                 (mod, values) -> TaskCatalogue.getItemTask("bed", 1));
 
         add(registry, "farm_crop", FeatureArea.FARM, facts("loc:surface"), facts("farm:built"),
-                List.of(ParamSpec.choice("crop", CROPS.keySet().toArray(String[]::new)), ParamSpec.ints("rows", 2, 8)),
+                List.of(ParamSpec.choice("crop", CROPS), ParamSpec.ints("rows", 2, 8)),
                 values -> Duration.ofMinutes(20),
-                (mod, values) -> new FarmCropsTask(CROPS.get(values.getString("crop")), values.getInt("rows")));
+                (mod, values) -> new FarmCropsTask(cropItem(values.getString("crop")), values.getInt("rows")));
 
         add(registry, "breed_animals", FeatureArea.FARM, facts("loc:surface"), facts(),
-                List.of(ParamSpec.choice("animal", ANIMALS.keySet().toArray(String[]::new)), ParamSpec.ints("pairs", 1, 3)),
+                List.of(ParamSpec.choice("animal", ANIMALS), ParamSpec.ints("pairs", 1, 3)),
                 values -> Duration.ofMinutes(10),
-                (mod, values) -> new BreedAnimalsTask(ANIMALS.get(values.getString("animal")), values.getInt("pairs")));
+                (mod, values) -> new BreedAnimalsTask(animalType(values.getString("animal")), values.getInt("pairs")));
 
         add(registry, "fish", FeatureArea.GATHER, facts("has:fishing_rod", "loc:surface"), facts("food:stocked"),
                 List.of(ParamSpec.ints("count", 2, 16)),
@@ -82,9 +78,9 @@ public final class LifeActivities {
                 (mod, values) -> TaskCatalogue.getItemTask("fishing_rod", 1));
 
         add(registry, "cook_food", FeatureArea.CRAFT, facts(), facts("food:stocked"),
-                List.of(ParamSpec.choice("raw", RAW_FOODS.keySet().toArray(String[]::new)), ParamSpec.ints("count", 4, 32)),
+                List.of(ParamSpec.choice("raw", RAW_FOODS), ParamSpec.ints("count", 4, 32)),
                 values -> Duration.ofMinutes(Math.min(20, 4 + values.getInt("count") / 4)),
-                (mod, values) -> new CookFoodTask(RAW_FOODS.get(values.getString("raw")), values.getInt("count")));
+                (mod, values) -> new CookFoodTask(rawFood(values.getString("raw")), values.getInt("count")));
 
         add(registry, "gain_xp_levels", FeatureArea.LEVEL, facts(), facts(),
                 List.of(ParamSpec.ints("target", 5, 35)),
@@ -135,6 +131,35 @@ public final class LifeActivities {
                 List.of(ParamSpec.ints("count", 4, 16)),
                 values -> Duration.ofMinutes(5),
                 (mod, values) -> new CollectEggsTask(values.getInt("count")));
+    }
+
+    private static Item cropItem(String name) {
+        return switch (name) {
+            case "wheat" -> Items.WHEAT;
+            case "carrot" -> Items.CARROT;
+            case "potato" -> Items.POTATO;
+            default -> Items.BEETROOT;
+        };
+    }
+
+    private static EntityType<?> animalType(String name) {
+        return switch (name) {
+            case "cow" -> EntityType.COW;
+            case "sheep" -> EntityType.SHEEP;
+            case "pig" -> EntityType.PIG;
+            default -> EntityType.CHICKEN;
+        };
+    }
+
+    private static Item rawFood(String name) {
+        return switch (name) {
+            case "beef" -> Items.BEEF;
+            case "porkchop" -> Items.PORKCHOP;
+            case "mutton" -> Items.MUTTON;
+            case "chicken" -> Items.CHICKEN;
+            case "cod" -> Items.COD;
+            default -> Items.POTATO;
+        };
     }
 
     private static void add(ActivityRegistry registry, String id, FeatureArea area, Set<Fact> requires, Set<Fact> provides,

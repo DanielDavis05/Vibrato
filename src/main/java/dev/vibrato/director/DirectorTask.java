@@ -5,6 +5,7 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.movement.IdleTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -35,6 +36,7 @@ public class DirectorTask extends Task implements StepAbandonable {
     /** Upper bound on steps that yield no task within a single tick, so a broken registry cannot hang the tick. */
     private static final int MAX_SKIPS_PER_TICK = 32;
     private static final double BREATHER_SECONDS = 15;
+    private static final double TICKS_PER_SECOND = 20;
 
     private final ActivityRegistry _registry;
     private final long _seed;
@@ -57,6 +59,7 @@ public class DirectorTask extends Task implements StepAbandonable {
     private InterruptTracker _interrupts = new InterruptTracker();
     private int _stepSerial;
     private long _tick;
+    private long _stepStartTick;
     private boolean _breatherPending;
     private boolean _onBreather;
 
@@ -204,26 +207,52 @@ public class DirectorTask extends Task implements StepAbandonable {
         return facts;
     }
 
+    @Override
+    public void tick(Vibrato mod, TaskChain parentChain) {
+        // A broken activity must fail its step, never the whole client.
+        StepGuard.run(() -> super.tick(mod, parentChain), this::onStepException);
+    }
+
+    private void onStepException(RuntimeException e) {
+        if (_currentStep != null) {
+            Debug.logInternal("Director step " + _currentStep.signature() + " threw: " + e);
+            e.printStackTrace();
+            completeStep(false, "exception: " + e.getMessage());
+        } else {
+            Debug.logInternal("Director threw outside a step: " + e);
+            e.printStackTrace();
+            _stepTask = null;
+            _onBreather = false;
+        }
+    }
+
     private void completeStep(boolean success, String reason) {
         PlannedStep step = _currentStep;
+        double seconds = (_tick - _stepStartTick) / TICKS_PER_SECOND;
         if (success) {
             _coverage.record(step.activity());
             PlanSampler.applyEffects(_facts, step.activity());
+            Debug.logInternal("Director step " + step.signature() + " succeeded after " + seconds + "s: " + reason);
         } else {
-            _churn.failed(_tick);
-            int cooldown = FAILURE_COOLDOWN_PLANS;
-            if (_churn.churning(_tick)) {
-                cooldown *= 2;
-                _breatherPending = true;
-                _churn.clear();
-                Debug.logInternal("Director: failures are piling up, taking a breather and doubling cooldowns");
-            }
-            _coverage.recordFailure(step.activity().id(), cooldown);
-            Debug.logInternal("Director: " + step.signature() + " failed (" + reason + "), moving on");
+            Debug.logInternal("Director step " + step.signature() + " failed after " + seconds + "s: " + reason);
+            failed(step);
         }
         _stepTask = null;
         _currentStep = null;
         _stuckWitness = null;
+    }
+
+    /** Puts the activity on cooldown, and starts a breather when failures pile up. */
+    private void failed(PlannedStep step) {
+        _churn.failed(_tick);
+        int cooldown = FAILURE_COOLDOWN_PLANS;
+        if (_churn.churning(_tick)) {
+            cooldown *= 2;
+            _breatherPending = true;
+            _churn.clear();
+            Debug.logInternal("Director: failures are piling up, taking a breather and doubling cooldowns");
+        }
+        _coverage.recordFailure(step.activity().id(), cooldown);
     }
 
     private Task nextStepTask(Vibrato mod) {
@@ -243,14 +272,21 @@ public class DirectorTask extends Task implements StepAbandonable {
                 }
             }
             PlannedStep step = _plan.steps().get(_stepIndex++);
-            Task task = step.activity().create(mod, step.params());
+            String[] error = {null};
+            Task task = StepGuard.call(() -> step.activity().create(mod, step.params()), e -> {
+                error[0] = "exception: " + e;
+                Debug.logInternal("Director step " + step.signature() + " threw while building its task: " + e);
+                e.printStackTrace();
+            });
             if (task == null) {
-                Debug.logInternal("Director: " + step.signature() + " created no task, skipping");
-                _coverage.recordFailure(step.activity().id(), FAILURE_COOLDOWN_PLANS);
+                String reason = error[0] != null ? error[0] : "no task was built";
+                Debug.logInternal("Director step " + step.signature() + " failed: " + reason);
+                failed(step);
                 continue;
             }
             _currentStep = step;
             _stepTask = task;
+            _stepStartTick = _tick;
             _health = new StepHealth();
             _interrupts = new InterruptTracker();
             _stepSerial++;
@@ -277,6 +313,11 @@ public class DirectorTask extends Task implements StepAbandonable {
                 plan = escapeFirst(plan);
             }
             _plan = plan;
+            for (int i = 0; i < plan.steps().size(); i++) {
+                PlannedStep step = plan.steps().get(i);
+                Debug.logInternal("Director plan " + (i + 1) + "/" + plan.steps().size() + ": "
+                        + step.signature() + " [" + step.activity().area() + "]");
+            }
         } catch (IllegalStateException e) {
             Debug.logInternal("Director could not plan from " + _facts + ": " + e.getMessage());
             _facts = observedFacts(mod);
