@@ -8,6 +8,10 @@ final class ShearWoolPolicy {
         return Math.max(requested, existing + 1);
     }
 
+    static int resumeTarget(int initialTarget, int requested, int existing) {
+        return initialTarget > 0 ? initialTarget : targetCount(requested, existing);
+    }
+
     static boolean ready(boolean alive, boolean baby, boolean shearable, boolean sheared) {
         return alive && !baby && shearable && !sheared;
     }

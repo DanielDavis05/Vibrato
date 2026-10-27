@@ -31,12 +31,11 @@ public final class ShearWoolActivityTask extends Task {
     }
 
     @Override protected void onStart(Vibrato mod) {
-        // Even with existing wool, this activity should actually obtain a new drop.
-        target = new ItemTarget(ItemHelper.WOOL, ShearWoolPolicy.targetCount(count, mod.getItemStorage().getItemCount(ItemHelper.WOOL)));
-        sheepTask = null;
-        sheared = false;
-        afterShearing = 0;
-        regrowthWait = 0;
+        // A defense interruption restarts this same task instance. Retain both
+        // its original goal and any confirmed shearing across that restart.
+        int goal = ShearWoolPolicy.resumeTarget(target == null ? 0 : target.getTargetCount(), count,
+                mod.getItemStorage().getItemCount(ItemHelper.WOOL));
+        if (target == null) target = new ItemTarget(ItemHelper.WOOL, goal);
         int initialDepth = mod.getBehaviour().stackDepth();
         try {
             mod.getBehaviour().push();

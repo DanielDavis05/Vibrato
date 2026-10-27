@@ -19,4 +19,11 @@ class ShearWoolPolicyTest {
         assertFalse(ShearWoolPolicy.finished(true, 10, 11));
         assertTrue(ShearWoolPolicy.finished(true, 11, 11));
     }
+
+    @Test void interruptionKeepsTheOriginalGoalAfterWoolIsCollected() {
+        int goal = ShearWoolPolicy.resumeTarget(0, 3, 5);
+        assertEquals(6, goal);
+        assertEquals(goal, ShearWoolPolicy.resumeTarget(goal, 3, 6));
+        assertTrue(ShearWoolPolicy.finished(true, 6, goal));
+    }
 }
