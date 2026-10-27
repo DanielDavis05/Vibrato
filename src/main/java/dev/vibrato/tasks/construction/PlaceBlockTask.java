@@ -9,22 +9,36 @@ import dev.vibrato.tasksystem.ITaskRequiresGrounded;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
+import dev.vibrato.util.time.TimerGame;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.schematic.AbstractSchematic;
 import baritone.api.schematic.ISchematic;
 import baritone.api.utils.BlockOptionalMeta;
+import baritone.api.utils.Rotation;
+import baritone.api.utils.input.Input;
+import baritone.pathing.movement.MovementHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Place a block type at a position
@@ -39,6 +53,10 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     private final boolean _autoCollectStructureBlocks;
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker();
     private final TimeoutWanderTask _wanderTask = new TimeoutWanderTask(3, true); // This can get stuck forever, so we increase the range.
+    private static final Direction[] SUPPORT_ORDER = {Direction.DOWN, Direction.NORTH, Direction.SOUTH,
+            Direction.WEST, Direction.EAST, Direction.UP};
+    private final TimerGame _manualClickTimer = new TimerGame(0.25);
+    private boolean _manualControl;
     private Task _materialTask;
     private int _failCount = 0;
 
@@ -64,6 +82,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected void onStart(Vibrato mod) {
         _progressChecker.reset();
+        _manualControl = false;
         // If we get interrupted by another task, this might cause problems...
         //_wanderTask.resetWander();
     }
@@ -73,6 +92,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
         // Perform timeout wander
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
+            releaseManualControl(mod);
             setDebugState("Wandering.");
             _progressChecker.reset();
             return _wanderTask;
@@ -82,6 +102,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             if (_materialTask != null && _materialTask.isActive() && !_materialTask.isFinished(mod)) {
                 setDebugState("No structure items, collecting cobblestone + dirt as default.");
                 if (getMaterialCount(mod) < PREFERRED_MATERIALS) {
+                    releaseManualControl(mod);
                     return _materialTask;
                 } else {
                     _materialTask = null;
@@ -92,6 +113,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             if (getMaterialCount(mod) < MIN_MATERIALS) {
                 // TODO: Mine items, extract their resource key somehow.
                 _materialTask = getMaterialTask(PREFERRED_MATERIALS);
+                releaseManualControl(mod);
                 _progressChecker.reset();
                 return _materialTask;
             }
@@ -102,6 +124,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         if (!_progressChecker.check(mod)) {
             _failCount++;
             if (!tryingAlternativeWay()) {
+                releaseManualControl(mod);
                 Debug.logMessage("Failed to place, wandering timeout.");
                 return _wanderTask;
             } else {
@@ -109,6 +132,11 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             }
         }
 
+
+        // Reachable placements can be aimed directly; the native builder handles
+        // cases that need movement, airborne placement, or obstruction handling.
+        if (!tryingAlternativeWay() && tryManualPlace(mod)) return null;
+        releaseManualControl(mod);
 
         // Place block
         if (tryingAlternativeWay()) {
@@ -130,6 +158,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected void onStop(Vibrato mod, Task interruptTask) {
+        releaseManualControl(mod);
         mod.getClientBaritone().getBuilderProcess().onLostControl();
     }
 
@@ -162,6 +191,76 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         return _failCount % 4 == 3;
     }
 
+    private ItemStack findPlaceableInventoryStack(Vibrato mod) {
+        for (ItemStack stack : mod.getPlayer().getInventory().main) {
+            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) continue;
+            if (_useThrowaways
+                    ? mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
+                        && !mod.getBehaviour().isProtected(stack.getItem())
+                    : Arrays.asList(_toPlace).contains(item.getBlock())) return stack;
+        }
+        return ItemStack.EMPTY;
+    }
+
+    static boolean hitPlacesAt(BlockHitResult hit, BlockPos support, Direction face, BlockPos target) {
+        return hit.getType() == HitResult.Type.BLOCK && hit.getBlockPos().equals(support)
+                && hit.getSide() == face && support.offset(face).equals(target);
+    }
+
+    private boolean tryManualPlace(Vibrato mod) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (!mod.getPlayer().isOnGround() || client.currentScreen != null
+                || !StorageHelper.getItemStackInCursorSlot().isEmpty()
+                || !mod.getWorld().getBlockState(_target).isReplaceable()
+                || !WorldHelper.canPlace(mod, _target)
+                || mod.getPlayer().getBoundingBox().intersects(new Box(_target))) return false;
+        ItemStack stack = findPlaceableInventoryStack(mod);
+        if (stack.isEmpty()) return false;
+        Item material = stack.getItem();
+
+        BlockPos support = null;
+        Direction face = null;
+        Rotation rotation = null;
+        for (Direction direction : SUPPORT_ORDER) {
+            BlockPos neighbor = _target.offset(direction);
+            Direction side = direction.getOpposite();
+            if (!MovementHelper.canPlaceAgainst(mod.getClientBaritone().getPlayerContext(), neighbor)) continue;
+            Optional<Rotation> reachable = LookHelper.getReach(neighbor, side);
+            if (reachable.isPresent()) {
+                support = neighbor;
+                face = side;
+                rotation = reachable.get();
+                break;
+            }
+        }
+        if (support == null) return false;
+        if (!_manualControl) {
+            mod.getClientBaritone().getBuilderProcess().onLostControl();
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
+            _manualControl = true;
+        }
+        setDebugState("Aiming to place on " + support.toShortString());
+        mod.getInputControls().hold(Input.SNEAK);
+        mod.getSlotHandler().forceEquipItem(material);
+        LookHelper.lookAt(mod, rotation);
+        if (mod.getExtraBaritoneSettings().isInteractionPaused() || !mod.getPlayer().isSneaking()
+                || !StorageHelper.isEquipped(mod, material)
+                || !_manualClickTimer.elapsed() || client.interactionManager == null
+                || !(client.crosshairTarget instanceof BlockHitResult hit)
+                || !hitPlacesAt(hit, support, face, _target)) return true;
+        _manualClickTimer.reset();
+        ActionResult result = client.interactionManager.interactBlock(mod.getPlayer(), Hand.MAIN_HAND, hit);
+        if (result.isAccepted()) mod.getPlayer().swingHand(Hand.MAIN_HAND);
+        return true;
+    }
+
+    private void releaseManualControl(Vibrato mod) {
+        if (_manualControl) {
+            mod.getInputControls().release(Input.SNEAK);
+            _manualControl = false;
+        }
+    }
+
     private class PlaceStructureSchematic extends AbstractSchematic {
 
         private final Vibrato _mod;
@@ -192,16 +291,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 // can plan and move the item to the hotbar. Inventory slot order is
                 // deterministic, and protected resources are never throwaways.
                 if (_mod.getPlayer() != null) {
-                    for (ItemStack stack : _mod.getPlayer().getInventory().main) {
-                        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) continue;
-                        Block block = item.getBlock();
-                        if (_useThrowaways
-                                ? _mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
-                                    && !_mod.getBehaviour().isProtected(stack.getItem())
-                                : Arrays.asList(_toPlace).contains(block)) {
-                            return block.getDefaultState();
-                        }
-                    }
+                    ItemStack stack = findPlaceableInventoryStack(_mod);
+                    if (!stack.isEmpty()) return ((BlockItem) stack.getItem()).getBlock().getDefaultState();
                 }
                 if (!_warnedNoThrowaway) {
                     _warnedNoThrowaway = true;
