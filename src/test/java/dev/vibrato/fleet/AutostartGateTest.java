@@ -62,6 +62,20 @@ class AutostartGateTest {
     }
 
     @Test
+    void restartsDeadDirectorOncePerMinute() {
+        long start = 1_000_000;
+        assertFalse(AutostartGate.shouldRestartDirector(true, false, false, start + 59_999, start));
+        assertTrue(AutostartGate.shouldRestartDirector(true, false, false, start + 60_000, start));
+    }
+
+    @Test
+    void doesNotRestartWhileDirectorRunsOrOtherTaskOwnsTheBot() {
+        assertFalse(AutostartGate.shouldRestartDirector(true, true, false, 1_000_000, 0));
+        assertFalse(AutostartGate.shouldRestartDirector(true, false, true, 1_000_000, 0));
+        assertFalse(AutostartGate.shouldRestartDirector(false, false, false, 1_000_000, 0));
+    }
+
+    @Test
     void doesNotReconnectAfterJoiningOnce() {
         assertFalse(AutostartGate.shouldConnect(true, true, true, true, 1_000_000, AutostartGate.NEVER));
     }

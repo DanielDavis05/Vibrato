@@ -6,6 +6,7 @@ public final class AutostartGate {
     /** Marks "no connection attempt yet". */
     public static final long NEVER = Long.MIN_VALUE;
     public static final long CONNECT_BACKOFF_MILLIS = 30_000;
+    public static final long RESTART_BACKOFF_MILLIS = 60_000;
 
     private AutostartGate() {}
 
@@ -20,6 +21,15 @@ public final class AutostartGate {
             return Decision.WAIT;
         }
         return ticksSinceJoin >= delayTicks ? Decision.START : Decision.WAIT;
+    }
+
+    /**
+     * Restart a director that is no longer the user task, unless another task owns the bot, at most once per
+     * {@link #RESTART_BACKOFF_MILLIS}.
+     */
+    public static boolean shouldRestartDirector(boolean autostart, boolean directorRunning, boolean otherTaskBusy,
+                                                long nowMillis, long lastStartMillis) {
+        return autostart && !directorRunning && !otherTaskBusy && nowMillis - lastStartMillis >= RESTART_BACKOFF_MILLIS;
     }
 
     /**

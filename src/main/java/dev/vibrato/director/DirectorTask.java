@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SplittableRandom;
 
@@ -20,7 +21,11 @@ import java.util.SplittableRandom;
  * Plays forever by running randomly sampled plans one step at a time. A step succeeds when its task finishes; it fails
  * when its budget runs out or the task gets stuck, and then it is put on cooldown and the plan moves on.
  */
-public class DirectorTask extends Task {
+public class DirectorTask extends Task implements StepAbandonable {
+
+    /** Activities that deliberately stay put, so navigation safety must not try to unstick them. */
+    private static final Set<String> STATIONARY_ACTIVITIES = Set.of(
+            "fish", "sleep_through_night", "set_spawn_point", "night_shelter", "wait_shelter");
 
     private static final int DEFAULT_PLAN_LENGTH = 10;
     private static final int FAILURE_COOLDOWN_PLANS = 3;
@@ -46,6 +51,8 @@ public class DirectorTask extends Task {
     private StepHealth _health = new StepHealth();
     private Task _stuckWitness;
     private final FailureChurn _churn = new FailureChurn();
+    private InterruptTracker _interrupts = new InterruptTracker();
+    private int _stepSerial;
     private long _tick;
     private boolean _breatherPending;
     private boolean _onBreather;
@@ -75,6 +82,37 @@ public class DirectorTask extends Task {
         if (_stepTimer != null) {
             _stepTimer.reset();
         }
+        if (_stepTask != null && !_onBreather) {
+            // Restarted in the middle of a step: something (a chain) interrupted it.
+            _interrupts.interrupted(_tick, progressKey(mod));
+        }
+    }
+
+    @Override
+    public void abandonCurrentStep(String reason) {
+        if (_currentStep != null) {
+            completeStep(false, reason);
+        }
+    }
+
+    @Override
+    public int stepSerial() {
+        return _stepSerial;
+    }
+
+    /** True while the running step is one that deliberately stays in place. */
+    public boolean currentStepStandsStill() {
+        return _currentStep != null && STATIONARY_ACTIVITIES.contains(_currentStep.activity().id());
+    }
+
+    private static long progressKey(Vibrato mod) {
+        var player = mod.getPlayer();
+        var inventory = player.getInventory();
+        long items = 0;
+        for (int i = 0; i < inventory.size(); i++) {
+            items += inventory.getStack(i).getCount();
+        }
+        return Objects.hash(player.getBlockX(), player.getBlockY(), player.getBlockZ(), items);
     }
 
     @Override
@@ -87,7 +125,9 @@ public class DirectorTask extends Task {
             _onBreather = false;
             _stepTask = null;
         } else if (_stepTask != null) {
-            if (_stepTask.isFinished(mod)) {
+            if (_interrupts.harassed(_tick)) {
+                completeStep(false, "harassed by interruptions");
+            } else if (_stepTask.isFinished(mod)) {
                 completeStep(true, "finished");
             } else if (_stepTimer.elapsed()) {
                 completeStep(false, "over budget");
@@ -189,6 +229,8 @@ public class DirectorTask extends Task {
             _currentStep = step;
             _stepTask = task;
             _health = new StepHealth();
+            _interrupts = new InterruptTracker();
+            _stepSerial++;
             _stepTimer = new TimerGame(step.activity().budget(step.params()).toMillis() / 1000.0);
             _stepTimer.reset();
             return task;

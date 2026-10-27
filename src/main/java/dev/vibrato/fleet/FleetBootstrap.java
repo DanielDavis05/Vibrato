@@ -28,6 +28,7 @@ public final class FleetBootstrap {
 
     private static long _ticksSinceJoin;
     private static boolean _started;
+    private static long _startedAtMillis;
     private static boolean _everJoined;
     private static long _lastConnectAttempt = AutostartGate.NEVER;
 
@@ -49,10 +50,22 @@ public final class FleetBootstrap {
         _ticksSinceJoin++;
 
         boolean busy = mod.getUserTaskChain().isActive() && !mod.getUserTaskChain().isRunningIdleTask();
+        boolean directorRunning = mod.getUserTaskChain().getCurrentTask() instanceof DirectorTask;
+        long now = System.currentTimeMillis();
+        if (_started) {
+            if (AutostartGate.shouldRestartDirector(config.autostart(), directorRunning, busy && !directorRunning,
+                    now, _startedAtMillis)) {
+                Debug.logInternal("Director is no longer running, restarting it");
+                start(mod, config);
+                _startedAtMillis = now;
+            }
+            return;
+        }
         long delayTicks = (long) config.startDelaySeconds() * TICKS_PER_SECOND;
-        if (AutostartGate.decideStart(true, config.autostart(), _ticksSinceJoin, delayTicks, _started, busy)
+        if (AutostartGate.decideStart(true, config.autostart(), _ticksSinceJoin, delayTicks, false, busy)
                 == AutostartGate.Decision.START) {
             _started = true;
+            _startedAtMillis = now;
             start(mod, config);
         }
     }

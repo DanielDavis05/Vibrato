@@ -4,6 +4,8 @@ import baritone.api.utils.input.Input;
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.control.InputControls;
+import dev.vibrato.director.DirectorTask;
+import dev.vibrato.director.StepAbandonable;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
 import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
 import dev.vibrato.tasksystem.Task;
@@ -11,6 +13,9 @@ import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.tasksystem.TaskRunner;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
@@ -48,6 +53,7 @@ public class NavSafetyChain extends TaskChain {
 
     private long _tick;
     private Task _watchedTask;
+    private int _watchedSerial;
     private boolean _anchored;
     private double _anchorX;
     private double _anchorZ;
@@ -80,8 +86,10 @@ public class NavSafetyChain extends TaskChain {
         _tick++;
 
         Task task = mod.getUserTaskChain().getCurrentTask();
-        if (task != _watchedTask) {
+        int serial = task instanceof StepAbandonable steps ? steps.stepSerial() : 0;
+        if (task != _watchedTask || serial != _watchedSerial) {
             _watchedTask = task;
+            _watchedSerial = serial;
             _waste.start(_tick);
             _ladder.onProgress();
             _detector.reset();
@@ -94,10 +102,19 @@ public class NavSafetyChain extends TaskChain {
             _detector.reset();
         }
         trackProgress(sample, wantsToMove);
+        boolean suppressed = NavGate.suppressed(
+                !mod.getMobDefenseChain().getTasks().isEmpty(),
+                !mod.getFoodChain().getTasks().isEmpty(),
+                !mod.getMLGBucketChain().getTasks().isEmpty(),
+                MinecraftClient.getInstance().currentScreen instanceof DeathScreen,
+                MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>,
+                task instanceof DirectorTask director && director.currentStepStandsStill());
 
         if (_action == null) {
             updateWaterOverlay(mod, sample);
-            if (wantsToMove && _waste.isWasting(_tick)) {
+            if (suppressed) {
+                _detector.reset();
+            } else if (wantsToMove && _waste.isWasting(_tick)) {
                 startAction(mod, UnstuckAction.ABANDON_TASK, "no progress", PRIORITY_ACTION);
             } else if (state != StuckState.OK && _ladder.ready(_tick)) {
                 UnstuckAction action = _ladder.next(state);
@@ -243,8 +260,12 @@ public class NavSafetyChain extends TaskChain {
             case CLIMB_OUT_OF_WATER -> climbOut(mod);
             case BREAK_BLOCKING_BLOCK, PLACE_STEP_BLOCK, DIG_UP, DIG_DOWN -> tickDelegate(mod);
             case ABANDON_TASK -> {
-                Debug.logWarning("Abandoning task: " + _actionReason);
-                mod.getUserTaskChain().cancel(mod);
+                Debug.logWarning("Abandoning " + _actionReason);
+                if (mod.getUserTaskChain().getCurrentTask() instanceof StepAbandonable steps) {
+                    steps.abandonCurrentStep(_actionReason);
+                } else {
+                    mod.getUserTaskChain().cancel(mod);
+                }
                 yield true;
             }
         };
