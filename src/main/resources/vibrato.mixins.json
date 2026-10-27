@@ -29,6 +29,7 @@
     "ClientTickMixin",
     "EntryMixin",
     "LoadChunkMixin",
+    "MouseRecorderMixin",
     "PlayerCollidesWithEntityMixin",
     "SimpleOptionAccessor"
   ],

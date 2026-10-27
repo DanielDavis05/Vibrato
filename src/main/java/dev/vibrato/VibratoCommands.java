@@ -34,7 +34,8 @@ public class VibratoCommands {
                 new PunkCommand(),
                 new SetGammaCommand(),
                 new ListCommand(),
-                new CustomCommand()
+                new CustomCommand(),
+                new RecordCommand()
                 //new TestMoveInventoryCommand(),
                 //    new TestSwapInventoryCommand()
         );
