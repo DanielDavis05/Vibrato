@@ -57,6 +57,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     private final boolean _increaseRange;
     //private DistanceProgressChecker _distanceProgressChecker = new DistanceProgressChecker(10, 0.1f);
 
+    private final WanderPolicy.Attempt _attempt = new WanderPolicy.Attempt();
+    private boolean _completedAtStop;
     private Vec3d _origin;
     private boolean _executingPlanB = false;
     private boolean _forceExplore;
@@ -95,20 +97,35 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     public void resetWander() {
         _executingPlanB = false;
         _wanderDistanceExtension = 0;
+        _attempt.reset();
     }
 
     @Override
     protected void onStart(Vibrato mod) {
+        if (_attempt.start(_completedAtStop)) {
+            beginAttempt(mod);
+        }
+        _completedAtStop = false;
+        // Pauses can involve combat movement; do not count them as failed wander progress.
+        _progressChecker.reset();
+        StorageHelper.closeScreen();
+    }
+
+    private void beginAttempt(Vibrato mod) {
         _timeCap.reset();
         _origin = mod.getPlayer().getPos();
-        _progressChecker.reset();
         _failCounter = 0;
         _executingPlanB = false;
-        StorageHelper.closeScreen();
+        _unstuckTask = null;
     }
 
     @Override
     protected Task onTick(Vibrato mod) {
+        // Some parents explicitly reset a retained child while it is still active.
+        if (_attempt.start(false)) {
+            beginAttempt(mod);
+            _progressChecker.reset();
+        }
 
         if (_unstuckTask != null && _unstuckTask.isActive() && !_unstuckTask.isFinished(mod) && stuckInBlock(mod) != null) {
             setDebugState("Getting unstuck from block.");
@@ -168,7 +185,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     protected void onStop(Vibrato mod, Task interruptTask) {
         mod.getClientBaritone().getExploreProcess().onLostControl();
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-        if (isFinished(mod)) {
+        _completedAtStop = isFinished(mod);
+        if (_completedAtStop) {
             if (_increaseRange) {
                 _wanderDistanceExtension += _distanceToWander;
                 Debug.logMessage("Increased wander range");
@@ -178,8 +196,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     public boolean isFinished(Vibrato mod) {
-        // Why the heck did I add this in?
-        //if (_origin == null) return true;
+        if (_attempt.needsStart() || _origin == null) return false;
 
         if (_timeCap.elapsed()) return true;
 
