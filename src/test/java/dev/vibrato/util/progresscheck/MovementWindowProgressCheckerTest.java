@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MovementWindowProgressCheckerTest {
     private boolean elapsed;
     private final MovementWindowProgressChecker checker = new MovementWindowProgressChecker(
-            0.1, () -> elapsed, () -> elapsed = false);
+            0.1, 1, () -> elapsed, () -> elapsed = false);
 
     @Test
     void returnAlongRouteIsProgress() {
@@ -28,6 +28,24 @@ class MovementWindowProgressCheckerTest {
         assertTrue(checker.failed());
         checker.reset();
         assertFalse(checker.failed());
+    }
+
+    @Test
+    void retriesRequireConsecutiveFailedWindows() {
+        MovementWindowProgressChecker retries = new MovementWindowProgressChecker(
+                0.1, 2, () -> elapsed, () -> elapsed = false);
+        retries.setProgress(new Vec3d(0, 64, 0));
+        elapsed = true;
+        retries.setProgress(new Vec3d(0, 64, 0));
+        assertFalse(retries.failed());
+        elapsed = true;
+        retries.setProgress(new Vec3d(1, 64, 0));
+        elapsed = true;
+        retries.setProgress(new Vec3d(1, 64, 0));
+        assertFalse(retries.failed());
+        elapsed = true;
+        retries.setProgress(new Vec3d(1, 64, 0));
+        assertTrue(retries.failed());
     }
 
     @Test

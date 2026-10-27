@@ -13,7 +13,7 @@ public class MovementProgressChecker {
     private BlockPos _lastBreakingBlock = null;
 
     public MovementProgressChecker(double distanceTimeout, double minDistance, double mineTimeout, double minMineProgress, int attempts) {
-        _distanceChecker = new ProgressCheckerRetry<>(new MovementWindowProgressChecker(distanceTimeout, minDistance), attempts);
+        _distanceChecker = new MovementWindowProgressChecker(distanceTimeout, minDistance, attempts);
         _mineChecker = new LinearProgressChecker(mineTimeout, minMineProgress);
     }
 
@@ -44,15 +44,15 @@ public class MovementProgressChecker {
             _mineChecker.reset();
         }
 
+        // Completion can turn isBreakingBlock false before the next check. Count the
+        // finished block even in that transition, but do not reward failed attempts.
+        if (_lastBreakingBlock != null && WorldHelper.isAir(mod, _lastBreakingBlock)) {
+            _distanceChecker.reset();
+            _mineChecker.reset();
+            _lastBreakingBlock = null;
+        }
         if (mod.getControllerExtras().isBreakingBlock()) {
             BlockPos breakBlock = mod.getControllerExtras().getBreakingBlockPos();
-            // If we broke a block, we made progress.
-            // We must also delay reseting the distance checker UNTIL we break a block.
-            // Because otherwise we risk not failing if we keep retrtying to mine and don't succeed.
-            if (_lastBreakingBlock != null && WorldHelper.isAir(mod, _lastBreakingBlock)) {
-                _distanceChecker.reset();
-                _mineChecker.reset();
-            }
             _lastBreakingBlock = breakBlock;
             _mineChecker.setProgress(mod.getControllerExtras().getBreakingBlockProgress());
             return !_mineChecker.failed();
@@ -66,6 +66,7 @@ public class MovementProgressChecker {
     public void reset() {
         _distanceChecker.reset();
         _mineChecker.reset();
+        _lastBreakingBlock = null;
     }
 
 }
