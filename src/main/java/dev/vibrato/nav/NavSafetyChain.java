@@ -24,8 +24,7 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Watches the bot's motion while a user task is pathing and steps in when it is stuck or drowning.
  * <p>
- * Detection runs in {@link #getPriority} every tick, as other chains do. The bank-jump overlay is
- * applied there too, so it works without taking over from the user task. A stuck episode takes over with a higher
+ * Detection runs in {@link #getPriority} every tick, as other chains do. A stuck episode takes over with a higher
  * priority for the duration of one {@link UnstuckAction}.
  */
 public class NavSafetyChain extends TaskChain {
@@ -46,7 +45,6 @@ public class NavSafetyChain extends TaskChain {
     private static final float SWIM_PITCH = -20.0f;
     private static final int BANK_RADIUS = 3;
     private static final double FRONT_REACH = 0.8;
-    private static final double HEAD_HEIGHT = 1.0;
     private static final double PROGRESS_DISTANCE = 1.5;
 
     private final StuckDetector _detector = new StuckDetector(StuckConfig.defaults());
@@ -63,9 +61,6 @@ public class NavSafetyChain extends TaskChain {
     private double _anchorX;
     private double _anchorY;
     private double _anchorZ;
-    private boolean _overlayJump;
-    private boolean _overlayForward;
-    private boolean _overlaySprint;
 
     private UnstuckAction _action;
     private float _actionPriority;
@@ -127,7 +122,6 @@ public class NavSafetyChain extends TaskChain {
                 task instanceof DirectorTask director && director.currentStepStandsStill());
 
         if (_action == null) {
-            updateWaterOverlay(mod, sample);
             if (suppressed) {
                 _detector.reset();
             } else if (wantsToMove && _waste.isWasting(_tick) && _rateLimit.tryAcquire(_tick)) {
@@ -165,7 +159,6 @@ public class NavSafetyChain extends TaskChain {
     @Override
     protected void onStop(Vibrato mod) {
         finishAction(mod);
-        setOverlay(mod, false, false, false);
         _detector.reset();
         _ladder.onProgress();
         _anchored = false;
@@ -195,37 +188,8 @@ public class NavSafetyChain extends TaskChain {
         }
     }
 
-    private void updateWaterOverlay(Vibrato mod, MotionSample sample) {
-        if (!sample.inWater() || !sample.wantsToMove()) {
-            setOverlay(mod, false, false, false);
-            return;
-        }
-        boolean bank = sample.horizontalCollision()
-                && WorldHelper.isSolid(mod, ahead(sample.x(), sample.y() + HEAD_HEIGHT, sample.z(), sample.yaw()));
-        // Baritone owns horizontal movement, including swimming and strafing. Forcing forward
-        // after a distance threshold can override a turn or reverse and send the bot astray.
-        setOverlay(mod, bank, false, false);
-    }
-
-    private void setOverlay(Vibrato mod, boolean jump, boolean forward, boolean sprint) {
-        InputControls input = mod.getInputControls();
-        if (jump != _overlayJump) {
-            setKey(input, Input.JUMP, jump);
-            _overlayJump = jump;
-        }
-        if (forward != _overlayForward) {
-            setKey(input, Input.MOVE_FORWARD, forward);
-            _overlayForward = forward;
-        }
-        if (sprint != _overlaySprint) {
-            setKey(input, Input.SPRINT, sprint);
-            _overlaySprint = sprint;
-        }
-    }
-
     private void startAction(Vibrato mod, UnstuckAction action, String reason, float priority) {
         Debug.logMessage("Unstuck " + action + " (" + reason + ")");
-        setOverlay(mod, false, false, false);
         if (action.cancelsPath()) {
             mod.getClientBaritone().getPathingBehavior().cancelEverything();
         }
