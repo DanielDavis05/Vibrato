@@ -1,0 +1,109 @@
+{
+  "recordedAtUtc": "2026-10-27T07:02:19.915027+00:00",
+  "finalArtifactRevision": "e87215bf547dcf7c6ac3f6dade4f814942fa2bb2",
+  "repository": "https://github.com/DanielDavis05/Vibrato",
+  "protocol": 767,
+  "minecraftVersion": "1.21.1",
+  "inventoryEntries": 224,
+  "taskCoveredEntries": 224,
+  "unknownPacketEntries": 0,
+  "unknownWireEntries": 0,
+  "coverageGate": "PASS",
+  "tests": {
+    "tests": 370,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "normalSuite": {
+    "scenarios": 83,
+    "executedInOrder": true,
+    "incompleteActions": 0,
+    "packetTypesCovered": 202,
+    "revision": "e87215bf547dcf7c6ac3f6dade4f814942fa2bb2"
+  },
+  "observationSemantics": "Successful client handling or successful outbound channel writes during a task. Separate wire evidence for legacy ping and bundle delimiter. A successful write does not prove server acceptance.",
+  "negativePlayerSessionOutcome": "The real server rejected the deliberately untrusted profile key: Invalid signature for profile public key.",
+  "controlledCases": [
+    "login query/cookie rejection",
+    "configuration cookie rejection",
+    "play cookie rejection",
+    "unknown deleted-message signature",
+    "unknown player removal",
+    "unavailable resource pack",
+    "untrusted Player Session key"
+  ],
+  "provenance": "Normal suite captured at finalArtifactRevision. Lifecycle cases were observed during preceding commits in this implementation; distinct capture IDs and SHA-256 hashes are retained.",
+  "manifestSha256": "1f968e50f214b5ff3aca2904024ada624fbafd45bed54214b18d5c7f8671c358",
+  "artifacts": {
+    "vibrato-0.1.0.jar": "099cf91c40f979d5a797d5a0890e653fc579cc1c9f78beda8140b61e64b07d9b",
+    "vibrato-protocol-fixture-0.1.0.jar": "2f876e7463af377c528863dd02c15edae5bff2515715431c73386de1c4715320"
+  },
+  "captures": [
+    {
+      "name": "config_common.json",
+      "captureId": "253ebc61-9815-4bda-817a-7fcaf6b02648",
+      "sha256": "0880bfaa92102976a79bbdd33c309255463ae5c97f319dd8537b83623c521566"
+    },
+    {
+      "name": "config_cookie.json",
+      "captureId": "1af58fe0-7543-4751-a3ce-571a371389ce",
+      "sha256": "136b247c20bfe005e5e89271b235bb985c1c111ecb68d16e12235b3ca092f149"
+    },
+    {
+      "name": "config_disconnect.json",
+      "captureId": "0872dce9-bb77-46aa-b286-5198087656d7",
+      "sha256": "831ae2649285308529e8220070a4010c331152bfe4fa81f8281688bcb6bbb7b4"
+    },
+    {
+      "name": "config_pack.json",
+      "captureId": "0deda2ab-27cc-4595-af53-639237216678",
+      "sha256": "f6e65cf89e0ec5b90b67ad01ff6256bd405a8f120c6f8e7702de94d1520ab8a0"
+    },
+    {
+      "name": "config_transfer.json",
+      "captureId": "717333cb-e4fa-4aae-99dc-311c7642e77c",
+      "sha256": "babeea37c60ea778d665dcc9bce4a278fec89f69bc66237b499584ef8580d3b0"
+    },
+    {
+      "name": "login_cookie.json",
+      "captureId": "063ea0f3-ddac-4a95-9a8c-ee127519619c",
+      "sha256": "cfdae3101c0f7fbf8c0828c181a182c0f586b1f5718846fc0642fdded5084bd8"
+    },
+    {
+      "name": "login_disconnect.json",
+      "captureId": "35a78ef4-c408-4fd7-8f24-2f003b0d5186",
+      "sha256": "564ee2f392502fe3ec1b850f5d6edf6b5053726f2559c4ee0268d85de11945fd"
+    },
+    {
+      "name": "login_encrypt.json",
+      "captureId": "1b28fe17-e712-459b-a242-04334c885f98",
+      "sha256": "3f94b98b5b37d7ba4300c19986af82a9b89d15bc04742eb7348a6983690d2b4e"
+    },
+    {
+      "name": "login_query.json",
+      "captureId": "faafe311-4fca-4254-ba33-06d7124549f3",
+      "sha256": "30e0d6550753bf929796c24ed3d922eb784932499af49a2f562e356af33d2275"
+    },
+    {
+      "name": "normal.json",
+      "captureId": "e539436f-69aa-449e-b46f-932c7bb3d57f",
+      "sha256": "0e947051c6d7ff0ed82b765deda627d204300ea23ee67905ac9743e05678a6a0"
+    },
+    {
+      "name": "play_disconnect.json",
+      "captureId": "30cc599b-86df-44dc-aeaf-7a379390d669",
+      "sha256": "022cfb86dd053bb6baf17e24e61e7e0650905e82c2fa365bb1ed6eeb8afdd8f1"
+    },
+    {
+      "name": "play_session_negative.json",
+      "captureId": "b4143ad7-8ce2-4e6c-b88c-bf9e5e7bb404",
+      "sha256": "3af0c645f5f8d23d43097facae16f77c043a7f6acb022c67b39621d83ba3ec7d"
+    },
+    {
+      "name": "play_transfer.json",
+      "captureId": "4d390b0f-2c9c-457f-b952-d382657242fc",
+      "sha256": "b291273d42151b1ef4989594749ac02b4f960abd0eb083a5b5e29202b64f7ca4"
+    }
+  ]
+}
