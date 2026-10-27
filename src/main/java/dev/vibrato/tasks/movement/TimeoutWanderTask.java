@@ -7,6 +7,7 @@ import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.ItemHelper;
 import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
+import dev.vibrato.util.time.TimerGame;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.block.Block;
@@ -45,7 +46,13 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         ));
     }
 
+    /** Used by the no-argument constructor, so a wander always ends on its own. */
+    public static final float DEFAULT_DISTANCE = 64;
+    /** Hard cap on one wander, whatever its distance. */
+    public static final double TIME_CAP_SECONDS = 120;
+
     private final float _distanceToWander;
+    private final TimerGame _timeCap = new TimerGame(TIME_CAP_SECONDS);
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker();
     private final boolean _increaseRange;
     //private DistanceProgressChecker _distanceProgressChecker = new DistanceProgressChecker(10, 0.1f);
@@ -68,7 +75,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     public TimeoutWanderTask() {
-        this(Float.POSITIVE_INFINITY, false);
+        this(DEFAULT_DISTANCE, false);
     }
 
     public TimeoutWanderTask(boolean forceExplore) {
@@ -92,6 +99,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected void onStart(Vibrato mod) {
+        _timeCap.reset();
         _origin = mod.getPlayer().getPos();
         _progressChecker.reset();
         _failCounter = 0;
@@ -171,6 +179,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     public boolean isFinished(Vibrato mod) {
         // Why the heck did I add this in?
         //if (_origin == null) return true;
+
+        if (_timeCap.elapsed()) return true;
 
         if (Float.isInfinite(_distanceToWander)) return false;
 

@@ -19,9 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BuiltinRegistryIntegrityTest {
 
     /** Facts the world provides at a plan boundary, so they need no provider. */
-    private static final Set<Fact> WORLD_FACTS = Set.of(
+    private static final Set<Fact> WORLD_FACTS = new HashSet<>(Set.of(
             Fact.dimension("overworld"), Fact.dimension("nether"), Fact.dimension("end"),
-            WorldFacts.SURFACE, WorldFacts.UNDERGROUND);
+            WorldFacts.SURFACE, WorldFacts.UNDERGROUND));
+    static {
+        WORLD_FACTS.addAll(WorldFacts.rareItemFacts());
+    }
 
     /**
      * Facts that the T3 transport and exploration domain must provide: no village-finding task exists yet, so

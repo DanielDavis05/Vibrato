@@ -17,6 +17,14 @@ public final class WorldFacts {
     private static final List<String> PICKAXES = List.of(
             "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
 
+    /**
+     * Rare items the bot cannot reliably craft or gather. They are only ever present when the bot already holds them
+     * (found, traded or given), so they are start facts read from the inventory, never providers.
+     */
+    private static final List<String> RARE_ITEMS = List.of(
+            "saddle", "elytra", "enchanted_book", "name_tag", "diamond_horse_armor", "totem_of_undying",
+            "ender_pearl", "spyglass");
+
     private WorldFacts() {}
 
     /**
@@ -31,7 +39,7 @@ public final class WorldFacts {
             facts.add(skyVisible ? SURFACE : UNDERGROUND);
         }
         for (String item : heldItems) {
-            if (PICKAXES.contains(item)) {
+            if (PICKAXES.contains(item) || RARE_ITEMS.contains(item)) {
                 facts.add(Fact.has(item));
             }
         }
@@ -41,7 +49,16 @@ public final class WorldFacts {
     /** Facts that are re-read from the world at every plan boundary; the rest persist across plans. */
     public static boolean isObservable(Fact fact) {
         String key = fact.key();
-        return key.startsWith("dim:") || key.startsWith("loc:") || isPickaxeFact(fact);
+        return key.startsWith("dim:") || key.startsWith("loc:") || isPickaxeFact(fact) || rareItemFacts().contains(fact);
+    }
+
+    /** Every {@code has:<rare item>} fact that the inventory can report. */
+    public static Set<Fact> rareItemFacts() {
+        Set<Fact> facts = new HashSet<>();
+        for (String item : RARE_ITEMS) {
+            facts.add(Fact.has(item));
+        }
+        return facts;
     }
 
     public static boolean hasPickaxe(Set<Fact> facts) {
