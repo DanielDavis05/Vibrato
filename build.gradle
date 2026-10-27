@@ -1,0 +1,86 @@
+plugins {
+    id "fabric-loom" version "1.11.8"
+    id "maven-publish"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
+}
+
+base {
+    archivesName = project.archives_base_name
+}
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "gaucho-matrero-repo"
+        url = "https://gaucho-matrero.github.io/maven/"
+    }
+    maven {
+        name = "babbaj-repo"
+        url = "https://babbaj.github.io/maven/"
+    }
+    flatDir {
+        dirs "${rootDir}/../baritone/dist"
+    }
+}
+
+dependencies {
+    //to change the versions see the gradle.properties file
+    minecraft("com.mojang:minecraft:${project.minecraft_version}")
+    mappings("net.fabricmc:yarn:${project.yarn_mappings}:v2")
+    modImplementation("net.fabricmc:fabric-loader:${project.loader_version}")
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
+
+    // Jackson JSON, bundled as jar-in-jar
+    implementation(include("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}"))
+    implementation(include("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}"))
+    implementation(include("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}"))
+
+    // Alto Clef needs a patched baritone (AltoClefSettings etc.), see develop.md
+    modImplementation(include("baritone:baritone-unoptimized-fabric:${project.baritone_version}"))
+    // Nested inside the baritone jar, but loom doesn't put nested jars of local deps on the dev runtime classpath
+    runtimeOnly("dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}")
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 21
+}
+
+jar {
+    from "LICENSE"
+}
+
+// configure the maven publication
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    // select the repositories you want to publish to
+    repositories {
+        // uncomment to publish to the local maven
+        // mavenLocal()
+    }
+}
