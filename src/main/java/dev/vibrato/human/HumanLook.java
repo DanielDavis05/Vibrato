@@ -25,14 +25,32 @@ public final class HumanLook implements RotationSmoother {
     private final RandomGenerator rng;
     private final Axis yaw;
     private final Axis pitch;
+    private final boolean simulation;
     private Rotation lastPrevious;
     private Rotation lastDesired;
 
     public HumanLook(long seed, HumanLookConfig cfg) {
+        this(seed, cfg, false);
+    }
+
+    private HumanLook(long seed, HumanLookConfig cfg, boolean simulation) {
         this.cfg = cfg;
         this.rng = new SplittableRandom(seed);
+        this.simulation = simulation;
         this.yaw = new Axis(cfg.maxYawDegPerTick(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
         this.pitch = new Axis(cfg.maxPitchDegPerTick(), -90, 90);
+    }
+
+    @Override
+    public HumanLook fork() {
+        // Simulation randomness must never consume the live stream. Its future wind and overshoot
+        // are estimates, but the already accumulated motion and pending request are exact snapshots.
+        HumanLook copy = new HumanLook(0, cfg, true);
+        copy.yaw.copyState(yaw);
+        copy.pitch.copyState(pitch);
+        copy.lastPrevious = lastPrevious;
+        copy.lastDesired = lastDesired;
+        return copy;
     }
 
     @Override
@@ -40,13 +58,13 @@ public final class HumanLook implements RotationSmoother {
         lastPrevious = previous;
         lastDesired = desired;
         Rotation smoothed = next(previous, desired);
-        LookTrace.observe(previous, desired, smoothed);
+        if (!simulation) LookTrace.observe(previous, desired, smoothed);
         return smoothed;
     }
 
     @Override
     public void onTick() {
-        LookTrace.endTick();
+        if (!simulation) LookTrace.endTick();
         if (lastPrevious == null) {
             yaw.rest();
             pitch.rest();
@@ -93,6 +111,13 @@ public final class HumanLook implements RotationSmoother {
             this.accel = cfg.gain() * maxSpeed;
             this.min = min;
             this.max = max;
+        }
+
+        void copyState(Axis source) {
+            velocity = source.velocity;
+            wind = source.wind;
+            overshoot = source.overshoot;
+            armed = source.armed;
         }
 
         /**

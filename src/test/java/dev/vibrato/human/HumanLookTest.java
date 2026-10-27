@@ -154,4 +154,56 @@ class HumanLookTest {
         Rotation again = look.smooth(new Rotation(0, 0), new Rotation(60, 0));
         assertEquals(first.getYaw(), again.getYaw());
     }
+
+    @Test
+    void forkCopiesPendingRequestAndMotionForDeterministicPrediction() {
+        HumanLook live = new HumanLook(5, NO_OVERSHOOT);
+        Rotation previous = new Rotation(0, 0);
+        Rotation desired = new Rotation(150, 45);
+        for (int i = 0; i < 3; i++) {
+            previous = live.smooth(previous, desired);
+            live.onTick();
+        }
+        // Fork between smooth and onTick: both must commit the same pending request.
+        Rotation pending = live.smooth(previous, desired);
+        HumanLook simulated = live.fork();
+        live.onTick();
+        simulated.onTick();
+        Rotation actual = pending;
+        Rotation predicted = pending;
+        for (int i = 0; i < 8; i++) {
+            actual = live.smooth(actual, desired);
+            predicted = simulated.smooth(predicted, desired);
+            assertEquals(actual.getYaw(), predicted.getYaw(), 1e-5);
+            assertEquals(actual.getPitch(), predicted.getPitch(), 1e-5);
+            live.onTick();
+            simulated.onTick();
+        }
+    }
+
+    @Test
+    void speculativeForksDoNotChangeLiveRequestMotionOrRandomStream() {
+        HumanLook live = new HumanLook(71, WINDY);
+        HumanLook baseline = new HumanLook(71, WINDY);
+        Rotation current = new Rotation(0, 0);
+        Rotation expected = current;
+        Rotation target = new Rotation(140, 35);
+        for (int i = 0; i < 20; i++) {
+            Rotation actualNext = live.smooth(current, target);
+            Rotation expectedNext = baseline.smooth(expected, target);
+            assertEquals(expectedNext.getYaw(), actualNext.getYaw(), 1e-5);
+            assertEquals(expectedNext.getPitch(), actualNext.getPitch(), 1e-5);
+
+            HumanLook simulated = live.fork();
+            Rotation hypothetical = current;
+            for (int j = 0; j < 5; j++) {
+                hypothetical = simulated.smooth(hypothetical, new Rotation(-130, -50));
+                simulated.onTick();
+            }
+            live.onTick();
+            baseline.onTick();
+            current = actualNext;
+            expected = expectedNext;
+        }
+    }
 }
