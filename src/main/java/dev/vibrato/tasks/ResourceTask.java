@@ -162,17 +162,23 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
             ArrayList<Block> satisfiedReqs = new ArrayList<>(Arrays.asList(_mineIfPresent));
             satisfiedReqs.removeIf(block -> !StorageHelper.miningRequirementMet(mod, MiningRequirement.getMinimumRequirementForBlock(block)));
             if (!satisfiedReqs.isEmpty()) {
-                if (mod.getBlockTracker().anyFound(satisfiedReqs.toArray(Block[]::new))) {
-                    Optional<BlockPos> closest = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), _mineIfPresent);
+                Block[] mineable = satisfiedReqs.toArray(Block[]::new);
+                if (_mineLastClosest != null && !mod.getBlockTracker().blockIsValid(_mineLastClosest, mineable)) {
+                    _mineLastClosest = null;
+                }
+                if (mod.getBlockTracker().anyFound(mineable)) {
+                    Optional<BlockPos> closest = mod.getBlockTracker().getNearestTracking(mod.getPlayer().getPos(), mineable);
                     if (closest.isPresent() && closest.get().isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceMineRange())) {
                         _mineLastClosest = closest.get();
                     }
                     if (_mineLastClosest != null) {
                         if (_mineLastClosest.isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceMineRange() * 1.5 + 20)) {
-                            return new MineAndCollectTask(_itemTargets, _mineIfPresent, MiningRequirement.HAND);
+                            return new MineAndCollectTask(_itemTargets, mineable, MiningRequirement.HAND);
                         }
                     }
                 }
+            } else {
+                _mineLastClosest = null;
             }
         }
 
