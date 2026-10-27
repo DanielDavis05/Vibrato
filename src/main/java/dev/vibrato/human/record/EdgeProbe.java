@@ -42,14 +42,26 @@ public final class EdgeProbe {
     }
 
     /**
+     * Whether an edge probe is meaningful this tick. Only a player standing on the ground in open air qualifies:
+     * while airborne the feet level rises above the ground, so the player's own column would look like a drop, and
+     * in water, lava, a vehicle or on a ladder the feet level says nothing about the walkable surface.
+     */
+    static boolean canProbe(boolean onGround, boolean inWater, boolean inLava, boolean riding, boolean climbing) {
+        return onGround && !inWater && !inLava && !riding && !climbing;
+    }
+
+    /**
      * Horizontal distance in blocks from {@code (x, z)} along the unit direction {@code (dirX, dirZ)} to the first
      * column whose standing surface is a gap or drop, sampled every {@link #STEP} blocks from 0 up to {@link #RANGE}.
-     * A column is an edge when it has no ground ({@link #NONE}) or its ground top is more than one block below
-     * {@code feetY}, i.e. {@code ground top + 1 < feetY - 1}. Returns {@code null} when no edge is found in range.
+     * {@code standingFeetY} is the integer feet level of the last grounded tick (the standing surface is the block
+     * just below it), not the player's current height. A column is an edge when it has no ground
+     * ({@link #NONE}) or its highest solid block is at least two below the standing surface, i.e.
+     * {@code ground top + 1 < standingFeetY - 1}. A one-block step or a slab top is therefore not an edge.
+     * Returns {@code null} when no edge is found in range.
      *
      * @throws IllegalArgumentException when the direction has zero length
      */
-    public static Double distanceToEdge(double x, double feetY, double z, double dirX, double dirZ,
+    public static Double distanceToEdge(double x, int standingFeetY, double z, double dirX, double dirZ,
                                         GroundLookup ground) {
         double length = Math.hypot(dirX, dirZ);
         if (length < 1e-9) {
@@ -66,7 +78,7 @@ public final class EdgeProbe {
             if (top == UNKNOWN) {
                 continue;
             }
-            if (top == NONE || top + 1 < feetY - 1.0) {
+            if (top == NONE || top + 1 < standingFeetY - 1) {
                 return d;
             }
         }

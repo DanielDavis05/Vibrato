@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EdgeProbeTest {
 
-    private static final double FEET = 64.0;
+    private static final int FEET = 64; // standing feet block: the standing surface is block 63
     private static final int GROUND = 63; // solid block index whose top is at feet level
     private static final double EPS = 1e-9;
 
@@ -44,6 +44,38 @@ class EdgeProbeTest {
         Double edge = EdgeProbe.distanceToEdge(0.5, FEET, 0.5, 1, 0, stepAt(4, GROUND - 2));
 
         assertEquals(3.5, edge, EPS);
+    }
+
+    @Test
+    void oneBlockStepUpIsNotAnEdge() {
+        // Ground top at 64 (one block above the standing surface): higher ground is never a drop.
+        assertNull(EdgeProbe.distanceToEdge(0.5, FEET, 0.5, 1, 0, stepAt(4, GROUND + 1)));
+    }
+
+    @Test
+    void standingLevelDecidesWhetherFlatGroundIsAnEdge() {
+        // Over flat ground (top 63), a standing level of 64 is not an edge, but a feet level of 66 (what an airborne
+        // player's height would give) is: the caller must pass the grounded level, not the current height.
+        assertNull(EdgeProbe.distanceToEdge(0.5, 64, 0.5, 1, 0, flat()));
+        assertEquals(0.0, EdgeProbe.distanceToEdge(0.5, 66, 0.5, 1, 0, flat()), EPS);
+    }
+
+    @Test
+    void probeRunsOnlyOnOpenGround() {
+        assertTrue(EdgeProbe.canProbe(true, false, false, false, false));
+    }
+
+    @Test
+    void airborneTicksAreNotProbed() {
+        assertFalse(EdgeProbe.canProbe(false, false, false, false, false));
+    }
+
+    @Test
+    void waterLavaVehiclesAndLaddersAreNotProbed() {
+        assertFalse(EdgeProbe.canProbe(true, true, false, false, false));
+        assertFalse(EdgeProbe.canProbe(true, false, true, false, false));
+        assertFalse(EdgeProbe.canProbe(true, false, false, true, false));
+        assertFalse(EdgeProbe.canProbe(true, false, false, false, true));
     }
 
     @Test

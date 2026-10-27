@@ -167,7 +167,7 @@ public final class MotionRecorder {
                 nextZ = node.getZ() + 0.5;
             }
         }
-        Double edge = edgeAhead(player, velocity);
+        Double edge = edgeAhead(player);
         return new TraceEvent.Tick(
                 ++tickCount, ms,
                 player.getX(), player.getY(), player.getZ(),
@@ -178,21 +178,26 @@ public final class MotionRecorder {
     }
 
     /**
-     * Distance to the first gap or drop ahead of the player, or null when there is none or no world is loaded.
+     * Distance to the first gap or drop ahead of the player, or null when the player is not on open ground (airborne,
+     * in water or lava, riding, climbing), when there is none, or when no world is loaded. Measured against the feet
+     * block of the last grounded tick, so a one-block step does not count as an edge.
      */
-    private static Double edgeAhead(ClientPlayerEntity player, Vec3d velocity) {
+    private static Double edgeAhead(ClientPlayerEntity player) {
         ClientWorld world = MinecraftClient.getInstance().world;
-        if (world == null) {
+        if (world == null || !EdgeProbe.canProbe(player.isOnGround(), player.isTouchingWater(), player.isInLava(),
+                player.hasVehicle(), player.isClimbing())) {
             return null;
         }
+        // Grounded and eligible, so the feet block is the standing level; airborne ticks never reach this point.
+        int standingFeetY = (int) Math.floor(player.getY());
+        Vec3d velocity = player.getVelocity();
         double[] heading = EdgeProbe.heading(velocity.x, velocity.z, player.getYaw());
-        int feetBlock = (int) Math.floor(player.getY());
-        return EdgeProbe.distanceToEdge(player.getX(), player.getY(), player.getZ(), heading[0], heading[1],
-                (x, z) -> highestSolidGround(world, x, z, feetBlock));
+        return EdgeProbe.distanceToEdge(player.getX(), standingFeetY, player.getZ(), heading[0], heading[1],
+                (x, z) -> highestSolidGround(world, x, z, standingFeetY));
     }
 
     /**
-     * Highest solid block in the column from one block above feet level down to two below it. Returns
+     * Highest solid block in the column from one block above the standing feet block down to two below it. Returns
      * {@link EdgeProbe#UNKNOWN} for an unloaded chunk and {@link EdgeProbe#NONE} when no solid block is in the window.
      */
     private static int highestSolidGround(ClientWorld world, int x, int z, int feetBlock) {
