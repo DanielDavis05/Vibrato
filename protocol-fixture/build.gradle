@@ -19,7 +19,7 @@ loom {
     runs {
         server {
             server()
-            runDir '../run-protocol-fixture'
+            runDir project.findProperty('fixtureRunDir')?.toString() ?: '../run-protocol-fixture'
             ideConfigGenerated true
             if (project.hasProperty('fixtureMode')) vmArg "-Dvibrato.fixture.lifecycle=${project.property('fixtureMode')}"
             if (project.hasProperty('fixturePort')) vmArg "-Dvibrato.fixture.port=${project.property('fixturePort')}"

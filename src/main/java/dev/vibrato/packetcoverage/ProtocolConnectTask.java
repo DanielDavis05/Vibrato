@@ -35,6 +35,7 @@ public final class ProtocolConnectTask extends Task {
     @Override protected void onStart(Vibrato mod) {
         stage = Stage.STATUS; ticks = 0; stageTick = 0;
         PacketCoverage.beginScenario(label);
+        PacketCoverage.externalTask(getClass().getSimpleName());
         try {
             pinger.add(new ServerInfo("Local protocol fixture", address, ServerInfo.ServerType.OTHER), () -> {}, () -> pingCompleted = true);
         } catch (Exception e) { pingCompleted = true; }
@@ -80,7 +81,11 @@ public final class ProtocolConnectTask extends Task {
             return true;
         } catch (Exception e) { return false; }
     }
-    @Override protected void onStop(Vibrato mod, Task interrupted) { pinger.cancel(); }
+    @Override protected void onStop(Vibrato mod, Task interrupted) {
+        pinger.cancel();
+        PacketCoverage.endExternalTask(getClass().getSimpleName());
+        PacketCoverage.endScenario();
+    }
     @Override public boolean isFinished(Vibrato mod) { return stage == Stage.DONE; }
     @Override protected boolean isEqual(Task other) { return other == this; }
     @Override protected String toDebugString() { return "Protocol connection " + label + " (" + stage + ")"; }

@@ -49,9 +49,8 @@ public final class ProtocolScenarioTask extends Task {
                 client.getNetworkHandler().sendChatCommand("vprotocol run " + action);
                 dispatched = true;
             } else {
-                String mode = action.equals("spectator_teleport") ? "spectator"
-                        : action.equals("recipe_book") || action.equals("recipe_seen") ? "survival" : "creative";
-                client.getNetworkHandler().sendChatCommand("gamemode " + mode);
+                var mode = ClientProtocolScenarioTask.fixtureGameMode(action);
+                if (mode != null) client.getNetworkHandler().sendChatCommand("gamemode " + mode.getName());
                 String setup = ClientProtocolScenarioTask.fixtureSetup(action);
                 if (!setup.equals("none")) client.getNetworkHandler().sendChatCommand("vprotocol run " + setup);
             }

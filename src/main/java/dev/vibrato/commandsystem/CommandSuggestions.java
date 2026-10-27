@@ -53,6 +53,10 @@ public final class CommandSuggestions {
             values = java.util.stream.Stream.concat(java.util.stream.Stream.of("all"), commands.stream().map(Command::getName)).toList();
         } else if (name.equals("play") && tokenStart == argumentStart) {
             values = Personas.all().stream().map(persona -> persona.name()).toList();
+        } else if (name.equals("protocol") && tokenStart == argumentStart) {
+            values = java.util.List.of("report", "verify", "missing", "list", "run", "fixture", "suite", "reset");
+        } else if (name.equals("protocol") && arguments.startsWith("run ") && !arguments.substring(4).stripLeading().contains(" ")) {
+            values = dev.vibrato.protocol.scenarios.ClientProtocolScenarioTask.supportedActions();
         } else if (name.equals("goto") && validGotoCoordinates(beforeCursor.substring(argumentStart, tokenStart))) {
             values = Arrays.stream(Dimension.values()).map(d -> d.name().toLowerCase(Locale.ROOT)).toList();
         } else if (name.equals("locate_structure") && !arguments.contains(" ")) {

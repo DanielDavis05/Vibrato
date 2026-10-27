@@ -24,7 +24,9 @@ public final class ProtocolCommand extends Command {
                 var path = ProtocolReports.write();
                 mod.log(ProtocolReports.summary(report) + ". Report: " + path);
                 if (verb.equals("missing")) mod.log("Still unobserved: " + String.join(", ", report.packets().stream().filter(row -> !row.covered()).limit(12).map(row -> row.packet().state() + "/" + row.packet().name()).toList()));
-                if (verb.equals("verify") && ProtocolReports.covered(report) != report.packets().size()) throw new CommandException("Protocol coverage is incomplete; unobserved packets are listed in the report");
+                if (verb.equals("verify") && (ProtocolReports.covered(report) != report.packets().size()
+                        || !report.unknownPackets().isEmpty() || !report.unknownWireEvidence().isEmpty()))
+                    throw new CommandException("Protocol coverage is incomplete or contains unrecognized evidence; inspect the report");
             } else {
                 if (!PacketCoverage.enabled()) throw new CommandException("Relaunch with -Dvibrato.packetCoverage=true to record actual observations");
                 if (verb.equals("reset")) PacketCoverage.reset();
