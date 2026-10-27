@@ -7,6 +7,10 @@ import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.ChickenEntity;
 
 import java.util.function.Predicate;
 
@@ -15,6 +19,7 @@ public class KillAndLootTask extends ResourceTask {
     private final Class _toKill;
 
     private final Task _killTask;
+    private final Task _landSearch = new LandAnimalSearchTask();
 
     public KillAndLootTask(Class toKill, Predicate<Entity> shouldKill, ItemTarget... itemTargets) {
         super(itemTargets.clone());
@@ -46,6 +51,10 @@ public class KillAndLootTask extends ResourceTask {
                 return getToCorrectDimensionTask(mod);
             }
             setDebugState("Searching for mob...");
+            if (_toKill == SheepEntity.class || _toKill == CowEntity.class
+                    || _toKill == PigEntity.class || _toKill == ChickenEntity.class) {
+                return _landSearch;
+            }
             return new TimeoutWanderTask(9999999);
         }
         // We found the mob!
