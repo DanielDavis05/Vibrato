@@ -39,7 +39,7 @@ public abstract class Task {
         // We have a sub task
         if (newSub != null) {
             if (!newSub.isEqual(_sub)) {
-                if (canBeInterrupted(mod, _sub, newSub)) {
+                if (_sub == null || _sub.canBeInterruptedBy(mod, newSub)) {
                     // Our sub task is new
                     if (_sub != null) {
                         // Our previous sub must be interrupted.
@@ -55,7 +55,7 @@ public abstract class Task {
         } else {
             // We are null
             if (_sub != null) {
-                if (canBeInterrupted(mod, _sub, null)) {
+                if (_sub.canBeInterruptedBy(mod, null)) {
                     _sub.stop(mod);
                     _sub = null;
                 } else {
@@ -176,9 +176,8 @@ public abstract class Task {
      * Sometimes a task just can NOT be bothered to be interrupted right now.
      * For instance, if we're in mid air and MUST complete the parkour movement.
      */
-    private boolean canBeInterrupted(Vibrato mod, Task subTask, Task toInterruptWith) {
-        if (subTask == null) return true;
-        return !subTask.thisOrChildSatisfies(task ->
-                task instanceof ITaskCanForce canForce && canForce.shouldForce(mod, toInterruptWith));
+    public boolean canBeInterruptedBy(Vibrato mod, Task candidate) {
+        return !thisOrChildSatisfies(task ->
+                task instanceof ITaskCanForce canForce && canForce.shouldForce(mod, candidate));
     }
 }

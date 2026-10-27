@@ -32,7 +32,7 @@ public abstract class SingleTaskChain extends TaskChain {
         }
 
         if (_mainTask != null) {
-            if ((_mainTask.isFinished(mod)) || _mainTask.stopped()) {
+            if (_mainTask.stopped() || (_mainTask.isFinished(mod) && _mainTask.canBeInterruptedBy(mod, null))) {
                 onTaskFinish(mod);
             } else {
                 _mainTask.tick(mod, this);
