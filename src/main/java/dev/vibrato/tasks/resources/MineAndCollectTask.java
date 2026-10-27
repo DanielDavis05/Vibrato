@@ -13,6 +13,7 @@ import dev.vibrato.util.MiningRequirement;
 import dev.vibrato.util.slots.PlayerSlot;
 import dev.vibrato.util.time.TimerGame;
 import dev.vibrato.util.helpers.ItemHelper;
+import dev.vibrato.util.helpers.LookHelper;
 import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
@@ -183,7 +184,15 @@ public class MineAndCollectTask extends ResourceTask {
 
         @Override
         protected Optional<Object> getClosestTo(Vibrato mod, Vec3d pos) {
+            // Prefer a nearby block we can already see and mine without removing our own footing.
+            // This is only a preference: distant or buried ore remains eligible in the fallback.
+            BlockPos feet = mod.getPlayer().getBlockPos();
             Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
+                if (check.getX() == feet.getX() && check.getZ() == feet.getZ() && check.getY() < feet.getY()) return false;
+                if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
+                return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
+            }, _blocks);
+            if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
                 if (_blacklist.contains(check)) return false;
                 return WorldHelper.canBreak(mod, check);
             }, _blocks);
