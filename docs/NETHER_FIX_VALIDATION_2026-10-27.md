@@ -1,48 +1,64 @@
-# Nether dependency recovery, 2026-10-27
+# Nether recovery fixes and validation — 2026-10-27
 
-This follows `NETHER_RUN_2026-10-27.md`. The original `human` save is not available on this machine; the historical session cannot be reproduced exactly here.
+The reported underground log loop is fixed in the controlled reproduction. The final cave request completed in 33.200 seconds without navigation recovery; the original current-master baseline cancelled after 109.384 seconds. A separate surface fixture collected fluids, cast and lit a portal, and entered the Nether in 89.835 seconds with full health.
 
-## Current-master baseline
+Work is unified on `master`. The original `human` save was not available on this machine. These results use disposable survival copies of seed 424242, with peaceful difficulty and commands confined to fixture preparation. They are individual runs, not an exact reproduction of the unavailable terrain. Movement recordings in `/opt/traces` are for comparing human and bot movement; the save is needed to repeat the exact terrain.
 
-Built detached `1e9fa30` against the existing sibling Baritone checkout. In a disposable survival copy of seed 424242, made a stone chamber at y61–64 with surface cover at y79, teleported the player to (140.5,62,20.5), and supplied a stone pickaxe and 64 cobblestone before requesting `@get oak_log 1`. Setup commands were confined to the disposable fixture. Navigation debug and a position recording were enabled.
+## Results
 
-The bot selected a surface trunk, then a nearby natural trunk at (126,73,14). It paced at the same ascent, fired three JUMP recoveries followed by two BACK_OFF_AND_REPATH recoveries, and cancelled the request after 109.384 seconds. This reproduces the cancellation and unproductive approach problem on current master, though it is not the original world or full Nether chain.
+| Check | Observed result |
+| --- | --- |
+| Baseline underground `@get oak_log 1`, `1e9fa30` | Paced at an ascent, fired six navigation recoveries, cancelled after 109.384 s. |
+| First bounded-recovery implementation, `f882222` | Escaped and collected a log in 130.382 s. |
+| Direct engine placement fix, `e816bfe` | Collected a log in 32.706 s, no navigation recoveries. |
+| Final code, `ebef8c9`, same cave setup and bot configuration | Collected a log in 33.200 s, no navigation recoveries. |
+| Independent dirt-ceiling escape, no pickaxe | Climbed from y61 to y80, waited for a grounded landing; completed in 70.497 s. |
+| Water above the escape column | Reported bounded failure after its walk attempt; did not dig into the water. |
+| Final non-hotbar recovery placement | Dirt from slot 27 placed in 0.816 s; cobblestone from slot 28 placed in 0.031 s. Server block assertions passed; saved inventory retained all eight protected dirt and seven cobblestone. |
+| Native bridge across a five-block gap | Completed in 3.753 s, used placement, finished grounded at y80 with full health. No navigation recovery. |
+| Nether prerequisites | Gathered wood, made a table and furnace, smelted seven iron in one pass, crafted two buckets and ignition. |
+| Final surface portal, `ebef8c9` | Filled buckets from nearby pools, cast all ten frame blocks, lit the portal and entered `minecraft:the_nether` in 89.835 s. Saved health 20; no navigation recovery. One bounded cast reposition occurred. |
 
-An earlier natural-cave smoke check, without the constructed chamber, completed the log request in 60.900 seconds. Neither result establishes universal reachability.
+`./gradlew :test :build`: **594 tests passed**, no failures or skipped tests.
 
-## Changes under validation
+Sibling engine `./gradlew :test :fabric:build -Pavailable_loaders=fabric`: **53 tests passed**, build succeeded.
 
-* Mining exclusions expire. Two related failures temporarily suppress connected vertical logs, without excluding adjacent ores or permanently poisoning global tracking.
-* A persistent 45-second mining approach check requires a better best distance or confirmed excavation. Pacing, changing the target to another block in the same trunk, and navigation interruptions cannot keep renewing it.
-* Surface-log collection can request a bounded escape after a failed approach from deep underground. Escape no longer recursively acquires a wooden pickaxe; it first tries an existing walkable route, then clears safe headroom and physically climbs. Failure is terminal for that escape attempt and is reported as failure by the director.
-* Manual requests receive at most two scoped resource recoveries before cancellation, renewed by completed mining or a new root request. Director step abandonment keeps its existing scope.
-* Recovery selects available cheap blocks from all 36 inventory slots and retains the interrupted parent's protection snapshot. With room, it can collect one reachable safe dirt block. An occupied cursor is preserved. Explicit placement no longer silently substitutes cobblestone or reports the misleading throwaway warning.
+## Changes
 
-The existing development command `@test` has `escape`, `recovery`, and `recovery-protected` cases for exercising these paths. The recovery cases target the block immediately east and below the player; prepare an empty placement spot in a disposable world. The protected case models dirt protection being released by the interrupted parent before the delegate starts.
+* Connected vertical logs share temporary approach failures. A persistent 45-second check requires an improved best distance or confirmed excavation; pacing and interruptions cannot renew it indefinitely. Nearby ores remain independent.
+* Deep surface-log failures can request a bounded escape. Escape avoids recursive wooden-pick acquisition, retains its progress through interruptions, checks liquids/falling blocks, physically ascends and waits for landing at the rim. A fresh attempt replaces a failed instance. A walked exit at a lower altitude can finish legitimately.
+* Before cancelling a manual root request, navigation can ask its deepest resource dependency to try another approach. Two scoped retries are available per root, renewed by completed mining or a new root. Director abandonment retains its step scope.
+* Stalled resource containers are deferred locally without deleting their cached contents. Entering interaction range makes them eligible again. Portal iron is gathered for missing buckets and ignition together.
+* Recovery selects unprotected materials from all 36 main inventory slots and retains the interrupted task's protection snapshot. It can gather one safe adjacent dirt block and preserves an occupied cursor. It equips its material before planning placement.
+* Reachable placement now uses geometric face selection, human camera easing, actual held-item and cursor checks, crouching, collision checks and an exact support-face crosshair check before a throttled native interaction. Movement, obstruction handling and airborne placement still use the native builder.
+* Construction retains a valid actual-inventory material when Baritone's candidate list is temporarily empty. Completed cast placement/removal counts as progress before deciding to wander.
+* General tracking no longer applies mining-only breakability filters to fluid sources and other interaction targets. Actual mining still uses `WorldHelper.canBreak` and the strict native mining search. Tracking refreshes loaded terrain even with a full cache.
+* Capped global results can still omit a nearby fluid source. Bucket collection therefore checks loaded sources within 16 blocks first, caching this local query for half a second. Portal lake selection seeds its normal flood/size check from a local source. Debug fluid traces distinguish raw, cached and direct local results.
+* Trimmed cache indexes can be repaired on reinsertion. Target heuristics now use the planner's vertical direction and floor behavior at negative heights. Active mining can equip an owned hotbar tool if a bucket or block is held, while retaining native choices when a tool is already equipped.
 
-## Verification so far
+## Engine checkout and build
 
-The first fixed run (`f882222`) completed the same chamber log request in 130.382 seconds: the persistent check rejected the paced approach, escape changed from WALK to ASCEND after its 30-second walk limit, and the bot reached y80 and collected an oak log. The baseline cancelled at 109.384 seconds; completion took longer than that earlier cancellation, but the request succeeded.
+The sibling checkout remains in `/opt/Baritone`; existing modifications were preserved. This iteration changed:
 
-A subsequent review tightened ascent completion: the bot must land before advancing a pillar step, retain the original rim height while digging, and distinguish a fresh escape attempt from a failed equal child. A walked exit at a lower altitude can complete after leaving the original column. These refinements are being live-tested.
+* `src/main/java/baritone/pathing/movement/MovementHelper.java`
+* `src/main/java/baritone/process/MineProcess.java`
+* `src/main/java/baritone/process/WorldScanPolicy.java`
+* `src/test/java/baritone/process/WorldScanPolicyTest.java`
 
-`./gradlew :test :build`: 583 tests passed, no failures or skipped tests. Live validation of the changes is in progress; this file will be updated with outcomes and limitations.
+The movement change tests a placement face at the intended geometric rotation when Vibrato's smoother is installed, so the camera can acquire its target. Real crosshair alignment still gates clicks. Native mining keeps its original search constraints and cache threshold.
 
-Two later fixes change the sibling engine. `MovementHelper.java` now tests placement-face geometry independently of the next smoothed camera step; the actual crosshair still gates clicks. `MineProcess.java` adds `searchWorldForTracking`, retaining cached and loaded scanning while omitting mining-only eligibility filters. Vibrato's block tracker uses that method; actual mining still calls `WorldHelper.canBreak` and the existing strict mining search is unchanged.
+The updated engine is required to build this revision and is bundled in the packaged mod. Engine jar SHA-256:
 
-These changes are in `/opt/Baritone/src/main/java/baritone/pathing/movement/MovementHelper.java` and `/opt/Baritone/src/main/java/baritone/process/MineProcess.java`. Existing engine working-tree edits are preserved. The updated engine is required for building this Vibrato revision; it is included in the packaged mod. Engine jar SHA-256: `4061f6ab410a86e826385fff8692f2c8108eb365a5566fdeb188bc53d2b9b59f`.
+`4061f6ab410a86e826385fff8692f2c8108eb365a5566fdeb188bc53d2b9b59f`
 
+A complete engine working-tree source snapshot accompanies the jar. It can be overlaid onto the base checkout recorded in its `SNAPSHOT.json`; it excludes Git metadata and build output. Engine Git publication remains deferred as requested.
 
-## Longer dependency run
+## Reproduction and limits
 
-The first Nether dependency run passed log collection, crafting table and furnace construction, and two-bucket crafting. It then requested a seventh iron ingot for ignition, dug down again, and got stuck retrieving coal from the cached furnace above. The mining-only scoped recovery could not handle that container branch, and the root was cancelled after 224.776 seconds. This was a real remaining failure, not a successful Nether run.
+The evidence bundle contains the exact setup scripts, logs, input/position traces, saved-player summaries and a video of the final cave run. Its `run_case.py` copies `survival-fixed-20261027`, prepares the chamber and supplies a stone pickaxe and 64 cobblestone before the log request. The chamber has cover at y79 and an underground room at y61–64; the player starts at (140.5,62,20.5). The baseline and final cave runs use the same bot ID and seed.
 
-The follow-up batches iron for missing buckets plus ignition before crafting (7 ingots for two missing buckets without an igniter), and extends scoped recovery to a resource task's current container. A stalled container is deferred locally, retaining its cached contents; entering interaction range enables it again. Other containers and normal resource collection remain available. The global two-recovery limit still applies.
+`surface_portal.py` prepares a larger stable surface, water and lava pools, then supplies two empty buckets, ignition, a pickaxe and 64 cobblestone. Collection, casting, clearing, lighting and entry are performed by the task. Prerequisite acquisition was checked separately; the final surface test does not claim an uninterrupted empty-inventory Nether run.
 
+Earlier unsuccessful runs are retained as failure history. They exposed the extra iron/fuel trip, inaccessible furnace retrieval, invisible/capped source search, and upper support placement. A timed-out or cancelled run is not counted as successful merely because `wait-idle` returned.
 
-The first complete portal fixture reached buckets and ignition with the iron batched in one pass, then spent its remaining budget searching for fluids. Analysis found that the general tracker used mining search, discarding sources the liquid task protects from breaking. Its 300-second scripted budget expired; it did not enter the Nether. The tracking-specific engine path addresses that source discovery error. The next engine fixture and portal continuation are recorded separately, rather than counting this timed-out run as success.
-
-
-Later surface checks confirmed a second tracking issue: a full cache of distant underground lava could skip the loaded-chunk scan. Tracking now always merges a fresh loaded scan before sorting/limiting; native mining retains its existing cache threshold. The engine adds `src/main/java/baritone/process/WorldScanPolicy.java` and `src/test/java/baritone/process/WorldScanPolicyTest.java`. The engine suite now has 53 passing tests; Vibrato retains 589 passing tests.
-
-The portal task now gives its first lava scan a bounded 0.5-second grace instead of immediately wandering while the scan starts. Active breaking can equip an owned hotbar tool when a bucket or block is held, while leaving native tool choices intact when a tool is already equipped. The stable surface casting fixture is being rerun with these changes.
+Escape remains bounded when tools, scaffold materials or a safe route are unavailable. The original `human` terrain and a full uninterrupted empty-inventory Nether run remain useful follow-up checks.
