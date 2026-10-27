@@ -19,6 +19,7 @@ import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolItem;
 import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.Optional;
@@ -66,12 +67,14 @@ public class PlayerInteractionFixChain extends TaskChain {
                 Optional<Slot> bestToolSlot = StorageHelper.getBestToolSlot(mod, state);
                 Slot currentEquipped = PlayerSlot.getEquipSlot();
 
-                // if baritone is running, only accept tools OUTSIDE OF HOTBAR!
-                // Baritone will take care of tools inside the hotbar.
+                // While pathing, preserve Baritone's choice when a tool is already held.
+                // A non-tool held during active mining still needs the best available tool.
                 if (bestToolSlot.isPresent() && !bestToolSlot.get().equals(currentEquipped)) {
                     // ONLY equip if the item class is STRICTLY different (otherwise we swap around a lot)
                     if (StorageHelper.getItemStackInSlot(currentEquipped).getItem() != StorageHelper.getItemStackInSlot(bestToolSlot.get()).getItem()) {
-                        boolean isAllowedToManage = !mod.getClientBaritone().getPathingBehavior().isPathing() || bestToolSlot.get().getInventorySlot() >= 9;
+                        boolean isAllowedToManage = !mod.getClientBaritone().getPathingBehavior().isPathing()
+                                || bestToolSlot.get().getInventorySlot() >= 9
+                                || !(StorageHelper.getItemStackInSlot(currentEquipped).getItem() instanceof ToolItem);
                         if (isAllowedToManage) {
                             Debug.logInternal("Found better tool in inventory, equipping.");
                             mod.getSlotHandler().forceEquipSlot(bestToolSlot.get());

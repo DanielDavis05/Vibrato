@@ -30,7 +30,7 @@ A subsequent review tightened ascent completion: the bot must land before advanc
 
 Two later fixes change the sibling engine. `MovementHelper.java` now tests placement-face geometry independently of the next smoothed camera step; the actual crosshair still gates clicks. `MineProcess.java` adds `searchWorldForTracking`, retaining cached and loaded scanning while omitting mining-only eligibility filters. Vibrato's block tracker uses that method; actual mining still calls `WorldHelper.canBreak` and the existing strict mining search is unchanged.
 
-These changes are in `/opt/Baritone/src/main/java/baritone/pathing/movement/MovementHelper.java` and `/opt/Baritone/src/main/java/baritone/process/MineProcess.java`. Existing engine working-tree edits are preserved. The updated engine is required for building this Vibrato revision; it is included in the packaged mod. Engine jar SHA-256: `305e7fcb4de9efa864b024e354e75e81f4cf0a6efe8bca376a1fe70c1c7c6bf9`.
+These changes are in `/opt/Baritone/src/main/java/baritone/pathing/movement/MovementHelper.java` and `/opt/Baritone/src/main/java/baritone/process/MineProcess.java`. Existing engine working-tree edits are preserved. The updated engine is required for building this Vibrato revision; it is included in the packaged mod. Engine jar SHA-256: `4061f6ab410a86e826385fff8692f2c8108eb365a5566fdeb188bc53d2b9b59f`.
 
 
 ## Longer dependency run
@@ -41,3 +41,8 @@ The follow-up batches iron for missing buckets plus ignition before crafting (7 
 
 
 The first complete portal fixture reached buckets and ignition with the iron batched in one pass, then spent its remaining budget searching for fluids. Analysis found that the general tracker used mining search, discarding sources the liquid task protects from breaking. Its 300-second scripted budget expired; it did not enter the Nether. The tracking-specific engine path addresses that source discovery error. The next engine fixture and portal continuation are recorded separately, rather than counting this timed-out run as success.
+
+
+Later surface checks confirmed a second tracking issue: a full cache of distant underground lava could skip the loaded-chunk scan. Tracking now always merges a fresh loaded scan before sorting/limiting; native mining retains its existing cache threshold. The engine adds `src/main/java/baritone/process/WorldScanPolicy.java` and `src/test/java/baritone/process/WorldScanPolicyTest.java`. The engine suite now has 53 passing tests; Vibrato retains 589 passing tests.
+
+The portal task now gives its first lava scan a bounded 0.5-second grace instead of immediately wandering while the scan starts. Active breaking can equip an owned hotbar tool when a bucket or block is held, while leaving native tool choices intact when a tool is already equipped. The stable surface casting fixture is being rerun with these changes.

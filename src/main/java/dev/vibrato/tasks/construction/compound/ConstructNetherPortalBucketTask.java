@@ -66,6 +66,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     private static final Vec3i PORTALABLE_REGION_SIZE = new Vec3i(4, 6, 6);
     private static final Vec3i PORTAL_ORIGIN_RELATIVE_TO_REGION = new Vec3i(1, 0, 2);
     private final TimerGame _lavaSearchTimer = new TimerGame(5);
+    private final TimerGame _initialLavaSearchGrace = new TimerGame(0.5);
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker(5);
     private final TimeoutWanderTask _wanderTask = new TimeoutWanderTask(25);
     // Stored here to cache lava blacklist
@@ -75,7 +76,9 @@ public class ConstructNetherPortalBucketTask extends Task {
 
     //private BlockPos _currentLavaTarget = null;
     private BlockPos _currentDestroyTarget = null;
-    private boolean _firstSearch = false;
+    // Persists across interruptions: do not restart the grace period on resume.
+    private boolean _initialLavaSearchStarted = false;
+    private boolean _initialLavaSearchFinished = false;
 
     @Override
     protected void onStart(Vibrato mod) {
@@ -180,27 +183,46 @@ public class ConstructNetherPortalBucketTask extends Task {
             }
 
             boolean foundSpot = false;
+            boolean firstLookup = !_initialLavaSearchStarted;
+            if (firstLookup) {
+                _initialLavaSearchStarted = true;
+                _initialLavaSearchGrace.reset();
+            }
+            boolean initialSearch = !_initialLavaSearchFinished;
+            boolean graceExpired = initialSearch && _initialLavaSearchGrace.elapsed();
 
-            if (_firstSearch || _lavaSearchTimer.elapsed()) {
-                _firstSearch = false;
-                _lavaSearchTimer.reset();
-                Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
+            if (initialSearch || _lavaSearchTimer.elapsed()) {
+                if (firstLookup || !initialSearch || graceExpired) {
+                    Debug.logMessage("(Searching for lava lake with portalable spot nearby...)");
+                }
+                if (!initialSearch || graceExpired) {
+                    _initialLavaSearchFinished = true;
+                    _lavaSearchTimer.reset();
+                }
                 BlockPos lavaPos = findLavaLake(mod, mod.getPlayer().getBlockPos());
                 if (lavaPos != null) {
                     // We have a lava lake, set our portal origin!
                     BlockPos foundPortalRegion = getPortalableRegion(mod, lavaPos, mod.getPlayer().getBlockPos(), new Vec3i(-1, 0, 0), PORTALABLE_REGION_SIZE, 20);
                     if (foundPortalRegion == null) {
-                        Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
+                        if (!initialSearch || graceExpired) {
+                            Debug.logWarning("Failed to find portalable region nearby. Consider increasing the search timeout range");
+                        }
                     } else {
                         _portalOrigin = foundPortalRegion.add(PORTAL_ORIGIN_RELATIVE_TO_REGION);
+                        _initialLavaSearchFinished = true;
+                        _lavaSearchTimer.reset();
                         foundSpot = true;
                     }
-                } else {
+                } else if (!initialSearch || graceExpired) {
                     Debug.logMessage("(lava lake not found)");
                 }
             }
 
             if (!foundSpot) {
+                if (initialSearch && !graceExpired) {
+                    setDebugState("Waiting briefly for the initial lava scan");
+                    return null;
+                }
                 setDebugState("(timeout: Looking for lava lake)");
                 return new TimeoutWanderTask(100);
             }
