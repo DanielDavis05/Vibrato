@@ -3,6 +3,7 @@ package dev.vibrato.director;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.combat.BowFightTask;
+import dev.vibrato.tasks.combat.CombatBudgets;
 import dev.vibrato.tasks.combat.ClearNearbyHostilesTask;
 import dev.vibrato.tasks.combat.DefendPositionTask;
 import dev.vibrato.tasks.combat.FarmMobDropsTask;
@@ -42,7 +43,7 @@ public final class CombatActivities {
         registry.register(spec("slay_mob", FeatureArea.COMBAT, Set.of(), Set.of(),
                 List.of(ParamSpec.choice("mob", HOSTILE_MOBS.toArray(String[]::new)), ParamSpec.ints("count", 1, 12)),
                 v -> new SlayMobTask(mobType(v.getString("mob")), v.getInt("count")),
-                v -> Duration.ofSeconds(SlayMobTask.timeLimitSeconds(v.getInt("count")))));
+                v -> Duration.ofSeconds(CombatBudgets.slayTimeLimitSeconds(v.getInt("count")))));
 
         registry.register(spec("hunt_animals", FeatureArea.GATHER, Set.of(), Set.of(),
                 List.of(ParamSpec.choice("animal", ANIMALS.toArray(String[]::new)), ParamSpec.ints("count", 1, 16)),
@@ -78,10 +79,6 @@ public final class CombatActivities {
                 Set.of(Fact.of("armor:netherite")), List.of(),
                 v -> new UpgradeGearTask(GearTier.NETHERITE),
                 v -> Duration.ofMinutes(20)));
-
-        registry.register(spec("get_shield", FeatureArea.GEAR, Set.of(), Set.of(Fact.has("shield")), List.of(),
-                v -> TaskCatalogue.getItemTask("shield", 1),
-                v -> Duration.ofMinutes(4)));
 
         registry.register(spec("get_weapon", FeatureArea.GEAR, Set.of(), Set.of(),
                 List.of(ParamSpec.choice("tier", "stone", "iron", "diamond")),

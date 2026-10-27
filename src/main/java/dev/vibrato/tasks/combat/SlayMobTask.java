@@ -50,10 +50,13 @@ public class SlayMobTask extends Task {
     private static final double CHARGE_RANGE = 4;
     private static final int ZIGZAG_TICKS = 12;
 
-    private static final Item[] WEAPONS = new Item[]{
-            Items.NETHERITE_SWORD, Items.DIAMOND_SWORD, Items.IRON_SWORD, Items.STONE_SWORD, Items.WOODEN_SWORD, Items.GOLDEN_SWORD,
-            Items.NETHERITE_AXE, Items.DIAMOND_AXE, Items.IRON_AXE, Items.STONE_AXE, Items.WOODEN_AXE, Items.GOLDEN_AXE
-    };
+    /** Kept in a holder so that loading SlayMobTask (for its constants) never touches the item registry. */
+    private static final class Weapons {
+        static final Item[] PREFERRED = new Item[]{
+                Items.NETHERITE_SWORD, Items.DIAMOND_SWORD, Items.IRON_SWORD, Items.STONE_SWORD, Items.WOODEN_SWORD, Items.GOLDEN_SWORD,
+                Items.NETHERITE_AXE, Items.DIAMOND_AXE, Items.IRON_AXE, Items.STONE_AXE, Items.WOODEN_AXE, Items.GOLDEN_AXE
+        };
+    }
 
     private final EntityType<?> _type;
     private final MobKind _kind;
@@ -73,12 +76,7 @@ public class SlayMobTask extends Task {
         _type = type;
         _kind = kindOf(type);
         _count = count;
-        _timeLimit = new TimerGame(timeLimitSeconds(count));
-    }
-
-    /** Scales with the count; the activity budget matches this so the director never cuts a task short. */
-    public static int timeLimitSeconds(int count) {
-        return 180 + 40 * count;
+        _timeLimit = new TimerGame(CombatBudgets.slayTimeLimitSeconds(count));
     }
 
     /** Whether the task gave up (time out or too hurt) rather than reaching its kill count. */
@@ -231,7 +229,7 @@ public class SlayMobTask extends Task {
     }
 
     private void equipWeapon(Vibrato mod) {
-        mod.getSlotHandler().forceEquipItem(WEAPONS);
+        mod.getSlotHandler().forceEquipItem(Weapons.PREFERRED);
     }
 
     private Snapshot snapshot(Vibrato mod) {
