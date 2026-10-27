@@ -47,6 +47,8 @@ final class ProtocolScenarioPreparation {
             case "structure" -> prepareBlock(client, mod, Blocks.STRUCTURE_BLOCK, StructureBlockScreen.class);
             case "beacon" -> prepareBeacon(client, mod);
             case "crafter_slot" -> prepareBlock(client, mod, Blocks.CRAFTER, CrafterScreen.class);
+            case "rename_item" -> prepareWorkstationInput(client, mod, Blocks.ANVIL, AnvilScreen.class, false);
+            case "container_button" -> prepareWorkstationInput(client, mod, Blocks.STONECUTTER, StonecutterScreen.class, true);
             case "use_block" -> prepareBlock(client, mod, Blocks.CHEST, GenericContainerScreen.class);
             case "update_sign" -> prepareBlock(client, mod, Blocks.OAK_SIGN, SignEditScreen.class);
             case "attack_block" -> prepareAttackBlock(client, mod);
@@ -114,6 +116,25 @@ final class ProtocolScenarioPreparation {
         if (client.player.squaredDistanceTo(entity) > 25.0) return false;
         LookHelper.lookAtInstant(mod, entity.getBoundingBox().getCenter());
         client.interactionManager.interactEntity(client.player, entity, Hand.MAIN_HAND);
+        return false;
+    }
+
+    private boolean prepareWorkstationInput(MinecraftClient client, Vibrato mod, Block block,
+                                            Class<?> screenType, boolean stoneOnly) {
+        if (!screenType.isInstance(client.currentScreen)) return prepareBlock(client, mod, block, screenType);
+        var screen = (HandledScreen<?>) client.currentScreen;
+        var handler = screen.getScreenHandler();
+        if (handler.getSlot(0).hasStack()) return true;
+        if (!ready() || !handler.getCursorStack().isEmpty()) return false;
+        for (int i = 2; i < handler.slots.size(); i++) {
+            var stack = handler.getSlot(i).getStack();
+            if (handler.getSlot(i).inventory == client.player.getInventory()
+                    && !stack.isEmpty() && (!stoneOnly || stack.isOf(Items.STONE))) {
+                client.interactionManager.clickSlot(handler.syncId, i, 0, SlotActionType.PICKUP, client.player);
+                client.interactionManager.clickSlot(handler.syncId, 0, 0, SlotActionType.PICKUP, client.player);
+                return false;
+            }
+        }
         return false;
     }
 

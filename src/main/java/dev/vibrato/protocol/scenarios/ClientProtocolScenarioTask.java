@@ -13,6 +13,9 @@ import net.minecraft.client.gui.screen.ingame.CrafterScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.screen.ingame.MerchantScreen;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
+import net.minecraft.client.gui.screen.ingame.AnvilScreen;
+import net.minecraft.client.gui.screen.ingame.StonecutterScreen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
@@ -83,6 +86,8 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("inventory_click", new Requirement("Open player inventory with an item", List.of("Click Container"))),
             Map.entry("close_container", new Requirement("Open player inventory", List.of("Close Container"))),
             Map.entry("place_recipe", new Requirement("Open player inventory with the crafting table recipe unlocked", List.of("Place Recipe"))),
+            Map.entry("rename_item", new Requirement("Open a fixture anvil with an input item", List.of("Rename Item"))),
+            Map.entry("container_button", new Requirement("Open fixture stonecutter with stone input", List.of("Click Container Button"))),
             Map.entry("select_trade", new Requirement("Open fixture villager trade screen", List.of("Select Trade"))),
             Map.entry("boat", new Requirement("Ride and steer fixture boat", List.of("Move Vehicle", "Paddle Boat", "Player Input"))),
             Map.entry("abilities", new Requirement("Join a world with flight permitted", List.of("Player Abilities (serverbound)")))
@@ -104,7 +109,7 @@ public final class ClientProtocolScenarioTask extends Task {
     public static String fixtureSetup(String action) {
         requirement(action);
         return switch (action) {
-            case "command_block", "jigsaw", "jigsaw_generate", "structure", "beacon", "crafter_slot", "query_block", "use_block", "attack_block", "update_sign" -> "blocks";
+            case "command_block", "jigsaw", "jigsaw_generate", "structure", "beacon", "crafter_slot", "query_block", "use_block", "attack_block", "update_sign", "rename_item", "container_button" -> "blocks";
             case "query_entity", "spectator_teleport", "command_minecart", "interact_entity", "attack_entity", "select_trade" -> "entities";
             case "boat" -> "watercraft";
             case "book_edit", "book_sign", "pick_item", "creative_slot", "recipe_seen", "use_item", "place_recipe" -> "inventory";
@@ -116,7 +121,7 @@ public final class ClientProtocolScenarioTask extends Task {
     public static GameMode fixtureGameMode(String action) {
         requirement(action);
         return switch (action) {
-            case "inventory_click", "close_container", "place_recipe", "recipe_book", "recipe_seen", "boat", "select_trade" -> GameMode.SURVIVAL;
+            case "inventory_click", "close_container", "place_recipe", "recipe_book", "recipe_seen", "boat", "select_trade", "rename_item", "container_button" -> GameMode.SURVIVAL;
             case "spectator_teleport" -> GameMode.SPECTATOR;
             case "command_block", "command_minecart", "jigsaw", "jigsaw_generate", "structure", "creative_slot", "abilities" -> GameMode.CREATIVE;
             default -> null;
@@ -282,6 +287,25 @@ public final class ClientProtocolScenarioTask extends Task {
                 var recipe = client.getNetworkHandler().getRecipeManager().get(Identifier.of("minecraft", "crafting_table"));
                 if (recipe.isEmpty() || !client.player.getRecipeBook().contains(recipe.get())) yield false;
                 client.interactionManager.clickRecipe(screen.getScreenHandler().syncId, recipe.get(), false);
+                yield true;
+            }
+            case "rename_item" -> {
+                if (!(client.currentScreen instanceof AnvilScreen screen)) yield false;
+                boolean changed = false;
+                for (var child : screen.children()) {
+                    if (child instanceof TextFieldWidget field && field.isActive()) {
+                        field.setText("Protocol fixture item");
+                        changed = true;
+                        break;
+                    }
+                }
+                yield changed;
+            }
+            case "container_button" -> {
+                if (!(client.currentScreen instanceof StonecutterScreen screen)) yield false;
+                var handler = screen.getScreenHandler();
+                if (handler.getAvailableRecipeCount() == 0 || !handler.onButtonClick(client.player, 0)) yield false;
+                client.interactionManager.clickButton(handler.syncId, 0);
                 yield true;
             }
             case "select_trade" -> {
