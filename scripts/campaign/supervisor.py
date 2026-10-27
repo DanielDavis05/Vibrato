@@ -135,7 +135,7 @@ def run(args):
                    '-Dvibrato.autostart=false', '-Dvibrato.perf=low', '-Dvibrato.campaignTelemetry=true', f'-Dvibrato.script={script}']
             options = {'username': bot, 'uuid': hashlib.md5(('OfflinePlayer:' + bot).encode()).hexdigest(),
                        'token':'0', 'gameDirectory':str(path), 'executablePath':'java', 'jvmArguments':jvm,
-                       'resolutionWidth':'640', 'resolutionHeight':'360'}
+                       'customResolution':True, 'resolutionWidth':'640', 'resolutionHeight':'360'}
             cmd = mll.command.get_minecraft_command(version, str(mc), options)
             output = (path / 'client.log').open('w')
             env = {**os.environ, 'DISPLAY':args.display, 'LIBGL_ALWAYS_SOFTWARE':'1', 'ALSOFT_DRIVERS':'null'}
@@ -204,7 +204,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--install', required=True, help='fleet install root with minecraft/ and mods/')
     p.add_argument('--campaign', required=True, choices=['round0'])
-    p.add_argument('--label', required=True, choices=['single', 'four', 'six'])
+    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'four', 'six'])
     p.add_argument('--count', type=int, required=True, choices=[1, 4, 6])
     p.add_argument('--budget', type=int, default=60)
     p.add_argument('--startup-timeout', type=int, default=180)
