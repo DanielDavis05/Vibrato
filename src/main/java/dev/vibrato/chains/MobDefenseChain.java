@@ -395,8 +395,14 @@ public class MobDefenseChain extends SingleTaskChain {
                 double horizontalDistanceSq = delta.x * delta.x + delta.z * delta.z;
                 double verticalDistance = Math.abs(delta.y);
 
-                if (horizontalDistanceSq < ARROW_KEEP_DISTANCE_HORIZONTAL*ARROW_KEEP_DISTANCE_HORIZONTAL && verticalDistance < ARROW_KEEP_DISTANCE_VERTICAL)
+                if (horizontalDistanceSq < ARROW_KEEP_DISTANCE_HORIZONTAL*ARROW_KEEP_DISTANCE_HORIZONTAL && verticalDistance < ARROW_KEEP_DISTANCE_VERTICAL) {
+                    if (Boolean.getBoolean("vibrato.debugNavigation") && mod.getPlayer().age % 5 == 0) {
+                        System.out.printf(java.util.Locale.ROOT,
+                                "[NavTrace] projectile=%s pos=%s velocity=%s nearest=%s player=%s%n",
+                                projectile.projectileType, projectile.position, projectile.velocity, expectedHit, mod.getPlayer().getPos());
+                    }
                     return true;
+                }
             }
         } catch (ConcurrentModificationException e) {
             Debug.logWarning("Weird exception caught and ignored while checking for nearby projectiles.");

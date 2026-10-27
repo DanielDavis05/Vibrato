@@ -21,44 +21,43 @@ public class ProjectileHelper {
         return !entity.hasNoGravity();
     }
 
-    // If we shoot on a 2d plane, what is the 2d point on that trajectory closest to our player pos?
-    private static Vec3d getClosestPointOnFlatLine(double shootX, double shootZ, double velX, double velZ, double playerX, double playerZ) {
-        double deltaX = playerX - shootX,
-                deltaZ = playerZ - shootZ;
-        // Did da math I am smurt boi who knows basic calculus
-        double t = ((velX * deltaX) + (velZ * deltaZ)) / (velX * velX + velZ * velZ);
+    /** How far ahead to consider a projectile, in game ticks. */
+    public static final double DODGE_HORIZON_TICKS = 40;
+    private static final double MIN_HORIZONTAL_SPEED_SQUARED = 1.0e-8;
 
-        double hitX = shootX + velX * t,
-                hitZ = shootZ + velZ * t;
-
-        return new Vec3d(hitX, 0, hitZ);
+    private static double horizontalApproachTime(Vec3d origin, Vec3d velocity, Vec3d target) {
+        double speedSquared = velocity.x * velocity.x + velocity.z * velocity.z;
+        if (speedSquared < MIN_HORIZONTAL_SPEED_SQUARED) return 0;
+        double time = (velocity.x * (target.x - origin.x) + velocity.z * (target.z - origin.z)) / speedSquared;
+        return Math.max(0, Math.min(DODGE_HORIZON_TICKS, time));
     }
 
     public static double getFlatDistanceSqr(double shootX, double shootZ, double velX, double velZ, double playerX, double playerZ) {
-        return getClosestPointOnFlatLine(shootX, shootZ, velX, velZ, playerX, playerZ).squaredDistanceTo(playerX, 0, playerZ);
+        Vec3d origin = new Vec3d(shootX, 0, shootZ);
+        Vec3d velocity = new Vec3d(velX, 0, velZ);
+        Vec3d target = new Vec3d(playerX, 0, playerZ);
+        double time = horizontalApproachTime(origin, velocity, target);
+        return origin.add(velocity.multiply(time)).squaredDistanceTo(target);
     }
 
-    private static double getArrowHitHeight(double gravity, double horizontalVel, double verticalVel, double initialHeight, double distanceTraveled) {
-        double time = distanceTraveled / horizontalVel;
-        return initialHeight - (verticalVel * time) - 0.5 * (gravity * time * time);
-    }
-
-    /**
-     * Calculates where we think an arrow will "hit" us, or at least where it will be at its closest.
-     * Does so by figuring out the closest X-Z coordinate of the arrow's trajectory and then using the height
-     * of the arrow when it reaches that point as the result's Y value.
-     */
+    /** Predicts the nearest horizontal encounter on the future trajectory, bounded in time.
+     * For nearly vertical shots, choose the time of nearest vertical approach instead. */
     public static Vec3d calculateArrowClosestApproach(Vec3d shootOrigin, Vec3d shootVelocity, double yGravity, Vec3d playerOrigin) {
-        Vec3d flatEncounter = getClosestPointOnFlatLine(shootOrigin.x, shootOrigin.z, shootVelocity.x, shootVelocity.z, playerOrigin.x, playerOrigin.z);
-        double encounterDistanceTraveled = (flatEncounter.subtract(shootOrigin.x, flatEncounter.y, shootOrigin.z)).length();
-
-        double horizontalVel = Math.sqrt(shootVelocity.x * shootVelocity.x + shootVelocity.z * shootVelocity.z);
-        double verticalVel = shootVelocity.y;
-        double initialHeight = shootOrigin.y;
-
-        double hitHeight = getArrowHitHeight(yGravity, horizontalVel, verticalVel, initialHeight, encounterDistanceTraveled);
-
-        return new Vec3d(flatEncounter.x, hitHeight, flatEncounter.z);
+        double time = horizontalApproachTime(shootOrigin, shootVelocity, playerOrigin);
+        if (shootVelocity.x * shootVelocity.x + shootVelocity.z * shootVelocity.z < MIN_HORIZONTAL_SPEED_SQUARED) {
+            double best = Math.abs(shootOrigin.y - playerOrigin.y);
+            // Sampling half ticks handles vertical shots and avoids division by zero.
+            for (double t = 0.5; t <= DODGE_HORIZON_TICKS; t += 0.5) {
+                double distance = Math.abs(shootOrigin.y + shootVelocity.y * t - 0.5 * yGravity * t * t - playerOrigin.y);
+                if (distance < best) {
+                    best = distance;
+                    time = t;
+                }
+            }
+        }
+        return new Vec3d(shootOrigin.x + shootVelocity.x * time,
+                shootOrigin.y + shootVelocity.y * time - 0.5 * yGravity * time * time,
+                shootOrigin.z + shootVelocity.z * time);
     }
 
     public static Vec3d calculateArrowClosestApproach(CachedProjectile projectile, Vec3d pos) {

@@ -43,10 +43,7 @@ public class GoalDodgeProjectiles implements Goal {
             for (CachedProjectile projectile : projectiles) {
                 if (isInvalidProjectile(projectile)) continue;
                 try {
-                    if (projectile.needsToRecache()) {
-                        projectile.setCacheHit(ProjectileHelper.calculateArrowClosestApproach(projectile, p));
-                    }
-                    Vec3d hit = projectile.getCachedHit();
+                    Vec3d hit = ProjectileHelper.calculateArrowClosestApproach(projectile, p);
                     //Debug.logMessage("Hit Delta: " + p.subtract(hit));
 
                     if (isHitCloseEnough(hit, p)) return false;
@@ -73,10 +70,7 @@ public class GoalDodgeProjectiles implements Goal {
             for (CachedProjectile projectile : projectiles) {
                 if (isInvalidProjectile(projectile)) continue;
 
-                if (projectile.needsToRecache()) {
-                    projectile.setCacheHit(ProjectileHelper.calculateArrowClosestApproach(projectile, p));
-                }
-                Vec3d hit = projectile.getCachedHit();
+                Vec3d hit = ProjectileHelper.calculateArrowClosestApproach(projectile, p);
 
                 double arrowPenalty = ProjectileHelper.getFlatDistanceSqr(projectile.position.x, projectile.position.z, projectile.velocity.x, projectile.velocity.z, p.x, p.z);
                 //double arrowCost = hit.squaredDistanceTo(p); //Math.pow(p.x - hit.x, 2) + Math.pow(p.z - hit.z, 2);
