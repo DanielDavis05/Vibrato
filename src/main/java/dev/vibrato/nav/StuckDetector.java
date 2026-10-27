@@ -57,7 +57,7 @@ public final class StuckDetector {
                 return StuckState.OSCILLATING;
             }
             if (hasWindow(_config.stationaryTicks())
-                    && horizontalDistance(ago(_config.stationaryTicks() - 1), s) < _config.stationaryMinMove()) {
+                    && distance3d(ago(_config.stationaryTicks() - 1), s) < _config.stationaryMinMove()) {
                 return StuckState.STATIONARY_WITH_INTENT;
             }
         }
@@ -123,6 +123,12 @@ public final class StuckDetector {
 
     private static int cell(double coordinate) {
         return (int) Math.floor(coordinate);
+    }
+
+    /** Vertical movement counts too, so a pillar (jump, place, repeat) is progress rather than standing still. */
+    private static double distance3d(MotionSample a, MotionSample b) {
+        double dy = a.y() - b.y();
+        return Math.sqrt(dy * dy + Math.pow(a.x() - b.x(), 2) + Math.pow(a.z() - b.z(), 2));
     }
 
     private static double horizontalDistance(MotionSample a, MotionSample b) {

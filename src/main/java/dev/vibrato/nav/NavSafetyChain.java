@@ -59,6 +59,7 @@ public class NavSafetyChain extends TaskChain {
     private long _tick;
     private Task _watchedTask;
     private int _watchedSerial;
+    private long _lastBreakTick = NavGate.NEVER;
     private boolean _anchored;
     private double _anchorX;
     private double _anchorZ;
@@ -104,7 +105,16 @@ public class NavSafetyChain extends TaskChain {
         boolean calculating = mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
         boolean wantsToMove = mod.getUserTaskChain().isActive()
                 && mod.getClientBaritone().getPathingBehavior().isPathing() && !calculating;
-        boolean productive = calculating || isBreakingBlock() || mod.getClientBaritone().getBuilderProcess().isActive();
+        // Breaking, placing, an open container and a path being calculated are all work: never stuck, always progress.
+        if (isBreakingBlock()) {
+            _lastBreakTick = _tick;
+        }
+        boolean containerOpen = MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>;
+        boolean productive = calculating || NavGate.withinBreakGrace(_tick, _lastBreakTick) || containerOpen
+                || mod.getClientBaritone().getBuilderProcess().isActive();
+        if (productive) {
+            _waste.onProgress(_tick);
+        }
         MotionSample sample = sample(mod.getPlayer(), wantsToMove, productive);
         StuckState state = _detector.update(sample);
         if (!wantsToMove) {

@@ -124,9 +124,12 @@ public class WorldSurvivalChain extends SingleTaskChain {
             }
         }
         // Stop swimming up if we just swam.
+        // A pillar or bridge in progress owns the jump key; releasing it would break the jump-place rhythm.
         if (_wasAvoidingDrowning && !avoidedDrowning) {
             _wasAvoidingDrowning = false;
-            mod.getInputControls().release(Input.JUMP);
+            if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
+                mod.getInputControls().release(Input.JUMP);
+            }
             //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.JUMP, false);
         }
     }

@@ -11,6 +11,17 @@ class ProductiveMotionTest {
     }
 
     @Test
+    void breakingForTwoHundredTicksWithoutMovingStaysOk() {
+        StuckConfig config = StuckConfig.defaults();
+        StuckDetector detector = new StuckDetector(config);
+        StuckState state = StuckState.OK;
+        for (long tick = 0; tick < 200; tick++) {
+            state = detector.update(sample(tick, true));
+        }
+        assertEquals(StuckState.OK, state);
+    }
+
+    @Test
     void standingStillWhileBreakingOrCalculatingIsNotStuck() {
         StuckConfig config = StuckConfig.defaults();
         StuckDetector detector = new StuckDetector(config);

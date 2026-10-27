@@ -17,6 +17,6 @@ public enum UnstuckAction {
 
     /** Only these actions may cancel the path Baritone is following; the others move the bot around it. */
     public boolean cancelsPath() {
-        return this == BACK_OFF_AND_REPATH || this == ABANDON_TASK || this == ESCAPE_SURFACE;
+        return this == BACK_OFF_AND_REPATH || this == ABANDON_TASK;
     }
 }

@@ -8,6 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NavGateTest {
 
     @Test
+    void breakGraceLastsThreeSecondsAfterTheLastBreakTick() {
+        assertTrue(NavGate.withinBreakGrace(1000, 1000));
+        assertTrue(NavGate.withinBreakGrace(1000 + NavGate.BREAK_GRACE_TICKS, 1000));
+        assertFalse(NavGate.withinBreakGrace(1000 + NavGate.BREAK_GRACE_TICKS + 1, 1000));
+        assertFalse(NavGate.withinBreakGrace(1000, NavGate.NEVER));
+    }
+
+    @Test
     void quietWhenNothingElseOwnsTheBot() {
         assertFalse(NavGate.suppressed(false, false, false, false, false, false));
     }
