@@ -28,7 +28,9 @@ A subsequent review tightened ascent completion: the bot must land before advanc
 
 `./gradlew :test :build`: 583 tests passed, no failures or skipped tests. Live validation of the changes is in progress; this file will be updated with outcomes and limitations.
 
-No sibling Baritone source changes were made for this fix.
+Two later fixes change the sibling engine. `MovementHelper.java` now tests placement-face geometry independently of the next smoothed camera step; the actual crosshair still gates clicks. `MineProcess.java` adds `searchWorldForTracking`, retaining cached and loaded scanning while omitting mining-only eligibility filters. Vibrato's block tracker uses that method; actual mining still calls `WorldHelper.canBreak` and the existing strict mining search is unchanged.
+
+These changes are in `/opt/Baritone/src/main/java/baritone/pathing/movement/MovementHelper.java` and `/opt/Baritone/src/main/java/baritone/process/MineProcess.java`. Existing engine working-tree edits are preserved. The updated engine is required for building this Vibrato revision; it is included in the packaged mod. Engine jar SHA-256: `305e7fcb4de9efa864b024e354e75e81f4cf0a6efe8bca376a1fe70c1c7c6bf9`.
 
 
 ## Longer dependency run
@@ -36,3 +38,6 @@ No sibling Baritone source changes were made for this fix.
 The first Nether dependency run passed log collection, crafting table and furnace construction, and two-bucket crafting. It then requested a seventh iron ingot for ignition, dug down again, and got stuck retrieving coal from the cached furnace above. The mining-only scoped recovery could not handle that container branch, and the root was cancelled after 224.776 seconds. This was a real remaining failure, not a successful Nether run.
 
 The follow-up batches iron for missing buckets plus ignition before crafting (7 ingots for two missing buckets without an igniter), and extends scoped recovery to a resource task's current container. A stalled container is deferred locally, retaining its cached contents; entering interaction range enables it again. Other containers and normal resource collection remain available. The global two-recovery limit still applies.
+
+
+The first complete portal fixture reached buckets and ignition with the iron batched in one pass, then spent its remaining budget searching for fluids. Analysis found that the general tracker used mining search, discarding sources the liquid task protects from breaking. Its 300-second scripted budget expired; it did not enter the Nether. The tracking-specific engine path addresses that source discovery error. The next engine fixture and portal continuation are recorded separately, rather than counting this timed-out run as success.

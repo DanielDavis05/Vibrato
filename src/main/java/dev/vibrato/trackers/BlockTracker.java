@@ -357,7 +357,7 @@ public class BlockTracker extends Tracker {
 
         // The scanning may run asynchronously.
         BlockOptionalMetaLookup boml = new BlockOptionalMetaLookup(blocksToScan);
-        List<BlockPos> found = MineProcess.searchWorld(ctx, boml, _config.maxCacheSizePerBlockType, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        List<BlockPos> found = MineProcess.searchWorldForTracking(ctx, boml, _config.maxCacheSizePerBlockType, Collections.emptyList(), Collections.emptyList());
 
         synchronized (_scanMutex) {
             if (MinecraftClient.getInstance().world != null) {
