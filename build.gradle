@@ -25,7 +25,7 @@ repositories {
         url = "https://babbaj.github.io/maven/"
     }
     flatDir {
-        dirs baritoneDist
+        dirs baritoneArtifactDir
     }
 }
 
@@ -44,7 +44,7 @@ dependencies {
     implementation(include("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}"))
 
     // Vibrato needs a patched baritone (VibratoSettings etc.), see develop.md
-    modImplementation(include(files(new File(baritoneDist, "baritone-unoptimized-fabric-${project.baritone_version}.jar"))))
+    modImplementation(include("baritone:baritone-unoptimized-fabric:${baritoneArtifactVersion}"))
     // Nested inside the baritone jar, but loom doesn't put nested jars of local deps on the dev runtime classpath
     runtimeOnly("dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}")
 

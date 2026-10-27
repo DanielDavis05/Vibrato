@@ -68,3 +68,18 @@ if (!overriddenDist) {
     }
     buildBaritone(digest.digest().encodeHex().toString())
 }
+
+// Give Loom a module artifact for jar-in-jar packaging, with coordinates that
+// change whenever the source jar changes so remapping cannot reuse stale bytes.
+def dependencyJar = new File(baritoneDist, "baritone-unoptimized-fabric-${project.baritone_version}.jar")
+if (!dependencyJar.isFile()) {
+    throw new GradleException("Baritone jar not found: ${dependencyJar}")
+}
+def artifactHash = MessageDigest.getInstance('SHA-256').digest(dependencyJar.bytes).encodeHex().toString().substring(0, 12)
+ext.baritoneArtifactVersion = "${project.baritone_version}-${artifactHash}"
+ext.baritoneArtifactDir = layout.buildDirectory.dir('baritone-dependency').get().asFile
+baritoneArtifactDir.mkdirs()
+def artifactJar = new File(baritoneArtifactDir, "baritone-unoptimized-fabric-${baritoneArtifactVersion}.jar")
+if (!artifactJar.isFile()) {
+    java.nio.file.Files.copy(dependencyJar.toPath(), artifactJar.toPath())
+}
