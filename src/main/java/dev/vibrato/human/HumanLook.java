@@ -39,11 +39,14 @@ public final class HumanLook implements RotationSmoother {
     public Rotation smooth(Rotation previous, Rotation desired) {
         lastPrevious = previous;
         lastDesired = desired;
-        return next(previous, desired);
+        Rotation smoothed = next(previous, desired);
+        LookTrace.observe(previous, desired, smoothed);
+        return smoothed;
     }
 
     @Override
     public void onTick() {
+        LookTrace.endTick();
         if (lastPrevious == null) {
             yaw.rest();
             pitch.rest();
@@ -54,12 +57,19 @@ public final class HumanLook implements RotationSmoother {
         lastPrevious = null;
         lastDesired = null;
         Rotation applied = next(previous, desired);
-        yaw.advance(previous.getYaw(), desired.getYaw(), applied.getYaw());
+        yaw.advance(previous.getYaw(), shortestYawTarget(previous, desired), applied.getYaw());
         pitch.advance(previous.getPitch(), desired.getPitch(), applied.getPitch());
     }
 
+    /**
+     * Baritone's targets are absolute yaw, so the yaw target is taken on the shortest arc from the current yaw.
+     */
+    private static double shortestYawTarget(Rotation previous, Rotation desired) {
+        return previous.getYaw() + Rotation.normalizeYaw(desired.getYaw() - previous.getYaw());
+    }
+
     private Rotation next(Rotation previous, Rotation desired) {
-        double yawNext = yaw.next(previous.getYaw(), desired.getYaw());
+        double yawNext = yaw.next(previous.getYaw(), shortestYawTarget(previous, desired));
         double pitchNext = pitch.next(previous.getPitch(), desired.getPitch());
         return new Rotation((float) yawNext, (float) pitchNext);
     }
