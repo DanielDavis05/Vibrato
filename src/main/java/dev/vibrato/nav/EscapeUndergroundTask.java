@@ -13,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ public class EscapeUndergroundTask extends Task {
     private TimerGame _stepTimer;
     private Task _sub;
     private BlockPos _stepOrigin;
+    private Integer _surfaceY;
+    private BlockPos _startPos;
     private boolean _breaking;
     private boolean _oldBreak, _oldPlace;
     private List<Item> _oldThrowaways;
@@ -50,7 +53,11 @@ public class EscapeUndergroundTask extends Task {
 
     @Override
     protected void onStart(Vibrato mod) {
-        if (_rung == null) setRung(Rung.WALK, "start");
+        if (_rung == null) {
+            _startPos = mod.getPlayer().getBlockPos();
+            _surfaceY = initialSurfaceY(mod);
+            setRung(Rung.WALK, "start; surface height " + _surfaceY);
+        }
         _oldBreak = mod.getClientBaritoneSettings().allowBreak.value;
         _oldPlace = mod.getClientBaritoneSettings().allowPlace.value;
         _oldThrowaways = new ArrayList<>(mod.getClientBaritoneSettings().acceptableThrowawayItems.value);
@@ -90,9 +97,20 @@ public class EscapeUndergroundTask extends Task {
     public boolean hasFailed() { return _rung == Rung.GIVE_UP; }
 
     @Override
-    public boolean isFinished(Vibrato mod) { return hasFailed() || SurfaceAccess.isAtSurface(mod); }
+    public boolean isFinished(Vibrato mod) {
+        if (hasFailed()) return true;
+        if (_surfaceY == null) return false;
+        BlockPos feet = mod.getPlayer().getBlockPos();
+        boolean grounded = mod.getPlayer().isOnGround();
+        boolean exposed = SurfaceAccess.isAtSurface(mod);
+        if (SurfaceProbe.escaped(feet.getY(), _surfaceY, grounded, exposed)) return true;
+        long dx = (long) feet.getX() - _startPos.getX();
+        long dz = (long) feet.getZ() - _startPos.getZ();
+        return _rung == Rung.WALK && grounded && exposed && dx * dx + dz * dz >= 16
+                && SurfaceProbe.escapedByWalking(feet.getY(), initialSurfaceY(mod), grounded, exposed, dx * dx + dz * dz);
+    }
     @Override
-    protected boolean isEqual(Task other) { return other instanceof EscapeUndergroundTask; }
+    protected boolean isEqual(Task other) { return this == other; }
     @Override
     protected String toDebugString() { return "Escaping underground (" + _rung + ")"; }
 
@@ -112,7 +130,7 @@ public class EscapeUndergroundTask extends Task {
                     return null;
                 }
                 if (!mod.getWorld().getBlockState(_stepOrigin.up(2)).isAir()) return _sub;
-            } else if (feet.getY() <= _stepOrigin.getY()) {
+            } else if (!SurfaceProbe.landedAbove(feet.getY(), _stepOrigin.getY(), mod.getPlayer().isOnGround())) {
                 return _sub;
             }
             _sub = null;
@@ -145,6 +163,39 @@ public class EscapeUndergroundTask extends Task {
         // Existing paths first; ascent only places blocks after the ceiling has been checked and cleared.
         mod.getClientBaritoneSettings().allowBreak.value = false;
         mod.getClientBaritoneSettings().allowPlace.value = _rung == Rung.ASCEND && _oldPlace;
+    }
+
+    /** Preserve the initial roof height even after digging; use neighboring terrain for an open shaft. */
+    private static int initialSurfaceY(Vibrato mod) {
+        BlockPos feet = mod.getPlayer().getBlockPos();
+        int local = SurfaceAccess.target(mod).getY();
+        if (local > feet.getY() + 1) return local;
+        if (SurfaceAccess.isAtSurface(mod)) local = feet.getY();
+        List<Integer> heights = new ArrayList<>();
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                BlockPos column = feet.add(dx, 0, dz);
+                if (!mod.getChunkTracker().isChunkLoaded(column)) continue;
+                int top = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING, column.getX(), column.getZ());
+                int terrain = SurfaceColumn.targetY(feet.getY(), top, y -> {
+                    BlockState state = mod.getWorld().getBlockState(new BlockPos(column.getX(), y, column.getZ()));
+                    return state.isAir() || isCover(state);
+                });
+                heights.add(terrain);
+            }
+        }
+        if (heights.size() < 5) return local;
+        heights.sort(Integer::compareTo);
+        int median = heights.get(heights.size() / 2);
+        // Small changes in terrain height should not turn an ordinary depression into a cave.
+        return median >= feet.getY() + 4 ? Math.max(local, median) : local;
+    }
+
+    private static boolean isCover(BlockState state) {
+        return state.isIn(BlockTags.LEAVES) || state.isIn(BlockTags.LOGS)
+                || state.isIn(BlockTags.PLANKS) || state.isIn(BlockTags.WOODEN_SLABS)
+                || state.isIn(BlockTags.WOODEN_STAIRS);
     }
 
     private static boolean adjacentLiquid(Vibrato mod, BlockPos pos) {

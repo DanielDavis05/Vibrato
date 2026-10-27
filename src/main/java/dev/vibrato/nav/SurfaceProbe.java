@@ -29,6 +29,20 @@ public final class SurfaceProbe {
 
     public enum Ascent { DIG, CLIMB, STOP }
 
+    /** Feet must be supported, not merely passing through the next height during a jump. */
+    public static boolean landedAbove(int feetY, int startY, boolean grounded) {
+        return grounded && feetY > startY;
+    }
+
+    public static boolean escaped(int feetY, int rimY, boolean grounded, boolean exposed) {
+        return grounded && exposed && feetY >= rimY;
+    }
+
+    public static boolean escapedByWalking(int feetY, int localRimY, boolean grounded, boolean exposed,
+                                           long horizontalDistanceSquared) {
+        return horizontalDistanceSquared >= 16 && escaped(feetY, localRimY, grounded, exposed);
+    }
+
     private SurfaceProbe() {}
 
     /** Decide only the immediate step; open space above still requires the bot to climb. */

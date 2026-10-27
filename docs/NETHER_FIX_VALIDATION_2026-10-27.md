@@ -22,6 +22,10 @@ The existing development command `@test` has `escape`, `recovery`, and `recovery
 
 ## Verification so far
 
+The first fixed run (`f882222`) completed the same chamber log request in 130.382 seconds: the persistent check rejected the paced approach, escape changed from WALK to ASCEND after its 30-second walk limit, and the bot reached y80 and collected an oak log. The baseline cancelled at 109.384 seconds; completion took longer than that earlier cancellation, but the request succeeded.
+
+A subsequent review tightened ascent completion: the bot must land before advancing a pillar step, retain the original rim height while digging, and distinguish a fresh escape attempt from a failed equal child. A walked exit at a lower altitude can complete after leaving the original column. These refinements are being live-tested.
+
 `./gradlew :test :build`: 583 tests passed, no failures or skipped tests. Live validation of the changes is in progress; this file will be updated with outcomes and limitations.
 
 No sibling Baritone source changes were made for this fix.
