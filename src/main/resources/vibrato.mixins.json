@@ -8,6 +8,8 @@
     "BlockModifiedByPlayerMixin",
     "ClientBlockBreakAccessor",
     "ClientConnectionAccessor",
+    "PacketCoverageConnectionMixin",
+    "PacketCoverageThreadMixin",
     "ClientInteractWithBlockMixin",
     "ClientUIMixin",
     "GameOverlayMixin",
@@ -16,6 +18,7 @@
     "WorldBlockModifiedMixin"
   ],
   "client": [
+    "PacketCoverageBundleMixin",
     "ChatInputMixin",
     "ChatSuggestionsMixin",
     "ClientAdvancementManagerAccessor",

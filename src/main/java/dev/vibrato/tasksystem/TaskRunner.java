@@ -2,6 +2,9 @@ package dev.vibrato.tasksystem;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.Debug;
+import dev.vibrato.chains.SingleTaskChain;
+import dev.vibrato.director.DirectorTask;
+import dev.vibrato.packetcoverage.PacketCoverage;
 
 import java.util.ArrayList;
 
@@ -19,7 +22,7 @@ public class TaskRunner {
     }
 
     public void tick() {
-        if (!_active) return;
+        if (!_active) { PacketCoverage.setTask("none", "none"); return; }
         // Get highest priority chain and run
         TaskChain maxChain = null;
         float maxPriority = Float.NEGATIVE_INFINITY;
@@ -35,6 +38,9 @@ public class TaskRunner {
             _cachedCurrentTaskChain.onInterrupt(_mod, maxChain);
         }
         _cachedCurrentTaskChain = maxChain;
+        Task root = maxChain instanceof SingleTaskChain single ? single.getCurrentTask() : null;
+        PacketCoverage.setTask(root == null ? "none" : root.getClass().getSimpleName(),
+                root instanceof DirectorTask director ? director.currentStepId() : "none");
         if (maxChain != null) {
             maxChain.tick(_mod);
         }
@@ -60,6 +66,7 @@ public class TaskRunner {
             chain.stop(_mod);
         }
         _active = false;
+        PacketCoverage.setTask("none", "none");
 
         Debug.logMessage("Stopped");
     }

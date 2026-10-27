@@ -177,6 +177,10 @@ public class DirectorTask extends Task implements StepAbandonable {
                 + "/" + _plan.steps().size() + ")";
     }
 
+    public String currentStepId() {
+        return _currentStep == null ? "none" : _currentStep.activity().id();
+    }
+
     /** The step currently running, as {@code id{k=v,...}}, or "idle" between steps. */
     public String currentStepDescription() {
         return _currentStep == null ? "idle" : _currentStep.signature();
@@ -240,6 +244,7 @@ public class DirectorTask extends Task implements StepAbandonable {
         }
         _stepTask = null;
         _currentStep = null;
+        dev.vibrato.packetcoverage.PacketCoverage.setTask(getClass().getSimpleName(), "none");
         _stuckWitness = null;
     }
 
@@ -293,6 +298,7 @@ public class DirectorTask extends Task implements StepAbandonable {
                 continue;
             }
             _currentStep = step;
+            dev.vibrato.packetcoverage.PacketCoverage.setTask(getClass().getSimpleName(), step.activity().id());
             _stepTask = task;
             _stepStartTick = _tick;
             _health = new StepHealth();
