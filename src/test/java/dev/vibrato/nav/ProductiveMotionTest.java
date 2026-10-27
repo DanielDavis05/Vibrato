@@ -33,6 +33,16 @@ class ProductiveMotionTest {
     }
 
     @Test
+    void movementGetsFreshWindowAfterWorkEnds() {
+        StuckDetector detector = new StuckDetector(StuckConfig.defaults());
+        for (long tick = 0; tick < 200; tick++) detector.update(sample(tick, true));
+        for (long tick = 200; tick < 239; tick++) {
+            assertEquals(StuckState.OK, detector.update(sample(tick, false)), "tick " + tick);
+        }
+        assertEquals(StuckState.STATIONARY_WITH_INTENT, detector.update(sample(239, false)));
+    }
+
+    @Test
     void standingStillWithoutWorkIsStillStuck() {
         StuckConfig config = StuckConfig.defaults();
         StuckDetector detector = new StuckDetector(config);

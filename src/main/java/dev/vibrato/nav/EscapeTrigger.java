@@ -8,9 +8,9 @@ public final class EscapeTrigger {
     private EscapeTrigger() {}
 
     /**
-     * Underground without a pickaxe always warrants an escape. With a pickaxe, a long stall underground does.
+     * An underground escape is appropriate only after a long stall, regardless of equipment.
      */
     public static boolean shouldEscape(boolean underground, boolean hasPickaxe, long ticksWithoutProgress) {
-        return underground && (!hasPickaxe || ticksWithoutProgress >= STALL_TICKS);
+        return underground && ticksWithoutProgress >= STALL_TICKS;
     }
 }

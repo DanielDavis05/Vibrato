@@ -13,8 +13,9 @@ class EscapeTriggerTest {
     }
 
     @Test
-    void escapesUndergroundWithoutAPickaxeAtOnce() {
-        assertTrue(EscapeTrigger.shouldEscape(true, false, 0));
+    void undergroundWithoutAPickaxeAlsoRequiresAStall() {
+        assertFalse(EscapeTrigger.shouldEscape(true, false, EscapeTrigger.STALL_TICKS - 1));
+        assertTrue(EscapeTrigger.shouldEscape(true, false, EscapeTrigger.STALL_TICKS));
     }
 
     @Test

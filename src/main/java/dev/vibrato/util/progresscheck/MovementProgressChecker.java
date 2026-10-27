@@ -13,7 +13,7 @@ public class MovementProgressChecker {
     private BlockPos _lastBreakingBlock = null;
 
     public MovementProgressChecker(double distanceTimeout, double minDistance, double mineTimeout, double minMineProgress, int attempts) {
-        _distanceChecker = new ProgressCheckerRetry<>(new DistanceProgressChecker(distanceTimeout, minDistance), attempts);
+        _distanceChecker = new ProgressCheckerRetry<>(new MovementWindowProgressChecker(distanceTimeout, minDistance), attempts);
         _mineChecker = new LinearProgressChecker(mineTimeout, minMineProgress);
     }
 
@@ -30,6 +30,13 @@ public class MovementProgressChecker {
     }
 
     public boolean check(Vibrato mod) {
+
+        // Path calculation can legitimately keep the player still before movement starts.
+        var pathing = mod.getClientBaritone().getPathingBehavior();
+        if (!pathing.isPathing() && pathing.getInProgress().isPresent()) {
+            reset();
+            return true;
+        }
 
         // Allow pause on eat
         if (mod.getFoodChain().isTryingToEat()) {

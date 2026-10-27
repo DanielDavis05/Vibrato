@@ -20,6 +20,12 @@ public final class StuckDetector {
     }
 
     public StuckState update(MotionSample sample) {
+        // Work interrupts a motion window: do not diagnose a stall immediately after it ends.
+        if (sample.productive()) {
+            reset();
+            return sample.underWater() && sample.airTicksLeft() < _config.lowAirTicks()
+                    ? StuckState.LOW_AIR : StuckState.OK;
+        }
         _history[_next] = sample;
         _next = (_next + 1) % _history.length;
         if (_size < _history.length) {
@@ -43,7 +49,7 @@ public final class StuckDetector {
             return StuckState.OK;
         }
         if (s.inWater() && s.wantsToMove() && hasWindow(_config.waterTicks())
-                && horizontalDistance(ago(_config.waterTicks() - 1), s) < _config.waterMinMove()) {
+                && distance3d(ago(_config.waterTicks() - 1), s) < _config.waterMinMove()) {
             return StuckState.WATER_DRIFT;
         }
         if (_edgeRun >= _config.edgeJamTicks()) {
@@ -71,7 +77,7 @@ public final class StuckDetector {
             degrees += Math.abs(wrapDegrees(ago(i).yaw() - ago(i + 1).yaw()));
         }
         return degrees > _config.spinMinDegrees()
-                && horizontalDistance(ago(n - 1), ago(0)) < _config.spinMaxNet();
+                && distance3d(ago(n - 1), ago(0)) < _config.spinMaxNet();
     }
 
     /**
@@ -109,7 +115,7 @@ public final class StuckDetector {
             }
         }
         return hasOther && switches >= _config.oscillationMinSwitches()
-                && horizontalDistance(ago(n - 1), ago(0)) < _config.oscillationMaxNet();
+                && distance3d(ago(n - 1), ago(0)) < _config.oscillationMaxNet();
     }
 
     private boolean hasWindow(int ticks) {

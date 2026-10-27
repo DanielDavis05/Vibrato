@@ -24,8 +24,8 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Watches the bot's motion while a user task is pathing and steps in when it is stuck or drowning.
  * <p>
- * Detection runs in {@link #getPriority} every tick, as other chains do. Water overlays (swim forward, bank jump) are
- * applied there too, so they work without taking over from the user task. A stuck episode takes over with a higher
+ * Detection runs in {@link #getPriority} every tick, as other chains do. The bank-jump overlay is
+ * applied there too, so it works without taking over from the user task. A stuck episode takes over with a higher
  * priority for the duration of one {@link UnstuckAction}.
  */
 public class NavSafetyChain extends TaskChain {
@@ -47,7 +47,6 @@ public class NavSafetyChain extends TaskChain {
     private static final int BANK_RADIUS = 3;
     private static final double FRONT_REACH = 0.8;
     private static final double HEAD_HEIGHT = 1.0;
-    private static final double SWIM_TRAVEL_BLOCKS = 8.0;
     private static final double PROGRESS_DISTANCE = 1.5;
 
     private final StuckDetector _detector = new StuckDetector(StuckConfig.defaults());
@@ -62,10 +61,8 @@ public class NavSafetyChain extends TaskChain {
     private long _lastBreakTick = NavGate.NEVER;
     private boolean _anchored;
     private double _anchorX;
+    private double _anchorY;
     private double _anchorZ;
-    private double _prevX;
-    private double _prevZ;
-    private double _waterTravel;
     private boolean _overlayJump;
     private boolean _overlayForward;
     private boolean _overlaySprint;
@@ -148,8 +145,6 @@ public class NavSafetyChain extends TaskChain {
             }
         }
 
-        _prevX = sample.x();
-        _prevZ = sample.z();
         return _action == null ? 0 : _actionPriority;
     }
 
@@ -173,7 +168,6 @@ public class NavSafetyChain extends TaskChain {
         setOverlay(mod, false, false, false);
         _detector.reset();
         _ladder.onProgress();
-        _waterTravel = 0;
         _anchored = false;
         _watchedTask = null;
     }
@@ -190,9 +184,11 @@ public class NavSafetyChain extends TaskChain {
 
     private void trackProgress(MotionSample sample, boolean wantsToMove) {
         // Idle time is never waste, and moving a few blocks from the anchor counts as progress.
-        if (!_anchored || !wantsToMove || Math.hypot(sample.x() - _anchorX, sample.z() - _anchorZ) >= PROGRESS_DISTANCE) {
+        if (!_anchored || !wantsToMove || Math.sqrt(Math.pow(sample.x() - _anchorX, 2) + Math.pow(sample.y() - _anchorY, 2)
+                + Math.pow(sample.z() - _anchorZ, 2)) >= PROGRESS_DISTANCE) {
             _anchored = true;
             _anchorX = sample.x();
+            _anchorY = sample.y();
             _anchorZ = sample.z();
             _ladder.onProgress();
             _waste.onProgress(_tick);
@@ -201,20 +197,14 @@ public class NavSafetyChain extends TaskChain {
 
     private void updateWaterOverlay(Vibrato mod, MotionSample sample) {
         if (!sample.inWater() || !sample.wantsToMove()) {
-            _waterTravel = 0;
             setOverlay(mod, false, false, false);
             return;
         }
-        _waterTravel += Math.hypot(sample.x() - _prevX, sample.z() - _prevZ);
-
         boolean bank = sample.horizontalCollision()
                 && WorldHelper.isSolid(mod, ahead(sample.x(), sample.y() + HEAD_HEIGHT, sample.z(), sample.yaw()));
-        if (bank) {
-            setOverlay(mod, true, true, false);
-        } else {
-            boolean swim = _waterTravel > SWIM_TRAVEL_BLOCKS;
-            setOverlay(mod, false, swim, swim);
-        }
+        // Baritone owns horizontal movement, including swimming and strafing. Forcing forward
+        // after a distance threshold can override a turn or reverse and send the bot astray.
+        setOverlay(mod, bank, false, false);
     }
 
     private void setOverlay(Vibrato mod, boolean jump, boolean forward, boolean sprint) {

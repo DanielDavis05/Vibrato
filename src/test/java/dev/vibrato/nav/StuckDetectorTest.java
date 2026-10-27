@@ -105,6 +105,15 @@ class StuckDetectorTest {
         assertEquals(StuckState.WATER_DRIFT, detector.update(waterSample(59 * 0.01)));
     }
 
+    @Test
+    void swimmingVerticallyIsNotWaterDrift() {
+        for (int i = 0; i < 100; i++) {
+            MotionSample s = new MotionSample(tick++, 0.5, 64 + i * 0.05, 0.5, 0f, 0f,
+                    false, true, true, false, true, MotionSample.FULL_AIR);
+            assertEquals(StuckState.OK, detector.update(s), "tick " + i);
+        }
+    }
+
     private MotionSample waterSample(double x) {
         return new MotionSample(tick++, x, 64, 0.5, 0f, 0f, false, true, false, false, true, MotionSample.FULL_AIR);
     }
