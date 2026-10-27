@@ -2,6 +2,8 @@ package dev.vibrato.director;
 
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.IdleTask;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.time.TimerGame;
@@ -24,6 +26,7 @@ public class DirectorTask extends Task {
     private static final int FAILURE_COOLDOWN_PLANS = 3;
     /** Upper bound on steps that yield no task within a single tick, so a broken registry cannot hang the tick. */
     private static final int MAX_SKIPS_PER_TICK = 32;
+    private static final double BREATHER_SECONDS = 15;
 
     private final ActivityRegistry _registry;
     private final long _seed;
@@ -40,6 +43,12 @@ public class DirectorTask extends Task {
     private PlannedStep _currentStep;
     private Task _stepTask;
     private TimerGame _stepTimer;
+    private StepHealth _health = new StepHealth();
+    private Task _stuckWitness;
+    private final FailureChurn _churn = new FailureChurn();
+    private long _tick;
+    private boolean _breatherPending;
+    private boolean _onBreather;
 
     /**
      * @param coverageFile where coverage is loaded from and saved to, or null to keep it in memory only
@@ -70,15 +79,33 @@ public class DirectorTask extends Task {
 
     @Override
     protected Task onTick(Vibrato mod) {
-        if (_stepTask != null) {
+        _tick++;
+        if (_onBreather) {
+            if (!_stepTimer.elapsed()) {
+                return _stepTask;
+            }
+            _onBreather = false;
+            _stepTask = null;
+        } else if (_stepTask != null) {
             if (_stepTask.isFinished(mod)) {
                 completeStep(true, "finished");
             } else if (_stepTimer.elapsed()) {
                 completeStep(false, "over budget");
-            } else if (_stepTask.thisOrChildAreTimedOut()) {
-                completeStep(false, "stuck");
             } else {
-                return _stepTask;
+                // A wander inside the step is normal (waiting for a path); only a persistent one counts as stuck.
+                _stuckWitness = null;
+                boolean stuckNow = _stepTask.thisOrChildSatisfies(task -> {
+                    if (task instanceof TimeoutWanderTask) {
+                        _stuckWitness = task;
+                        return true;
+                    }
+                    return false;
+                });
+                _health.tick(stuckNow);
+                if (!_health.verdict()) {
+                    return _stepTask;
+                }
+                completeStep(false, "stuck in " + _stuckWitness);
             }
         }
         return nextStepTask(mod);
@@ -120,14 +147,31 @@ public class DirectorTask extends Task {
             _coverage.record(step.activity());
             PlanSampler.applyEffects(_facts, step.activity());
         } else {
-            _coverage.recordFailure(step.activity().id(), FAILURE_COOLDOWN_PLANS);
+            _churn.failed(_tick);
+            int cooldown = FAILURE_COOLDOWN_PLANS;
+            if (_churn.churning(_tick)) {
+                cooldown *= 2;
+                _breatherPending = true;
+                _churn.clear();
+                Debug.logInternal("Director: failures are piling up, taking a breather and doubling cooldowns");
+            }
+            _coverage.recordFailure(step.activity().id(), cooldown);
             Debug.logInternal("Director: " + step.signature() + " failed (" + reason + "), moving on");
         }
         _stepTask = null;
         _currentStep = null;
+        _stuckWitness = null;
     }
 
     private Task nextStepTask(Vibrato mod) {
+        if (_breatherPending) {
+            _breatherPending = false;
+            _onBreather = true;
+            _stepTask = new IdleTask();
+            _stepTimer = new TimerGame(BREATHER_SECONDS);
+            _stepTimer.reset();
+            return _stepTask;
+        }
         for (int skipped = 0; skipped < MAX_SKIPS_PER_TICK; skipped++) {
             if (_stepIndex >= _plan.steps().size()) {
                 finishPlan();
@@ -144,6 +188,7 @@ public class DirectorTask extends Task {
             }
             _currentStep = step;
             _stepTask = task;
+            _health = new StepHealth();
             _stepTimer = new TimerGame(step.activity().budget(step.params()).toMillis() / 1000.0);
             _stepTimer.reset();
             return task;
