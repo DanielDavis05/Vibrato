@@ -53,6 +53,7 @@ public final class ScriptRunner {
     private long taskStartCount, taskCompletedCount, blocksBrokenCount, blockChangesNearPlayerCount, pillarAttempts;
     private boolean lastGrounded;
     private long lastScreenshotNanos;
+    private int screenshotSerial;
     private final ArrayDeque<Map<String, Object>> recentStarts = new ArrayDeque<>();
 
     private ScriptRunner(Vibrato mod, List<ScriptPlan.Step> steps, Path result) {
@@ -163,11 +164,15 @@ public final class ScriptRunner {
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
         sample(client, path);
-        if (Boolean.getBoolean("vibrato.screenshots") && (lastScreenshotNanos == 0 || now - lastScreenshotNanos > 15_000_000_000L)) {
+        if (Boolean.getBoolean("vibrato.screenshots") && (lastScreenshotNanos == 0 || now - lastScreenshotNanos > Math.clamp(Long.getLong("vibrato.screenshotIntervalSeconds", 15L), 5L, 300L) * 1_000_000_000L)) {
             lastScreenshotNanos = now;
-            ScreenshotRecorder.saveScreenshot(client.runDirectory, "live.png", client.getFramebuffer(), message -> {
-                try { writeAtomic(client.runDirectory.toPath().resolve("screenshot-ready.json"), Map.of("wall", System.currentTimeMillis() / 1000.0)); }
-                catch (IOException ignored) { }
+            String imageName = "live-" + (screenshotSerial++ % 2) + ".png";
+            ScreenshotRecorder.saveScreenshot(client.runDirectory, imageName, client.getFramebuffer(), message -> {
+                try {
+                    Path image = client.runDirectory.toPath().resolve("screenshots").resolve(imageName);
+                    if (Files.isRegularFile(image)) writeAtomic(client.runDirectory.toPath().resolve("screenshot-ready.json"),
+                            Map.of("wall", Files.getLastModifiedTime(image).toMillis() / 1000.0, "file", imageName));
+                } catch (IOException ignored) { }
             });
         }
         if (lastTimelineNanos == 0 || now - lastTimelineNanos >= 1_000_000_000L) {
