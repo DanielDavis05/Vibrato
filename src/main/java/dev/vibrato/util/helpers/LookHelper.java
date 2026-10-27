@@ -1,6 +1,8 @@
 package dev.vibrato.util.helpers;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.human.Human;
+import dev.vibrato.human.HumanLook;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.RayTraceUtils;
@@ -198,9 +200,24 @@ public interface LookHelper {
     }
 
     static void lookAt(Vibrato mod, Rotation rotation) {
-        mod.getClientBaritone().getLookBehavior().updateTarget(rotation, true);
-        mod.getPlayer().setYaw(rotation.getYaw());
-        mod.getPlayer().setPitch(rotation.getPitch());
+        HumanLook look = Human.look();
+        if (look == null) {
+            mod.getClientBaritone().getLookBehavior().updateTarget(rotation, true);
+            mod.getPlayer().setYaw(rotation.getYaw());
+            mod.getPlayer().setPitch(rotation.getPitch());
+            return;
+        }
+        // Moves one human-limited step per call. No Baritone target is set, so Baritone does not add a second step.
+        turnTowards(mod.getPlayer(), look, rotation);
+    }
+
+    private static void turnTowards(PlayerEntity player, HumanLook look, Rotation target) {
+        Rotation current = new Rotation(player.getYaw(), player.getPitch());
+        float yawOffset = Rotation.normalizeYaw(target.getYaw() - current.getYaw());
+        Rotation desired = new Rotation(current.getYaw() + yawOffset, target.getPitch());
+        Rotation next = look.smooth(current, desired);
+        player.setYaw(next.getYaw());
+        player.setPitch(next.getPitch());
     }
     static void lookAt(Vibrato mod, Vec3d toLook) {
         Rotation targetRotation = getLookRotation(mod, toLook);
