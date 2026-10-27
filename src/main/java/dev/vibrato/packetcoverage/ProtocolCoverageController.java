@@ -76,7 +76,7 @@ public final class ProtocolCoverageController {
             PacketCoverage.setTask("none", "none");
         } else {
             Task root = tasks.getFirst();
-            String step = root instanceof DirectorTask director ? director.currentStepDescription().split("\\{", 2)[0] : "none";
+            String step = root instanceof DirectorTask director ? director.currentStepId() : "none";
             PacketCoverage.setTask(root.getClass().getSimpleName(), step);
         }
     }

@@ -14,7 +14,7 @@ public final class ProtocolScenarioTask extends Task {
     private final String action;
     private final boolean server;
     private final String scenario;
-    private final ClientProtocolScenarioTask child;
+    private ClientProtocolScenarioTask child;
     private long ticks;
     private boolean finished;
     private boolean dispatched;
@@ -26,12 +26,12 @@ public final class ProtocolScenarioTask extends Task {
         this.action = action;
         this.server = server;
         this.scenario = (server ? "fixture_" : "client_") + action;
-        this.child = server ? null : new ClientProtocolScenarioTask(action);
     }
 
     @Override protected void onStart(Vibrato mod) {
         if (!PacketCoverage.enabled()) throw new IllegalStateException("Launch with -Dvibrato.packetCoverage=true");
         ProtocolCoverageController.requireLocalFixture();
+        child = server ? null : new ClientProtocolScenarioTask(action);
         ticks = 0; finished = false; dispatched = false;
         PacketCoverage.beginScenario(scenario);
         PacketCoverage.setTask(getClass().getSimpleName(), "none");

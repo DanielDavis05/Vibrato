@@ -57,6 +57,10 @@ def ready(process, log):
     raise TimeoutError(f"Fixture startup timed out: {log}")
 
 
+def interrupted(*_):
+    raise KeyboardInterrupt
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--modes", default=",".join(DEFAULT_MODES))
@@ -64,8 +68,9 @@ def main():
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--display", default=os.environ.get("DISPLAY", ":99"))
     parser.add_argument("--steps", help="Override normal suite: fixture:name,client:name,...")
+    parser.add_argument("--verify", action="store_true", help="Require all 224 packets from this run's captures")
     args = parser.parse_args()
-    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
+    signal.signal(signal.SIGTERM, interrupted)
     modes = args.modes.split(",")
     if any(mode not in DEFAULT_MODES for mode in modes):
         parser.error("Unknown fixture mode")
@@ -73,6 +78,7 @@ def main():
     properties(ROOT / "run-protocol-fixture", 25576)
     properties(ROOT / "run-protocol-transfer", 25566)
     env = dict(os.environ, DISPLAY=args.display, LIBGL_ALWAYS_SOFTWARE="1", ALSOFT_DRIVERS="null")
+    captures = []
     for mode in modes:
         server = destination = client = None
         handles = []
@@ -114,11 +120,17 @@ def main():
             if json.loads(capture.read_text()).get("captureId") in (None, previous):
                 raise RuntimeError(f"Client did not produce a fresh capture: {capture}")
             print(f"Captured {mode}: {capture}", flush=True)
+            captures.append(capture)
         finally:
             stop(client)
             stop(server)
             stop(destination)
             for handle in handles: handle.close()
+    if args.verify or (set(modes) == set(DEFAULT_MODES) and len(modes) == len(DEFAULT_MODES) and not args.steps):
+        subprocess.run(["./gradlew", ":packetCoverageReport", "--console=plain",
+                        "-PpacketCaptures=" + ",".join(map(str, captures)),
+                        "-PpacketReport=" + str(ROOT / "run/vibrato/reports/merged.json")],
+                       cwd=ROOT, env=env, check=True)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ Use Java 21, Python 3, and an available display for the Minecraft client, such a
 python3 scripts/protocol-coverage.py --display :99
 ```
 
-The script starts and stops the local servers and clients for its configured lifecycle modes. Captures go to `run/vibrato/captures/`, reports to `run/vibrato/reports/`, and logs to `run/vibrato/protocol-logs/`. Use `--modes normal` for the play suite alone, or for example `--modes normal --steps fixture:ui,client:chat` to run selected steps. See `--help` and the script's mode list for the available options. A scenario may finish without its target packets being observed; inspect the report and logs.
+The script starts and stops the local servers and clients for its configured lifecycle modes. Captures go to `run/vibrato/captures/`, reports to `run/vibrato/reports/`, and logs to `run/vibrato/protocol-logs/`. A default full run also runs the 224-packet gate and writes `run/vibrato/reports/merged.json`. Use `--modes normal` for the play suite alone, or for example `--modes normal --steps fixture:ui,client:chat` to run selected steps. Add `--verify` to require complete coverage from a selected run. See `--help` and the script's mode list for the available options. A scenario may finish without its target packets being observed; the coverage gate remains the completeness check.
 
 ## Interactive commands and gate
 

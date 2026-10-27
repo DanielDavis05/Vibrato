@@ -25,7 +25,7 @@ public abstract class Task {
         parentChain.addTaskToChain(this);
         if (PacketCoverage.enabled()) {
             Task root = parentChain.getTasks().getFirst();
-            String step = root instanceof DirectorTask director ? director.currentStepDescription().split("\\{", 2)[0] : "none";
+            String step = root instanceof DirectorTask director ? director.currentStepId() : "none";
             PacketCoverage.setTask(root.getClass().getSimpleName(), step);
         }
         if (_first) {

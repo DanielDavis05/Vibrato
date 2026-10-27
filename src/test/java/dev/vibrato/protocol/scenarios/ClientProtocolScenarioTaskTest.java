@@ -5,6 +5,9 @@ import dev.vibrato.packetcoverage.ProtocolManifest;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientProtocolScenarioTaskTest {
+    @Test void separateInvocationsCannotReuseOldUiPreparationState() {
+        assertNotEquals(new ClientProtocolScenarioTask("book_edit"), new ClientProtocolScenarioTask("book_edit"));
+    }
     @Test void unknownActionCannotSilentlyRun() {
         assertThrows(IllegalArgumentException.class, () -> new ClientProtocolScenarioTask("unknown"));
         assertThrows(IllegalArgumentException.class, () -> ClientProtocolScenarioTask.requirements("unknown"));

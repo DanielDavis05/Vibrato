@@ -428,7 +428,9 @@ public final class ClientProtocolScenarioTask extends Task {
     }
     @Override public boolean isFinished(Vibrato mod) { return done; }
     @Override protected boolean isEqual(Task other) {
-        return other instanceof ClientProtocolScenarioTask task && action.equals(task.action);
+        // Each explicit invocation owns UI preparation and dispatch state. A fresh
+        // invocation must not silently reuse the previous invocation's screen state.
+        return this == other;
     }
     @Override protected String toDebugString() { return "Protocol scenario " + action; }
 }

@@ -32,7 +32,9 @@ public final class ProtocolSuiteTask extends Task {
         // Common cookie requests intentionally take the native unexpected-response disconnect path.
         steps.add(new Step("common", true));
     }
-    @Override protected void onStart(Vibrato mod) { index = 0; current = null; }
+    // Task.onStart also runs after a temporary survival-chain interruption.
+    // Keep the cursor and current operation so resuming cannot replay the entire suite.
+    @Override protected void onStart(Vibrato mod) { }
     @Override protected Task onTick(Vibrato mod) {
         if (current != null && current.isFinished(mod)) { current.stop(mod); current = null; index++; }
         if (index >= steps.size()) return null;
