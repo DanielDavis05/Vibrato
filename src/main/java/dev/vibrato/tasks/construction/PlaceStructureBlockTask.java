@@ -10,4 +10,13 @@ public class PlaceStructureBlockTask extends PlaceBlockTask {
     public PlaceStructureBlockTask(BlockPos target) {
         super(target, new Block[]{}, true, true);
     }
+
+    public PlaceStructureBlockTask(BlockPos target, BlockPos castOrigin) {
+        super(target, new Block[]{}, true, false, castOrigin);
+    }
+
+    @Override
+    public boolean isChurnGuardEligible() {
+        return true;
+    }
 }

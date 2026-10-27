@@ -8,12 +8,16 @@ import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.helpers.WorldHelper;
+import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
+
+import java.util.function.Predicate;
 
 /**
  * Places obsidian at a position using buckets and a cast.
@@ -36,6 +40,9 @@ public class PlaceObsidianBucketTask extends Task {
 
     private BlockPos _currentCastTarget;
     private BlockPos _currentDestroyTarget;
+    private Task _frameMaterialTask;
+    private int _usableBeforeCollection;
+    private boolean _checkCollectedMaterials;
 
     public PlaceObsidianBucketTask(BlockPos pos) {
         _pos = pos;
@@ -79,6 +86,20 @@ public class PlaceObsidianBucketTask extends Task {
             }
         }
 
+        // ResourceTask protects cobblestone until its onStop. Return null for
+        // one tick after completion so the child can pop its behaviour frame
+        // before we count blocks eligible for placement.
+        if (_frameMaterialTask != null) {
+            if (!_frameMaterialTask.isFinished(mod)) {
+                _progressChecker.reset();
+                return _frameMaterialTask;
+            }
+            _frameMaterialTask = null;
+            _checkCollectedMaterials = true;
+            _progressChecker.reset();
+            return null;
+        }
+
         // A completed placement or removal is real progress even when the
         // player did not move. Account for it before deciding to wander.
         boolean completedBlockChange = false;
@@ -92,6 +113,33 @@ public class PlaceObsidianBucketTask extends Task {
         }
         if (completedBlockChange) _progressChecker.reset();
 
+        int missingFrameBlocks = missingFrameCount(_pos, pos -> WorldHelper.isSolid(mod, pos));
+        int usable = PlaceBlockTask.countUsableThrowaways(mod,
+                item -> PlaceBlockTask.isStableCastMaterial(mod, item, _pos));
+        if (_checkCollectedMaterials) {
+            _checkCollectedMaterials = false;
+            if (usable < missingFrameBlocks && usable <= _usableBeforeCollection) {
+                fail("Collecting cobblestone did not provide usable cast blocks at " + _pos.toShortString());
+                return null;
+            }
+        }
+        if (usable < missingFrameBlocks) {
+            if (mod.getBehaviour().isProtected(Items.COBBLESTONE)
+                    || !mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(Items.COBBLESTONE)) {
+                fail("Cannot build obsidian cast at " + _pos.toShortString()
+                        + ": cobblestone is protected or not an accepted throwaway");
+                return null;
+            }
+            int held = mod.getItemStorage().getItemCountInventoryOnly(Items.COBBLESTONE);
+            ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
+            if (cursor.isOf(Items.COBBLESTONE)) held -= cursor.getCount();
+            _usableBeforeCollection = usable;
+            _frameMaterialTask = TaskCatalogue.getItemTask(Items.COBBLESTONE, CastMaterialPolicy.cobblestoneTarget(held, missingFrameBlocks, usable));
+            setDebugState("Collecting blocks for cast frame");
+            _progressChecker.reset();
+            return _frameMaterialTask;
+        }
+
         // Manual wander to try and make this godforesaken task work
         if (!completedBlockChange && _wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             setDebugState("Wandering.");
@@ -104,7 +152,7 @@ public class PlaceObsidianBucketTask extends Task {
         }
 
         if (_currentCastTarget != null) {
-            return new PlaceStructureBlockTask(_currentCastTarget);
+            return new PlaceStructureBlockTask(_currentCastTarget, _pos);
         }
         if (_currentDestroyTarget != null) {
             return new DestroyBlockTask(_currentDestroyTarget);
@@ -185,6 +233,12 @@ public class PlaceObsidianBucketTask extends Task {
             return new InteractWithBlockTask(new ItemTarget(Items.WATER_BUCKET, 1), Direction.WEST, _pos.add(1, 1, 0), true);
         }
         return null;
+    }
+
+    static int missingFrameCount(BlockPos origin, Predicate<BlockPos> solid) {
+        int missing = 0;
+        for (Vec3i offset : CAST_FRAME) if (!solid.test(origin.add(offset))) missing++;
+        return missing;
     }
 
     @Override

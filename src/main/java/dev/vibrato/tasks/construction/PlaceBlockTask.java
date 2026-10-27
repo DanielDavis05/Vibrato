@@ -22,6 +22,7 @@ import baritone.pathing.movement.MovementHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.FallingBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Place a block type at a position
@@ -51,6 +53,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     private final Block[] _toPlace;
     private final boolean _useThrowaways;
     private final boolean _autoCollectStructureBlocks;
+    private final BlockPos _castOrigin;
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker();
     private final TimeoutWanderTask _wanderTask = new TimeoutWanderTask(3, true); // This can get stuck forever, so we increase the range.
     private static final Direction[] SUPPORT_ORDER = {Direction.DOWN, Direction.NORTH, Direction.SOUTH,
@@ -58,13 +61,20 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     private final TimerGame _manualClickTimer = new TimerGame(0.25);
     private boolean _manualControl;
     private Task _materialTask;
+    private boolean _checkCollectedMaterials;
     private int _failCount = 0;
 
     public PlaceBlockTask(BlockPos target, Block[] toPlace, boolean useThrowaways, boolean autoCollectStructureBlocks) {
+        this(target, toPlace, useThrowaways, autoCollectStructureBlocks, null);
+    }
+
+    protected PlaceBlockTask(BlockPos target, Block[] toPlace, boolean useThrowaways,
+                             boolean autoCollectStructureBlocks, BlockPos castOrigin) {
         _target = target;
         _toPlace = toPlace;
         _useThrowaways = useThrowaways;
         _autoCollectStructureBlocks = autoCollectStructureBlocks;
+        _castOrigin = castOrigin;
     }
 
     public PlaceBlockTask(BlockPos target, Block... toPlace) {
@@ -77,6 +87,37 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
     public static Task getMaterialTask(int count) {
         return TaskCatalogue.getSquashedItemTask(new ItemTarget(Items.DIRT, count), new ItemTarget(Items.COBBLESTONE, count), new ItemTarget(Items.NETHERRACK, count));
+    }
+
+    static int countUsableThrowaways(Iterable<ItemStack> mainInventory, Predicate<Item> acceptable, Predicate<Item> protectedItem) {
+        return CastMaterialPolicy.countUsable(mainInventory,
+                stack -> !stack.isEmpty() && stack.getItem() instanceof BlockItem
+                        && acceptable.test(stack.getItem()) && !protectedItem.test(stack.getItem()),
+                ItemStack::getCount);
+    }
+
+    static boolean isStableSolidMaterial(Vibrato mod, Item item, BlockPos pos) {
+        if (!(item instanceof BlockItem blockItem) || blockItem.getBlock() instanceof FallingBlock) return false;
+        return blockItem.getBlock().getDefaultState().isSolidBlock(mod.getWorld(), pos);
+    }
+
+    static boolean isStableCastMaterial(Vibrato mod, Item item, BlockPos origin) {
+        for (var offset : PlaceObsidianBucketTask.CAST_FRAME) {
+            BlockPos pos = origin.add(offset);
+            if (!WorldHelper.isSolid(mod, pos) && !isStableSolidMaterial(mod, item, pos)) return false;
+        }
+        return true;
+    }
+
+    static int countUsableThrowaways(Vibrato mod) {
+        return countUsableThrowaways(mod, item -> true);
+    }
+
+    static int countUsableThrowaways(Vibrato mod, Predicate<Item> additionalFilter) {
+        return countUsableThrowaways(mod.getPlayer().getInventory().main,
+                item -> mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(item)
+                        && additionalFilter.test(item),
+                item -> mod.getBehaviour().isProtected(item));
     }
 
     @Override
@@ -99,26 +140,48 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         }
 
         if (_autoCollectStructureBlocks) {
-            if (_materialTask != null && _materialTask.isActive() && !_materialTask.isFinished(mod)) {
-                setDebugState("No structure items, collecting cobblestone + dirt as default.");
-                if (getMaterialCount(mod) < PREFERRED_MATERIALS) {
+            if (_materialTask != null) {
+                if (!_materialTask.isFinished(mod)) {
                     releaseManualControl(mod);
+                    _progressChecker.reset();
                     return _materialTask;
-                } else {
-                    _materialTask = null;
+                }
+                // Stop the resource child before checking usable materials: it
+                // protects its result until onStop pops its behaviour frame.
+                _materialTask = null;
+                _checkCollectedMaterials = true;
+                return null;
+            }
+            int usable = countUsableThrowaways(mod);
+            if (_checkCollectedMaterials) {
+                _checkCollectedMaterials = false;
+                if (usable < MIN_MATERIALS) {
+                    fail("Collecting cobblestone did not provide a usable structure block");
+                    return null;
                 }
             }
-
-            //Item[] items = Util.toArray(Item.class, mod.getClientBaritoneSettings().acceptableThrowawayItems.value);
-            if (getMaterialCount(mod) < MIN_MATERIALS) {
-                // TODO: Mine items, extract their resource key somehow.
-                _materialTask = getMaterialTask(PREFERRED_MATERIALS);
+            if (usable < MIN_MATERIALS) {
+                if (mod.getBehaviour().isProtected(Items.COBBLESTONE)
+                        || !mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(Items.COBBLESTONE)) {
+                    fail("Cannot collect a usable structure block: cobblestone is protected or not an accepted throwaway");
+                    return null;
+                }
+                int held = mod.getItemStorage().getItemCountInventoryOnly(Items.COBBLESTONE);
+                ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
+                if (cursor.isOf(Items.COBBLESTONE)) held -= cursor.getCount();
+                _materialTask = TaskCatalogue.getItemTask(Items.COBBLESTONE, held + PREFERRED_MATERIALS);
                 releaseManualControl(mod);
                 _progressChecker.reset();
                 return _materialTask;
             }
         }
 
+        if (findPlaceableInventoryStack(mod).isEmpty()) {
+            releaseManualControl(mod);
+            fail("No usable block to place at " + _target.toShortString()
+                    + ( _useThrowaways ? " (no unprotected throwaway in main inventory)" : " (requested " + Arrays.toString(_toPlace) + ")"));
+            return null;
+        }
 
         // Check if we're approaching our point. If we fail, wander for a bit.
         if (!_progressChecker.check(mod)) {
@@ -167,7 +230,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof PlaceBlockTask task) {
-            return task._target.equals(_target) && task._useThrowaways == _useThrowaways && Arrays.equals(task._toPlace, _toPlace);
+            return task._target.equals(_target) && task._useThrowaways == _useThrowaways && task._autoCollectStructureBlocks == _autoCollectStructureBlocks && java.util.Objects.equals(task._castOrigin, _castOrigin) && Arrays.equals(task._toPlace, _toPlace);
         }
         return false;
     }
@@ -197,6 +260,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             if (_useThrowaways
                     ? mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
                         && !mod.getBehaviour().isProtected(stack.getItem())
+                        && (_castOrigin == null || isStableCastMaterial(mod, stack.getItem(), _castOrigin))
                     : Arrays.asList(_toPlace).contains(item.getBlock())) return stack;
         }
         return ItemStack.EMPTY;
@@ -279,7 +343,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 for (BlockState possible : available) {
                     if (possible == null) continue;
                     if (_useThrowaways && _mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(possible.getBlock().asItem())
-                            && !_mod.getBehaviour().isProtected(possible.getBlock().asItem())) {
+                            && !_mod.getBehaviour().isProtected(possible.getBlock().asItem())
+                            && (_castOrigin == null || isStableCastMaterial(_mod, possible.getBlock().asItem(), _castOrigin))) {
                         return possible;
                     }
                     if (!_useThrowaways && Arrays.asList(_toPlace).contains(possible.getBlock())) {
@@ -305,7 +370,9 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 if (!_useThrowaways && _toPlace.length > 0) {
                     return new BlockOptionalMeta(_toPlace[0]).getAnyBlockState();
                 }
-                return Blocks.AIR.getDefaultState();
+                // Keep the schematic solid if inventory changes during a builder
+                // tick. The next task tick reports the missing material as failure.
+                return Blocks.COBBLESTONE.getDefaultState();
             }
             // Don't care.
             return blockState;
