@@ -7,6 +7,8 @@ import dev.vibrato.eventbus.events.TaskFinishedEvent;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskRunner;
 import dev.vibrato.util.time.Stopwatch;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 
 // A task chain that runs a user defined task at the same priority.
 // This basically replaces our old Task Runner.
@@ -52,6 +54,22 @@ public class UserTaskChain extends SingleTaskChain {
         if (!mod.inGame()) return;
 
         super.onTick(mod);
+        if (_mainTask != null && _mainTask.failureReason() != null && _mainTask.canBeInterruptedBy(mod, null)) {
+            Debug.logMessage("Task failed: " + _mainTask.failureReason());
+            cancel(mod);
+        }
+    }
+
+    @Override
+    protected boolean churnGuardEnabled() { return true; }
+
+    @Override
+    protected boolean churnGuardSuppressed(Vibrato mod) {
+        if (MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>) {
+            resetChurnGuard();
+            return true;
+        }
+        return false;
     }
 
     public void cancel(Vibrato mod) {

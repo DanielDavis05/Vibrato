@@ -106,6 +106,13 @@ public class DirectorTask extends Task implements StepAbandonable {
     }
 
     @Override
+    protected boolean onChildFailure(Vibrato mod, Task child, String reason) {
+        if (_currentStep == null) return false;
+        completeStep(false, reason);
+        return true;
+    }
+
+    @Override
     public int stepSerial() {
         return _stepSerial;
     }

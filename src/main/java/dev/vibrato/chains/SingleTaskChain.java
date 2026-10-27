@@ -32,7 +32,7 @@ public abstract class SingleTaskChain extends TaskChain {
         }
 
         if (_mainTask != null) {
-            if (_mainTask.stopped() || (_mainTask.isFinished(mod) && _mainTask.canBeInterruptedBy(mod, null))) {
+            if (_mainTask.stopped() || (_mainTask.failureReason() == null && _mainTask.isFinished(mod) && _mainTask.canBeInterruptedBy(mod, null))) {
                 onTaskFinish(mod);
             } else {
                 _mainTask.tick(mod, this);
@@ -49,6 +49,7 @@ public abstract class SingleTaskChain extends TaskChain {
 
     public void setTask(Task task) {
         if (_mainTask == null || !_mainTask.equals(task)) {
+            resetChurnForNewRoot();
             if (_mainTask != null) {
                 _mainTask.stop(_mod, task);
             }
@@ -67,6 +68,7 @@ public abstract class SingleTaskChain extends TaskChain {
 
     @Override
     public void onInterrupt(Vibrato mod, TaskChain other) {
+        resetChurnGuard();
         Debug.logInternal("Chain Interrupted: " + this + " by " + other.toString());
         // Stop our task. When we're started up again, let our task know we need to run.
         _interrupted = true;

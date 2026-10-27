@@ -21,6 +21,7 @@ public abstract class Task {
 
     private boolean _active = false;
     private boolean _cycleReported = false;
+    private String _failureReason;
 
     public void tick(Vibrato mod, TaskChain parentChain) {
         if (!parentChain.canEnter(this)) {
@@ -37,6 +38,7 @@ public abstract class Task {
             PacketCoverage.setTask(root.getClass().getSimpleName(), step);
         }
         if (_first) {
+            parentChain.recordStart(this);
             Debug.logInternal("Task START: " + this);
             _active = true;
             try {
@@ -60,7 +62,22 @@ public abstract class Task {
         }
         if (_stopped) return;
 
+        if (_failureReason != null) {
+            if (_sub != null && !_sub.canBeInterruptedBy(mod, null)) _sub.tick(mod, parentChain);
+            return;
+        }
+
+        // A failure marked after the previous chain tick must be consumed before
+        // onTick can replace that child with a fresh but equal instance.
+        if (_sub != null && _sub.hasFailurePending()) {
+            if (_sub.failureReason() == null || !_sub.canBeInterruptedBy(mod, null))
+                _sub.tick(mod, parentChain);
+            if (_sub.failureReason() != null && _sub.canBeInterruptedBy(mod, null)) consumeChildFailure(mod);
+            return;
+        }
+
         Task newSub = onTick(mod);
+        if (_failureReason != null) return;
         // Debug state print
         if (!_oldDebugState.equals(_debugState)) {
             Debug.logInternal(toString());
@@ -94,6 +111,9 @@ public abstract class Task {
 
             // Run our child
             _sub.tick(mod, parentChain);
+            if (_sub.failureReason() != null && _sub.canBeInterruptedBy(mod, null)) {
+                consumeChildFailure(mod);
+            }
         } else {
             // We are null
             if (_sub != null) {
@@ -179,6 +199,34 @@ public abstract class Task {
     public boolean recoverFromStall(Vibrato mod) {
         return false;
     }
+
+    /** Marks an unrecoverable failure; parents receive it after the tick unwinds. */
+    protected final void fail(String reason) {
+        if (_failureReason == null) _failureReason = getClass().getSimpleName() + ": " + reason;
+    }
+
+    public final String failureReason() { return _failureReason; }
+
+    /** Return true only when this task has arranged a different strategy. */
+    protected boolean onChildFailure(Vibrato mod, Task child, String reason) { return false; }
+
+    private void consumeChildFailure(Vibrato mod) {
+        Task failed = _sub;
+        String reason = failed.failureReason();
+        failed.stop(mod);
+        _sub = null;
+        if (!onChildFailure(mod, failed, reason)) _failureReason = reason;
+    }
+
+    private boolean hasFailurePending() {
+        for (Task task = this; task != null; task = task._sub) if (task._failureReason != null) return true;
+        return false;
+    }
+
+    /** Opt in only when equality identifies a stable, immutable target. */
+    public boolean isChurnGuardEligible() { return false; }
+
+    final void failFromChurn() { fail("repeated target restarts without progress: " + toDebugString()); }
 
     public boolean isActive() {
         return _active;

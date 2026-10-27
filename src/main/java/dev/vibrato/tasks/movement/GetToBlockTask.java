@@ -24,7 +24,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
 
     public GetToBlockTask(BlockPos position, boolean preferStairs, Dimension dimension) {
         _dimension = dimension;
-        _position = position;
+        _position = position.toImmutable();
         _preferStairs = preferStairs;
     }
 
@@ -63,6 +63,11 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
             return task._position.equals(_position) && task._preferStairs == _preferStairs && task._dimension == _dimension;
         }
         return false;
+    }
+
+    @Override
+    public boolean isChurnGuardEligible() {
+        return true;
     }
 
     @Override

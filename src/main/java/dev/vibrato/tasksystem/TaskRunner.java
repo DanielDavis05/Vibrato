@@ -5,6 +5,9 @@ import dev.vibrato.Debug;
 import dev.vibrato.chains.SingleTaskChain;
 import dev.vibrato.director.DirectorTask;
 import dev.vibrato.packetcoverage.PacketCoverage;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.events.BlockBrokenEvent;
+import dev.vibrato.eventbus.events.BlockPlaceEvent;
 
 import java.util.ArrayList;
 
@@ -19,6 +22,21 @@ public class TaskRunner {
     public TaskRunner(Vibrato mod) {
         _mod = mod;
         _active = false;
+        if (mod != null) {
+            EventBus.subscribe(BlockBrokenEvent.class, event -> {
+                if (event.player == mod.getPlayer()) resetChurnOnProgress();
+            });
+            // Placement events lack a placer. Restrict the signal to the local player's
+            // reach; unrelated distant world changes should not reset a stalled target.
+            EventBus.subscribe(BlockPlaceEvent.class, event -> {
+                if (mod.getPlayer() != null && event.blockPos.isWithinDistance(mod.getPlayer().getPos(), 6))
+                    resetChurnOnProgress();
+            });
+        }
+    }
+
+    private void resetChurnOnProgress() {
+        for (TaskChain chain : _chains) chain.resetChurnGuard();
     }
 
     public void tick() {
