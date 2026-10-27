@@ -27,6 +27,18 @@ class ScriptStateTest {
         assertTrue(state.finished());
     }
 
+    @Test void initialScreenBlocksButLaterScreenDoesNotFreezeTimeout() {
+        var gate = new WorldReadyGate();
+        var state = new ScriptState(ScriptPlan.parse(List.of("0 wait-idle 2")));
+        assertFalse(gate.ready(false, false));
+        assertFalse(gate.ready(true, true));
+        assertNull(state.tick(100, gate.ready(true, true), false));
+        assertNull(state.tick(0, gate.ready(true, false), false));
+        assertNull(state.tick(1, gate.ready(true, true), false));
+        assertFalse(gate.ready(false, true));
+        assertTrue(state.tick(1, gate.ready(true, true), false).timedOut());
+    }
+
     @Test void idleWinsAtDeadlineAndOvershootCounts() {
         var steps = ScriptPlan.parse(List.of("1 wait-idle 2"));
         var idle = new ScriptState(steps);

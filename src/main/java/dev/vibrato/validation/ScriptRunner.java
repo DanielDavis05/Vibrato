@@ -21,6 +21,7 @@ import java.util.Map;
 public final class ScriptRunner {
     private final Vibrato mod;
     private final ScriptState state;
+    private final WorldReadyGate readyGate = new WorldReadyGate();
     private final Path result;
     private final List<Map<String, Object>> commands = new ArrayList<>();
     private long previousNanos;
@@ -58,7 +59,7 @@ public final class ScriptRunner {
         long now = System.nanoTime();
         double dt = previousNanos == 0 ? 0 : Math.max(0, (now - previousNanos) / 1e9);
         previousNanos = now;
-        boolean ready = client.player != null && client.world != null && client.currentScreen == null;
+        boolean ready = readyGate.ready(client.player != null && client.world != null, client.currentScreen != null);
         if (!ready) { haveSample = false; return; }
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();

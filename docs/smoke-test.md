@@ -101,7 +101,7 @@ search. These are recorded in the watch report. This sampled watch does not exha
 
 ### Scripted client runs
 
-For unattended development runs, create a UTF-8 script with one `<delay seconds> <action>` per line. Delays are relative to the previous action; blank lines and `#` comments are ignored. The clock starts only when the player and world are loaded and no screen is open. Actions beginning with `@` use Vibrato's command executor; `/` sends a vanilla command. `wait-idle <maximum seconds>` waits until there is neither an active user task nor an active or calculating path, then continues; a timeout is recorded and also continues. `exit` writes the result and stops the client. For example:
+For unattended development runs, create a UTF-8 script with one `<delay seconds> <action>` per line. Delays are relative to the previous action; blank lines and `#` comments are ignored. The clock starts only after the player and world are loaded and no screen is open; later open screens do not pause it, so timeouts still fire. Actions beginning with `@` use Vibrato's command executor; `/` sends a vanilla command. `wait-idle <maximum seconds>` waits until there is neither an active user task nor an active or calculating path, then continues; a timeout is recorded and also continues. `exit` writes the result and stops the client. For example:
 
 ```text
 0 /time set day
