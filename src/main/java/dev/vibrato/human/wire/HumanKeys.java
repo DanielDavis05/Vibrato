@@ -13,6 +13,7 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.chains.MLGBucketFallChain;
 import dev.vibrato.chains.MobDefenseChain;
 import dev.vibrato.chains.SingleTaskChain;
+import dev.vibrato.human.motion.KeyShaper;
 import dev.vibrato.nav.NavSafetyChain;
 import dev.vibrato.tasksystem.TaskChain;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -45,11 +46,14 @@ public final class HumanKeys {
 
     private static final int PATH_NODES = 6;
     private static final int DEBUG_INTERVAL_TICKS = 20;
+    /** About 10 seconds at 20 ticks per second. */
+    private static final int SUMMARY_INTERVAL_TICKS = 200;
 
     private static volatile ShapingLayer layer;
     private static boolean debug;
     private static long tick;
     private static long lastDebugTick = Long.MIN_VALUE;
+    private static long lastSummaryTick = Long.MIN_VALUE;
     private static boolean failed;
 
     private HumanKeys() {}
@@ -100,6 +104,10 @@ public final class HumanKeys {
         KeyAdapter.Flags intended = new KeyAdapter.Flags(input.pressingForward, input.pressingBack,
                 input.pressingLeft, input.pressingRight, input.jumping, false, input.sneaking);
         KeyAdapter.Flags shaped = active.apply(intended, view(player, executor), bypass);
+        if (debug && tick - lastSummaryTick >= SUMMARY_INTERVAL_TICKS) {
+            lastSummaryTick = tick;
+            Debug.logMessage(summary(active.stats()));
+        }
         if (shaped.equals(intended)) {
             return;
         }
@@ -114,6 +122,17 @@ public final class HumanKeys {
             lastDebugTick = tick;
             Debug.logMessage("Keys intended " + intended + " shaped " + shaped);
         }
+    }
+
+    /** One line of shaper counters, so a run can attribute stutter to a component. */
+    static String summary(KeyShaper.Stats s) {
+        return "Keys stats ticks=" + s.ticks()
+                + " changed=" + s.changedTicks()
+                + " hesitation=" + s.hesitationTicks()
+                + " gapRelease=" + s.gapReleaseTicks()
+                + " strafeTap=" + s.strafeTapTicks()
+                + " jumpShifted=" + s.jumpShifted()
+                + " jumpMissed=" + s.jumpMissed();
     }
 
     private static boolean safetyChainInCharge(Vibrato mod) {

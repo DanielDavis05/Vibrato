@@ -15,7 +15,12 @@ public final class ContextBuilder {
     static final int LOOKAHEAD_SEGMENTS = 3;
     /** A step longer than this between nodes is a horizontal gap; a diagonal step is about 1.41. */
     static final double GAP_STEP_BLOCKS = 1.5;
-    private static final double DROP_BLOCKS = 0.5;
+    /**
+     * A drop must be at least 2 blocks to count: a 1-block step (stairs, slopes, a single ledge) is walked over
+     * without any key change, so it must not count as a gap. Compared with {@code <}, so a drop of exactly this
+     * height is not a drop.
+     */
+    static final double DROP_BLOCKS = 1.5;
 
     private ContextBuilder() {}
 
@@ -31,8 +36,8 @@ public final class ContextBuilder {
     }
 
     /**
-     * Horizontal distance to the first node with a drop or gap after it within {@value #LOOKAHEAD_SEGMENTS}
-     * segments, 0 when the current movement itself is one or the path is unknown, infinite when there is none.
+     * Horizontal distance to the first node with a drop of at least 2 blocks or a horizontal gap after it within
+     * {@value #LOOKAHEAD_SEGMENTS} segments, 0 when the current movement itself is one or the path is unknown, infinite when there is none.
      */
     static double gapAheadBlocks(PathView view) {
         MovementKind kind = view.kind();

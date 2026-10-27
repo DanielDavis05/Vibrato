@@ -48,6 +48,21 @@ class ContextBuilderTest {
     }
 
     @Test
+    void oneBlockStepDownIsNotAGap() {
+        List<PathView.Node> stairs = List.of(node(0.5, 64, 0.5), node(1.5, 63, 0.5), node(2.5, 62, 0.5),
+                node(3.5, 61, 0.5), node(4.5, 60, 0.5));
+        assertEquals(Double.POSITIVE_INFINITY, ContextBuilder.build(view(MovementKind.TRAVERSE, stairs)).gapAheadBlocks());
+    }
+
+    @Test
+    void dropOfExactlyOneAndAHalfBlocksIsNotAGapButTwoBlocksIs() {
+        List<PathView.Node> half = List.of(node(0.5, 64, 0.5), node(1.5, 62.5, 0.5), node(2.5, 62.5, 0.5));
+        assertEquals(Double.POSITIVE_INFINITY, ContextBuilder.build(view(MovementKind.TRAVERSE, half)).gapAheadBlocks());
+        List<PathView.Node> two = List.of(node(0.5, 64, 0.5), node(1.5, 62, 0.5), node(2.5, 62, 0.5));
+        assertEquals(0.0, ContextBuilder.build(view(MovementKind.TRAVERSE, two)).gapAheadBlocks(), 1e-9);
+    }
+
+    @Test
     void horizontalGapIsDetectedButDiagonalIsNot() {
         List<PathView.Node> gap = List.of(node(0.5, 64, 0.5), node(1.5, 64, 0.5), node(3.5, 64, 0.5));
         assertEquals(1.0, ContextBuilder.build(view(MovementKind.TRAVERSE, gap)).gapAheadBlocks(), 1e-9);

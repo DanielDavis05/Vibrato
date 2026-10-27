@@ -159,4 +159,127 @@ class KeyShaperTest {
             assertTrue(shaper.shape(EnumSet.noneOf(Key.class), ctx(true, KeyShaper.NO_JUMP, 2, 3)).isEmpty());
         }
     }
+
+    /** Walks a straight approach to a gap, one block closer per tick, and returns the forward flag per tick. */
+    private static List<Boolean> approach(KeyShaper shaper, EnumSet<Key> intended, double fromBlocks, double toBlocks) {
+        List<Boolean> forward = new ArrayList<>();
+        for (double gap = fromBlocks; gap >= toBlocks; gap -= 0.1) {
+            KeyShaper.Context ctx = new KeyShaper.Context(true, 0.2, gap, KeyShaper.NO_JUMP, 0, 0);
+            forward.add(shaper.shape(intended, ctx).contains(Key.FORWARD));
+        }
+        return forward;
+    }
+
+    /** Number of separate runs of released-forward ticks, and the length of the longest one. */
+    private static int[] releaseRuns(List<Boolean> forward) {
+        int runs = 0;
+        int longest = 0;
+        int current = 0;
+        for (boolean held : forward) {
+            if (!held) {
+                current++;
+                longest = Math.max(longest, current);
+                if (current == 1) {
+                    runs++;
+                }
+            } else {
+                current = 0;
+            }
+        }
+        return new int[] {runs, longest};
+    }
+
+    @Test
+    void sprintingBotNeverLosesForwardBeforeAGap() {
+        HumanProfile busy = new HumanProfile(5, 0, 0, 0, 0, 6, 0.3, 0, 0.03, 0.1, 3, 0.92, 1.2, 1, 1);
+        for (long seed = 0; seed < 50; seed++) {
+            KeyShaper shaper = new KeyShaper(seed, busy);
+            for (boolean forward : approach(shaper, EnumSet.of(Key.FORWARD, Key.SPRINT), 1.9, 0.5)) {
+                assertTrue(forward, "seed " + seed);
+            }
+        }
+    }
+
+    @Test
+    void walkingApproachReleasesForwardAtMostOncePerApproach() {
+        int releasedApproaches = 0;
+        for (long seed = 0; seed < 200; seed++) {
+            KeyShaper shaper = new KeyShaper(seed, QUIET);
+            int[] runs = releaseRuns(approach(shaper, EnumSet.of(Key.FORWARD), 1.9, 0.5));
+            assertTrue(runs[0] <= 1, "seed " + seed + " released " + runs[0] + " times");
+            assertTrue(runs[1] <= 2, "seed " + seed + " released for " + runs[1] + " ticks");
+            releasedApproaches += runs[0];
+        }
+        assertTrue(releasedApproaches > 0, "no approach ever released forward");
+        assertTrue(releasedApproaches < 200, "every approach released forward");
+    }
+
+    @Test
+    void eachNewApproachGetsItsOwnDecision() {
+        int twoReleases = 0;
+        for (long seed = 0; seed < 200; seed++) {
+            KeyShaper shaper = new KeyShaper(seed, QUIET);
+            List<Boolean> forward = new ArrayList<>(approach(shaper, EnumSet.of(Key.FORWARD), 1.9, 0.5));
+            for (int i = 0; i < 5; i++) {
+                forward.add(shaper.shape(EnumSet.of(Key.FORWARD), new KeyShaper.Context(true, 0.2, INF, KeyShaper.NO_JUMP, 0, 0))
+                        .contains(Key.FORWARD));
+            }
+            forward.addAll(approach(shaper, EnumSet.of(Key.FORWARD), 1.9, 0.5));
+            if (releaseRuns(forward)[0] == 2) {
+                twoReleases++;
+            }
+        }
+        assertTrue(twoReleases > 0, "a second approach never got its own decision");
+    }
+
+    @Test
+    void stopsReleasingForwardWhenTooCloseToTheEdge() {
+        // Gap at or below 2 * speed: a release would not be safe, so forward is held.
+        KeyShaper shaper = new KeyShaper(3, QUIET);
+        for (int t = 0; t < 20; t++) {
+            KeyShaper.Context ctx = new KeyShaper.Context(true, 0.2, 0.4, KeyShaper.NO_JUMP, 0, 0);
+            assertTrue(shaper.shape(EnumSet.of(Key.FORWARD), ctx).contains(Key.FORWARD));
+        }
+    }
+
+    @Test
+    void statsCountEachComponent() {
+        KeyShaper quiet = new KeyShaper(1, QUIET);
+        for (int t = 0; t < 10; t++) {
+            quiet.shape(EnumSet.of(Key.FORWARD, Key.JUMP), ctx(true, KeyShaper.NO_JUMP, 0, 0));
+        }
+        KeyShaper.Stats s = quiet.stats();
+        assertEquals(10, s.ticks());
+        assertEquals(0, s.changedTicks());
+        assertEquals(0, s.hesitationTicks());
+        assertEquals(0, s.gapReleaseTicks());
+        assertEquals(0, s.strafeTapTicks());
+        assertEquals(0, s.jumpMissed());
+        assertEquals(0, s.jumpShifted());
+
+        KeyShaper hesitant = new KeyShaper(1, new HumanProfile(5, 0, 0, 0, 0, 6, 0.3, 1, 0.03, 0.1, 3, 0.92, 1.2, 1, 1));
+        for (int t = 0; t < 4; t++) {
+            hesitant.shape(EnumSet.of(Key.FORWARD), ctx(true, KeyShaper.NO_JUMP, 0, 0));
+        }
+        assertEquals(4, hesitant.stats().hesitationTicks());
+        assertEquals(4, hesitant.stats().changedTicks());
+
+        KeyShaper missing = new KeyShaper(1, ALWAYS_MISS);
+        missing.shape(EnumSet.of(Key.FORWARD, Key.JUMP), new KeyShaper.Context(true, 0.2, INF, KeyShaper.NO_JUMP, 0, 0));
+        assertEquals(1, missing.stats().jumpMissed());
+
+        KeyShaper shifted = new KeyShaper(2, JITTERY);
+        for (int t = 0; t < 40; t++) {
+            shifted.shape(EnumSet.noneOf(Key.class), ctx(true, t == 0 ? 5 : KeyShaper.NO_JUMP, 2, 3));
+        }
+        assertTrue(shifted.stats().jumpShifted() >= 1);
+    }
+
+    @Test
+    void statsSumAcrossRestarts() {
+        KeyShaper.Stats a = new KeyShaper.Stats(1, 2, 3, 4, 5, 6, 7);
+        assertEquals(new KeyShaper.Stats(2, 4, 6, 8, 10, 12, 14), a.plus(a));
+        assertEquals(a, a.plus(KeyShaper.Stats.ZERO));
+    }
 }
+
