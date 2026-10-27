@@ -12,12 +12,16 @@ import net.minecraft.client.gui.screen.StatsScreen;
 import net.minecraft.client.gui.screen.ingame.CrafterScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
+import net.minecraft.network.packet.c2s.play.ChatCommandSignedC2SPacket;
+import net.minecraft.network.packet.c2s.play.MessageAcknowledgmentC2SPacket;
+import net.minecraft.network.message.ArgumentSignatureDataMap;
+import net.minecraft.network.message.LastSeenMessageList;
+import java.time.Instant;
+import java.util.BitSet;
 import net.minecraft.network.packet.c2s.play.SpectatorTeleportC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateDifficultyC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateDifficultyLockC2SPacket;
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.client.gui.screen.ingame.CommandBlockScreen;
 import net.minecraft.client.gui.screen.ingame.MinecartCommandBlockScreen;
 import net.minecraft.world.GameMode;
@@ -51,11 +55,14 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("statistics", new Requirement("Join a Play connection with no screen open", List.of("Client Status"))),
             Map.entry("chat", new Requirement("Join a server that permits chat", List.of("Chat Message"))),
             Map.entry("command", new Requirement("Join a server with the help command", List.of("Chat Command"))),
+            Map.entry("chat_ack_empty", new Requirement("Fresh isolated connection with no pending signed messages", List.of("Acknowledge Message"))),
+            Map.entry("signed_command_empty", new Requirement("Fresh isolated connection with no pending signed messages and operator permission", List.of("Signed Chat Command"))),
             Map.entry("signed_command", new Requirement("Join an authenticated server with profile keys and the msg command", List.of("Signed Chat Command"))),
             Map.entry("abilities", new Requirement("Join a world with flight permitted", List.of("Player Abilities (serverbound)")))
     );
     private final String action;
     private boolean done;
+    private final ProtocolScenarioPreparation preparation = new ProtocolScenarioPreparation();
 
     public ClientProtocolScenarioTask(String action) {
         if (!ACTIONS.containsKey(action)) throw new IllegalArgumentException("Unknown protocol scenario: " + action);
@@ -86,6 +93,10 @@ public final class ClientProtocolScenarioTask extends Task {
     @Override protected Task onTick(Vibrato mod) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.interactionManager == null || client.getNetworkHandler() == null) return null;
+        if (!preparation.prepare(action, mod)) {
+            setDebugState("Preparing fixture: " + requirements(action));
+            return null;
+        }
         done = switch (action) {
             case "book_edit" -> ScreenScenarios.editBook("Protocol fixture page", null);
             case "book_sign" -> ScreenScenarios.editBook("Protocol fixture page", "Fixture");
@@ -108,22 +119,19 @@ public final class ClientProtocolScenarioTask extends Task {
                 yield true;
             }
             case "creative_slot" -> {
-                if (client.interactionManager.getCurrentGameMode() != GameMode.CREATIVE
-                        || client.player.getInventory().getStack(0).isEmpty()) yield false;
-                client.interactionManager.clickCreativeStack(client.player.getInventory().getStack(0).copy(), 36);
+                int slot = ProtocolScenarioPreparation.firstHotbarItem(client);
+                if (client.interactionManager.getCurrentGameMode() != GameMode.CREATIVE || slot < 0) yield false;
+                client.interactionManager.clickCreativeStack(client.player.getInventory().getStack(slot).copy(), 36 + slot);
                 yield true;
             }
             case "query_block" -> {
-                if (!client.player.hasPermissionLevel(2) || client.world == null
-                        || !(client.crosshairTarget instanceof BlockHitResult hit)
-                        || hit.getType() != HitResult.Type.BLOCK
-                        || client.world.getBlockEntity(hit.getBlockPos()) == null) yield false;
-                client.getNetworkHandler().getDataQueryHandler().queryBlockNbt(hit.getBlockPos(), ignored -> { });
+                if (!client.player.hasPermissionLevel(2) || preparation.targetBlock() == null) yield false;
+                client.getNetworkHandler().getDataQueryHandler().queryBlockNbt(preparation.targetBlock(), ignored -> { });
                 yield true;
             }
             case "query_entity" -> {
-                if (!client.player.hasPermissionLevel(2) || client.targetedEntity == null) yield false;
-                client.getNetworkHandler().getDataQueryHandler().queryEntityNbt(client.targetedEntity.getId(), ignored -> { });
+                if (!client.player.hasPermissionLevel(2) || preparation.targetEntity() == null) yield false;
+                client.getNetworkHandler().getDataQueryHandler().queryEntityNbt(preparation.targetEntity().getId(), ignored -> { });
                 yield true;
             }
             case "difficulty" -> {
@@ -147,8 +155,8 @@ public final class ClientProtocolScenarioTask extends Task {
             case "crafter_slot" -> toggleCrafterSlot(client);
             case "recipe_seen" -> displayRecipe(client);
             case "spectator_teleport" -> {
-                if (!client.player.isSpectator() || client.targetedEntity == null) yield false;
-                client.getNetworkHandler().sendPacket(new SpectatorTeleportC2SPacket(client.targetedEntity.getUuid()));
+                if (!client.player.isSpectator() || preparation.targetEntity() == null) yield false;
+                client.getNetworkHandler().sendPacket(new SpectatorTeleportC2SPacket(preparation.targetEntity().getUuid()));
                 yield true;
             }
             case "ping" -> {
@@ -166,6 +174,16 @@ public final class ClientProtocolScenarioTask extends Task {
             }
             case "command" -> {
                 client.getNetworkHandler().sendChatCommand("help");
+                yield true;
+            }
+            case "chat_ack_empty" -> {
+                client.getNetworkHandler().sendPacket(new MessageAcknowledgmentC2SPacket(0));
+                yield true;
+            }
+            case "signed_command_empty" -> {
+                if (!client.player.hasPermissionLevel(2)) yield false;
+                client.getNetworkHandler().sendPacket(new ChatCommandSignedC2SPacket("time query daytime", Instant.now(), 0L,
+                        ArgumentSignatureDataMap.EMPTY, new LastSeenMessageList.Acknowledgment(0, new BitSet())));
                 yield true;
             }
             case "signed_command" -> {
