@@ -20,8 +20,16 @@ public abstract class Task {
     private boolean _stopped = false;
 
     private boolean _active = false;
+    private boolean _cycleReported = false;
 
     public void tick(Vibrato mod, TaskChain parentChain) {
+        if (!parentChain.canEnter(this)) {
+            if (!_cycleReported) parentChain.reportCycle(this);
+            _cycleReported = true;
+            return;
+        }
+        parentChain.enter(this);
+        try {
         parentChain.addTaskToChain(this);
         if (PacketCoverage.enabled()) {
             Task root = parentChain.getTasks().getFirst();
@@ -62,6 +70,18 @@ public abstract class Task {
         if (newSub != null) {
             if (!newSub.isEqual(_sub)) {
                 if (_sub == null || _sub.canBeInterruptedBy(mod, newSub)) {
+                    // Reject before attaching: an instance cycle would also make
+                    // stop(), interruption checks and descendant scans recurse forever.
+                    if (!parentChain.canEnter(newSub)) {
+                        if (!_cycleReported) parentChain.reportCycle(newSub);
+                        _cycleReported = true;
+                        if (_sub != null) {
+                            _sub.stop(mod);
+                            _sub = null;
+                        }
+                        return;
+                    }
+                    _cycleReported = false;
                     // Our sub task is new
                     if (_sub != null) {
                         // Our previous sub must be interrupted.
@@ -85,6 +105,9 @@ public abstract class Task {
                     _sub.tick(mod, parentChain);
                 }
             }
+        }
+        } finally {
+            parentChain.leave();
         }
     }
 

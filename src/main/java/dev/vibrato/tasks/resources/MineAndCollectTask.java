@@ -42,6 +42,7 @@ public class MineAndCollectTask extends ResourceTask {
 
     private final MineOrCollectTask _subtask;
     private Item _acquiringGatherTool;
+    private boolean _allowGatherTool = true;
 
     public MineAndCollectTask(ItemTarget[] itemTargets, Block[] blocksToMine, MiningRequirement requirement) {
         super(itemTargets);
@@ -133,7 +134,8 @@ public class MineAndCollectTask extends ResourceTask {
     @Override
     protected boolean isEqualResource(ResourceTask other) {
         if (other instanceof MineAndCollectTask task) {
-            return Arrays.equals(task._blocksToMine, _blocksToMine);
+            return Arrays.equals(task._blocksToMine, _blocksToMine)
+                    && task._allowGatherTool == _allowGatherTool;
         }
         return false;
     }
@@ -143,7 +145,14 @@ public class MineAndCollectTask extends ResourceTask {
         return "Mine And Collect";
     }
 
+    /** Avoid acquiring a tool when this collection supplies its recipe. */
+    public MineAndCollectTask withoutGatherTool() {
+        _allowGatherTool = false;
+        return this;
+    }
+
     private Item bulkHandHarvestTool(Vibrato mod) {
+        if (!_allowGatherTool) return null;
         if (_requirement != MiningRequirement.HAND || _blocksToMine.length == 0) return null;
         int remaining = 0;
         for (ItemTarget target : _itemTargets) {

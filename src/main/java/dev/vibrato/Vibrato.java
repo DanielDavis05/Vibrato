@@ -161,6 +161,7 @@ public class Vibrato implements ModInitializer {
         _butler = new Butler(this);
 
         initializeCommands();
+        dev.vibrato.validation.ScriptRunner.install(this);
 
         // Load settings
         dev.vibrato.Settings.load(newSettings -> {

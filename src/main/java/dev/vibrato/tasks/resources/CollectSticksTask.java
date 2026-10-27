@@ -40,7 +40,11 @@ public class CollectSticksTask extends ResourceTask {
         Optional<BlockPos> nearestBush = mod.getBlockTracker().getNearestTracking(Blocks.DEAD_BUSH);
         // If there's a dead bush within range, go get it
         if (nearestBush.isPresent() && nearestBush.get().isWithinDistance(mod.getPlayer().getPos(), 20)) {
-            return new MineAndCollectTask(Items.DEAD_BUSH, 999999, new Block[]{Blocks.DEAD_BUSH}, MiningRequirement.HAND);
+            // Dead bushes drop sticks when broken by hand. Do not request the
+            // bush item (which requires shears), nor bootstrap an axe from
+            // the sticks this very task is collecting.
+            return new MineAndCollectTask(Items.STICK, _targetCount,
+                    new Block[]{Blocks.DEAD_BUSH}, MiningRequirement.HAND).withoutGatherTool();
         }
         // else craft from wood
         return new CraftInInventoryTask(new RecipeTarget(Items.STICK, _targetCount, CraftingRecipe.newShapedRecipe("sticks", new ItemTarget[]{new ItemTarget("planks"), null, new ItemTarget("planks"), null},4)));

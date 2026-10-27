@@ -1,6 +1,8 @@
 package dev.vibrato.tasksystem;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.resources.CollectRecipeCataloguedResourcesTask;
+import dev.vibrato.util.RecipeTarget;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +30,15 @@ class TaskInterruptionTest {
         @Override protected void onStop(Vibrato mod, Task interruptTask) { stops++; }
         @Override protected boolean isEqual(Task other) { return this == other; }
         @Override protected String toDebugString() { return "fake"; }
+    }
+
+    private static final class ObjectiveTask extends FakeTask {
+        final String objective;
+        ObjectiveTask(String objective) { this.objective = objective; }
+        @Override protected boolean isEqual(Task other) {
+            return other instanceof ObjectiveTask task && objective.equals(task.objective);
+        }
+        @Override protected String toDebugString() { return objective; }
     }
 
     private static final class GridTask extends FakeTask implements ITaskUsesCraftingGrid {}
@@ -172,4 +183,78 @@ class TaskInterruptionTest {
         assertEquals(1, first.stops);
         assertEquals(1, second.ticks);
     }
+    @Test
+    void repeatedSemanticObjectiveAndInstanceCycleAreRejectedWithoutAttaching() {
+        TestChain chain = new TestChain();
+        ObjectiveTask table = new ObjectiveTask("craft wooden axe");
+        ObjectiveTask ingredients = new ObjectiveTask("collect axe ingredients");
+        ObjectiveTask sticks = new ObjectiveTask("collect sticks");
+        ObjectiveTask bush = new ObjectiveTask("mine dead bush");
+        ObjectiveTask repeatedTable = new ObjectiveTask("craft wooden axe");
+        table.next = ingredients;
+        ingredients.next = sticks;
+        sticks.next = bush;
+        bush.next = repeatedTable;
+        table.tick(null, chain);
+        assertEquals(4, chain.getTasks().size());
+        assertEquals(0, repeatedTable.ticks);
+        bush.next = table;
+        table.tick(null, chain);
+        assertEquals(0, repeatedTable.ticks);
+        table.stop(null);
+        assertEquals(1, table.stops);
+        assertEquals(1, bush.stops);
+    }
+
+    @Test
+    void distinctNestedObjectivesCanBootstrapWoodenAxeAndReleaseProtectedChild() {
+        TestChain chain = new TestChain();
+        ObjectiveTask logs = new ObjectiveTask("bulk logs");
+        ObjectiveTask axe = new ObjectiveTask("wooden axe");
+        ObjectiveTask planks = new ObjectiveTask("planks for axe");
+        ObjectiveTask bootstrapLog = new ObjectiveTask("one log for planks");
+        ForcedTask child = new ForcedTask();
+        logs.next = axe;
+        axe.next = planks;
+        planks.next = bootstrapLog;
+        bootstrapLog.next = child;
+        logs.tick(null, chain);
+        assertEquals(1, bootstrapLog.ticks);
+        axe.next = null;
+        logs.tick(null, chain);
+        assertEquals(2, child.ticks);
+        child.force = false;
+        logs.tick(null, chain);
+        assertEquals(1, child.stops);
+    }
+
+    @Test
+    void uniqueRecursiveObjectivesAreBoundedAndCanBeStopped() {
+        TestChain chain = new TestChain();
+        class GrowingTask extends FakeTask {
+            @Override protected Task onTick(Vibrato mod) { ticks++; return new GrowingTask(); }
+        }
+        GrowingTask root = new GrowingTask();
+        root.tick(null, chain);
+        assertEquals(128, chain.getTasks().size());
+        root.stop(null);
+        assertEquals(1, root.stops);
+    }
+
+    @Test
+    void realRecipeCollectorRejectsReentryButAllowsOtherRecipe() {
+        TestChain chain = new TestChain();
+        RecipeTarget axe = new RecipeTarget(null, 1, null);
+        RecipeTarget planks = new RecipeTarget(null, 4, null);
+        Task collectingAxe = new CollectRecipeCataloguedResourcesTask(false, axe);
+        chain.enter(collectingAxe);
+        try {
+            assertFalse(chain.canEnter(new CollectRecipeCataloguedResourcesTask(false, axe)));
+            assertTrue(chain.canEnter(new CollectRecipeCataloguedResourcesTask(false, planks)));
+        } finally {
+            chain.leave();
+        }
+        assertTrue(chain.canEnter(collectingAxe));
+    }
+
 }

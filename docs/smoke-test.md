@@ -98,3 +98,18 @@ regression tests. The final test/build run passed 399 tests, with no failures, e
 
 Earlier night sessions included combat deaths, and one bed/spawn attempt exceeded its budget after a long animal
 search. These are recorded in the watch report. This sampled watch does not exhaust every activity or terrain.
+
+### Scripted client runs
+
+For unattended development runs, create a UTF-8 script with one `<delay seconds> <action>` per line. Delays are relative to the previous action; blank lines and `#` comments are ignored. The clock starts only when the player and world are loaded and no screen is open. Actions beginning with `@` use Vibrato's command executor; `/` sends a vanilla command. `wait-idle <maximum seconds>` waits until there is neither an active user task nor an active or calculating path, then continues; a timeout is recorded and also continues. `exit` writes the result and stops the client. For example:
+
+```text
+0 /time set day
+1 @goto 119 62 20
+0 wait-idle 120
+0 exit
+```
+
+Run with `./gradlew runClient -PgameProps="-Dvibrato.world=ab-water -Dvibrato.autostart=false -Dvibrato.script=/absolute/path/to/script.txt"`. Use a disposable copy of a save. Script execution is disabled when the property is unset. `run/script-result.json` is atomically replaced at script completion or client shutdown and includes command dispatch/completion/error and wait timeout statuses. Vanilla commands report only that they were sent, not whether the server accepted them. Movement metrics sample effective input and horizontal displacement per client tick: moving speed assumes 20 ticks/s, stationary means at most 0.005 blocks of horizontal displacement in a tick, and unavailable stuck-firing/task-restart counters are `null`. The result is a run-wide aggregate, so use separate runs for comparisons. A script without `exit` leaves the client running after its final action.
+
+For movement comparisons, `-Dvibrato.humanHops=off` disables the extra sprint-hop policy. Hops also stop when the key layer is off or the upcoming path and surrounding clearance cannot be verified. The corridor-gated camera offset is visual only; Baritone still controls the actual path.
