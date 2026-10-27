@@ -32,7 +32,7 @@ Here are the Vibrato commands and their functions:
 | `reload_settings` | Reloads the local settings file. Run this every time you want your settings to be updated. | |
 | `gamma {brightness=1}` | Sets the game's gamma. Useful for testing. 0 is "Moody" and 1 is "Bright", and you can go beyond to enable fullbright. | `@gamma 1000` |
 | `status` | Prints the status of the currently executing command. Mostly useful when running through `/msg`. | |
-| `stop` | Forcefully stops the currently running command. The shortcut `CTRL+K` also achieves this. | |
+| `stop` | Stops the current task and pauses Director autostart until you reconnect. The shortcut `CTRL+K` does the same. | |
 | `test {testname}` | Runs a "test" command. These vary, and will be described below. | |
 
 ### Command chaining
