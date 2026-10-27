@@ -157,6 +157,7 @@ public class MineAndCollectTask extends ResourceTask {
 
     private static class MineOrCollectTask extends AbstractDoToClosestObjectTask<Object> {
 
+        private static final double COMPLETION_DROP_RADIUS_SQ = 36;
         private final Block[] _blocks;
         private final ItemTarget[] _targets;
         private final Set<BlockPos> _blacklist = new HashSet<>();
@@ -184,10 +185,43 @@ public class MineAndCollectTask extends ResourceTask {
 
         @Override
         protected Optional<Object> getClosestTo(Vibrato mod, Vec3d pos) {
+            int[] held = new int[_targets.length];
+            int[] required = new int[_targets.length];
+            int[] nearby = new int[_targets.length];
+            for (int i = 0; i < _targets.length; i++) {
+                held[i] = mod.getItemStorage().getItemCountInventoryOnly(_targets[i].getMatches());
+                required[i] = _targets[i].getTargetCount();
+            }
+            for (ItemEntity drop : mod.getEntityTracker().getTrackedEntities(ItemEntity.class)) {
+                if (!drop.isAlive() || !mod.getEntityTracker().isEntityReachable(drop)
+                        || drop.squaredDistanceTo(pos) > COMPLETION_DROP_RADIUS_SQ) continue;
+                for (int i = 0; i < _targets.length; i++) {
+                    if (_targets[i].matches(drop.getStack().getItem())) nearby[i] += drop.getStack().getCount();
+                }
+            }
+            if (CompletionDropPolicy.canFinish(held, required, nearby)) {
+                Optional<ItemEntity> completingDrop = mod.getEntityTracker().getClosestItemDrop(pos, drop -> {
+                    if (drop.squaredDistanceTo(pos) > COMPLETION_DROP_RADIUS_SQ) return false;
+                    for (int i = 0; i < _targets.length; i++) {
+                        if (held[i] < required[i] && _targets[i].matches(drop.getStack().getItem())) return true;
+                    }
+                    return false;
+                }, _targets);
+                if (completingDrop.isPresent()) {
+                    // Override the generic distance hysteresis only when pickup can finish this request.
+                    if (_miningPos != null) resetSearch();
+                    return completingDrop.map(Object.class::cast);
+                }
+            }
             // Prefer a nearby block we can already see and mine without removing our own footing.
             // This is only a preference: distant or buried ore remains eligible in the fallback.
             BlockPos feet = mod.getPlayer().getBlockPos();
             Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
+                if (check.getY() < feet.getY()) return false;
+                if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
+                return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
+            }, _blocks);
+            if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
                 if (check.getX() == feet.getX() && check.getZ() == feet.getZ() && check.getY() < feet.getY()) return false;
                 if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
                 return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
