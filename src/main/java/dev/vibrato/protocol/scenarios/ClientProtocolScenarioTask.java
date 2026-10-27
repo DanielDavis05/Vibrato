@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screen.ingame.MerchantScreen;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
@@ -65,6 +66,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("chat_ack_empty", new Requirement("Fresh isolated connection with no pending signed messages", List.of("Acknowledge Message"))),
             Map.entry("signed_command_empty", new Requirement("Fresh isolated connection with no pending signed messages and operator permission", List.of("Signed Chat Command"))),
             Map.entry("signed_command", new Requirement("Join an authenticated server with profile keys and the msg command", List.of("Signed Chat Command"))),
+            Map.entry("move_ground", new Requirement("Direct protocol fixture packet with the current ground state", List.of("Set Player On Ground"))),
             Map.entry("move_position", new Requirement("Walk on fixture floor", List.of("Set Player Position"))),
             Map.entry("move_rotation", new Requirement("Turn on fixture floor", List.of("Set Player Rotation"))),
             Map.entry("move_full", new Requirement("Walk and turn on fixture floor", List.of("Set Player Position and Rotation"))),
@@ -108,6 +110,16 @@ public final class ClientProtocolScenarioTask extends Task {
             case "book_edit", "book_sign", "pick_item", "creative_slot", "recipe_seen", "use_item", "place_recipe" -> "inventory";
             case "difficulty", "difficulty_lock" -> "world";
             default -> "none";
+        };
+    }
+    /** Required fixture game mode; null means no mode change is needed. */
+    public static GameMode fixtureGameMode(String action) {
+        requirement(action);
+        return switch (action) {
+            case "inventory_click", "close_container", "place_recipe", "recipe_book", "recipe_seen", "boat", "select_trade" -> GameMode.SURVIVAL;
+            case "spectator_teleport" -> GameMode.SPECTATOR;
+            case "command_block", "command_minecart", "jigsaw", "jigsaw_generate", "structure", "creative_slot", "abilities" -> GameMode.CREATIVE;
+            default -> null;
         };
     }
     private static Requirement requirement(String action) {
@@ -219,6 +231,10 @@ public final class ClientProtocolScenarioTask extends Task {
                 yield true;
             }
             case "move_position", "move_rotation", "move_full", "player_command", "boat" -> drive(client);
+            case "move_ground" -> {
+                client.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.OnGroundOnly(client.player.isOnGround()));
+                yield true;
+            }
             case "swing" -> { client.player.swingHand(Hand.MAIN_HAND); yield true; }
             case "held_item" -> {
                 client.player.getInventory().selectedSlot = (client.player.getInventory().selectedSlot + 1) % 9;
@@ -285,8 +301,9 @@ public final class ClientProtocolScenarioTask extends Task {
         return null;
     }
     private boolean drive(MinecraftClient client) {
-        if (phaseTicks++ == 0 && (action.equals("move_rotation") || action.equals("move_full")))
-            client.player.setYaw(client.player.getYaw() + 35.0f);
+        phaseTicks++;
+        if ((phaseTicks == 1 && action.equals("move_rotation")) || action.equals("move_full"))
+            client.player.setYaw(client.player.getYaw() + (action.equals("move_full") ? 2.0f : 35.0f));
         if (action.equals("move_position") || action.equals("move_full") || action.equals("player_command") || action.equals("boat"))
             client.options.forwardKey.setPressed(true);
         if (action.equals("player_command")) client.options.sprintKey.setPressed(true);

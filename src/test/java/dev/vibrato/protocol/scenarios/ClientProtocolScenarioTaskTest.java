@@ -18,6 +18,13 @@ class ClientProtocolScenarioTaskTest {
         assertTrue(ClientProtocolScenarioTask.expectedPackets("jigsaw_generate").contains("Jigsaw Generate"));
     }
 
+    @Test void fixtureModesMatchTheInterfacesAndSpectatorAction() {
+        assertEquals(net.minecraft.world.GameMode.SURVIVAL, ClientProtocolScenarioTask.fixtureGameMode("recipe_seen"));
+        assertEquals(net.minecraft.world.GameMode.CREATIVE, ClientProtocolScenarioTask.fixtureGameMode("structure"));
+        assertEquals(net.minecraft.world.GameMode.SPECTATOR, ClientProtocolScenarioTask.fixtureGameMode("spectator_teleport"));
+        assertNull(ClientProtocolScenarioTask.fixtureGameMode("chat"));
+    }
+
     @Test void everyOfferedActionExplainsItsPrerequisitesAndExpectedTraffic() {
         for (String action : ClientProtocolScenarioTask.supportedActions()) {
             assertFalse(ClientProtocolScenarioTask.requirements(action).isBlank(), action);
