@@ -44,7 +44,10 @@ public final class ProtocolScenarioTask extends Task {
         ticks++;
         if (client.currentScreen instanceof DeathScreen) client.player.requestRespawn();
         if (ticks == 1) {
-            client.setScreen(null);
+            if (client.player.currentScreenHandler != client.player.playerScreenHandler
+                    || client.currentScreen instanceof net.minecraft.client.gui.screen.ingame.HandledScreen<?>) {
+                client.player.closeHandledScreen();
+            } else client.setScreen(null);
             // Native sneak input dismounts before a new fixture action, so prior boat steering
             // cannot change the packet variants produced by later walking scenarios.
             if (client.player.hasVehicle() && !action.equals("vehicle_correction")) client.options.sneakKey.setPressed(true);
