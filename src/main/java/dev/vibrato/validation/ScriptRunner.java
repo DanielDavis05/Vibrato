@@ -41,6 +41,7 @@ public final class ScriptRunner {
     private final List<Map<String, Object>> taskOutcomes = new ArrayList<>();
     private final List<Map<String, Object>> timeline = new ArrayList<>();
     private long startNanos, lastTimelineNanos;
+    private long firstReadyNanos;
     private long previousNanos;
     private long heartbeatNanos;
     private int heartbeatTicks;
@@ -95,6 +96,8 @@ public final class ScriptRunner {
         if (startNanos == 0) startNanos = now;
         double dt = previousNanos == 0 ? 0 : Math.max(0, (now - previousNanos) / 1e9);
         previousNanos = now;
+        boolean ready = readyGate.ready(client.player != null && client.world != null, client.currentScreen != null);
+        if (ready && firstReadyNanos == 0) firstReadyNanos = now;
         int deaths = Boolean.getBoolean("vibrato.campaignTelemetry")
                 ? campaignDeaths.observe(client.player, player -> player.isDead() || player.getHealth() <= 0) : 0;
         if (client.player != null && client.world != null) {
@@ -106,6 +109,8 @@ public final class ScriptRunner {
                 var currentLeaf = activeTasks.isEmpty() ? null : activeTasks.getLast();
                 Map<String, Object> heartbeat = new LinkedHashMap<>();
                 heartbeat.put("seconds", elapsed());
+                heartbeat.put("worldReady", ready);
+                heartbeat.put("worldReadySeconds", !ready || firstReadyNanos == 0 ? 0 : (now - firstReadyNanos) / 1e9);
                 heartbeat.put("position", List.of(client.player.getX(), client.player.getY(), client.player.getZ()));
                 heartbeat.put("health", client.player.getHealth());
                 heartbeat.put("dead", client.player.isDead());
@@ -159,7 +164,6 @@ public final class ScriptRunner {
                 heartbeatTicks = 0;
             }
         }
-        boolean ready = readyGate.ready(client.player != null && client.world != null, client.currentScreen != null);
         if (!ready) { haveSample = false; return; }
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
