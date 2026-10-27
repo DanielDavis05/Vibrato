@@ -29,6 +29,8 @@ public final class ScriptRunner {
     private final List<Map<String, Object>> timeline = new ArrayList<>();
     private long startNanos, lastTimelineNanos;
     private long previousNanos;
+    private long heartbeatNanos;
+    private int heartbeatTicks;
     private boolean forward, sprint, haveSample;
     private double x, z, movingDistance;
     private long movingTicks, samples, pathStationaryTicks, forwardReleases, sprintRestarts;
@@ -70,6 +72,25 @@ public final class ScriptRunner {
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
         sample(client, path);
+        if (Boolean.getBoolean("vibrato.campaignTelemetry")) heartbeatTicks++;
+        if (heartbeatNanos == 0) heartbeatNanos = now;
+        if (Boolean.getBoolean("vibrato.campaignTelemetry") && now - heartbeatNanos >= 1_000_000_000L) {
+            var activeChain = mod.getTaskRunner().getCurrentTaskChain();
+            var activeTasks = activeChain == null ? List.<dev.vibrato.tasksystem.Task>of() : activeChain.getTasks();
+            var currentLeaf = activeTasks.isEmpty() ? null : activeTasks.getLast();
+            Map<String, Object> heartbeat = new LinkedHashMap<>();
+            heartbeat.put("seconds", elapsed());
+            heartbeat.put("position", List.of(client.player.getX(), client.player.getY(), client.player.getZ()));
+            heartbeat.put("health", client.player.getHealth());
+            heartbeat.put("dead", client.player.isDead());
+            heartbeat.put("dimension", client.world.getRegistryKey().getValue().toString());
+            heartbeat.put("leaf", currentLeaf == null ? null : currentLeaf.toString());
+            heartbeat.put("tps", heartbeatTicks * 1e9 / (now - heartbeatNanos));
+            try { writeAtomic(client.runDirectory.toPath().resolve("campaign-heartbeat.json"), heartbeat); }
+            catch (IOException error) { Debug.logInternal("Campaign heartbeat write failed: " + error.getMessage()); }
+            heartbeatNanos = now;
+            heartbeatTicks = 0;
+        }
         if (lastTimelineNanos == 0 || now - lastTimelineNanos >= 1_000_000_000L) {
             lastTimelineNanos = now;
             Map<String, Object> point = new LinkedHashMap<>();

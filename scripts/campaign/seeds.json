@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "Fixed reproducibility seeds; terrain categories are unverified and must be surveyed before assigning labels.",
+  "seeds": [424242, 1, 7, 19, 42, 12345, 8675309, 314159265, -4964420948893066024, 9223372036854775807]
+}
