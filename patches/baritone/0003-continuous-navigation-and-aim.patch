@@ -1,0 +1,92 @@
+--- a/src/main/java/baritone/behavior/LookBehavior.java
++++ b/src/main/java/baritone/behavior/LookBehavior.java
+@@ -179,6 +179,14 @@
+     @Override
+     public void onPlayerRotationMove(RotationMoveEvent event) {
+         if (this.target != null) {
++            // Camera easing must not rotate a planned movement vector off its path. Keep
++            // ground movement, swimming and sprint-jump impulses aligned with the planner;
++            // elytra uses the real eased aim because flight physics depends on that aim.
++            if (VibratoSettings.getInstance().getRotationSmoother() != null && !ctx.player().isFallFlying()) {
++                event.setYaw(this.target.rotation.getYaw());
++                event.setPitch(this.target.rotation.getPitch());
++                return;
++            }
+             final Rotation actual = this.processor.peekRotation(this.target.rotation);
+             event.setYaw(actual.getYaw());
+             event.setPitch(actual.getPitch());
+@@ -204,10 +212,14 @@
+         private final ForkableRandom rand;
+         private double randomYawOffset;
+         private double randomPitchOffset;
++        private final boolean simulation;
++        private final RotationSmoother simulationSmoother;
+ 
+         public AbstractAimProcessor(IPlayerContext ctx) {
+             this.ctx = ctx;
+             this.rand = new ForkableRandom();
++            this.simulation = false;
++            this.simulationSmoother = null;
+         }
+ 
+         private AbstractAimProcessor(final AbstractAimProcessor source) {
+@@ -215,6 +227,13 @@
+             this.rand = source.rand.fork();
+             this.randomYawOffset = source.randomYawOffset;
+             this.randomPitchOffset = source.randomPitchOffset;
++            this.simulation = true;
++            RotationSmoother sourceSmoother = source.rotationSmoother();
++            this.simulationSmoother = sourceSmoother == null ? null : sourceSmoother.fork();
++        }
++
++        private RotationSmoother rotationSmoother() {
++            return simulation ? simulationSmoother : VibratoSettings.getInstance().getRotationSmoother();
+         }
+ 
+         @Override
+@@ -234,7 +253,7 @@
+             desiredPitch += this.randomPitchOffset;
+ 
+             // Vibrato hook: the desired yaw is already expressed relative to prev, so the smoother needs no wrapping
+-            final RotationSmoother smoother = VibratoSettings.getInstance().getRotationSmoother();
++            final RotationSmoother smoother = rotationSmoother();
+             if (smoother != null) {
+                 final Rotation smoothed = smoother.smooth(prev, new Rotation(desiredYaw, desiredPitch));
+                 desiredYaw = smoothed.getYaw();
+@@ -249,6 +268,9 @@
+ 
+         @Override
+         public final void tick() {
++            if (simulationSmoother != null) {
++                simulationSmoother.onTick();
++            }
+             // randomLooking
+             this.randomYawOffset = (this.rand.nextDouble() - 0.5) * Baritone.settings().randomLooking.value;
+             this.randomPitchOffset = (this.rand.nextDouble() - 0.5) * Baritone.settings().randomLooking.value;
+--- a/src/main/java/baritone/vibrato/RotationSmoother.java
++++ b/src/main/java/baritone/vibrato/RotationSmoother.java
+@@ -39,4 +39,10 @@
+      * Called once per game tick, after the aim processor has ticked.
+      */
+     default void onTick() {}
++
++    /**
++     * Returns an independent snapshot for speculative aim simulation. A null result leaves
++     * simulations unsmoothed; a simulation must never borrow the live camera's mutable state.
++     */
++    default RotationSmoother fork() { return null; }
+ }
+--- a/src/main/java/baritone/process/ExploreProcess.java
++++ b/src/main/java/baritone/process/ExploreProcess.java
+@@ -102,7 +102,10 @@
+             logDebug("awaiting region load from disk");
+             return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
+         }
+-        return new PathingCommand(new GoalComposite(closestUncached), PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
++        // Cache updates recreate the composite every tick. Force validation compares object
++        // identity and repeatedly cancels partial paths that have not reached the frontier.
++        // Revalidate completed destinations while allowing useful partial paths to continue.
++        return new PathingCommand(new GoalComposite(closestUncached), PathingCommandType.REVALIDATE_GOAL_AND_PATH);
+     }
+ 
+     private Goal[] closestUncachedChunks(BlockPos center, IChunkFilter filter) {
