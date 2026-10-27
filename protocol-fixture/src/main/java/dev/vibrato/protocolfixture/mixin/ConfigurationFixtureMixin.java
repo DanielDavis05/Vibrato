@@ -3,6 +3,7 @@ package dev.vibrato.protocolfixture.mixin;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.network.packet.s2c.common.*;
 import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerConfigurationNetworkHandler;
@@ -25,6 +26,14 @@ public abstract class ConfigurationFixtureMixin {
         } else if (mode.equals("config_cookie")) {
             self.sendPacket(new CookieRequestS2CPacket(Identifier.of("vibrato", "fixture")));
             ci.cancel();
+        } else if (mode.equals("config_transfer")) {
+            int port = Integer.getInteger("vibrato.fixture.transferPort", 25566);
+            self.sendPacket(new ServerTransferS2CPacket("127.0.0.1", port));
+            ci.cancel();
+        } else if (mode.equals("config_pack")) {
+            // No remote service: client can decline, or report a failed localhost download.
+            self.sendPacket(new ResourcePackSendS2CPacket(UUID.fromString("99794d14-220a-4882-a609-38d4adf3b157"),
+                    "http://127.0.0.1:1/fixture.zip", "", false, Optional.empty()));
         } else if (mode.equals("config_common")) {
             self.sendPacket(new CommonPingS2CPacket(123));
             self.sendPacket(new StoreCookieS2CPacket(Identifier.of("vibrato", "fixture"), new byte[] {1}));
