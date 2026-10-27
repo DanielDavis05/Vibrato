@@ -27,6 +27,14 @@ class GoalFollowEntityTest {
     }
 
     @Test
+    void groundedDropOnSlabAllowsItsStandingBlock() {
+        GoalFollowEntity goal = new GoalFollowEntity(() -> new Vec3d(10.5, 130.5, 10.5), 1, () -> true);
+        assertTrue(goal.isInGoal(10, 130, 10));
+        assertEquals(0, goal.heuristic(10, 130, 10));
+        assertFalse(goal.isInGoal(10, 129, 10));
+    }
+
+    @Test
     void ungroundedDropKeepsOrdinaryEntityBlockSemantics() {
         GoalFollowEntity goal = new GoalFollowEntity(() -> new Vec3d(10.98, 130.999, 10.5), 1, () -> false);
         assertTrue(goal.isInGoal(10, 130, 10));
