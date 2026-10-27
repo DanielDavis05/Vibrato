@@ -1,0 +1,190 @@
+# @gamer run, 2026-10-27 16:20-16:25 (condensed and redacted)
+# Source: client latest.log. Kept: task starts, chat, stuck/failure lines. Dropped: pathfinder stats, inventory refreshes, slot clicks, pickups/approaches.
+# Identical consecutive lines folded (xN). Player names, paths and ids redacted.
+
+16:20:30 CHAT [Vibrato] User Task Set: <Beating the Game.> 
+16:20:30 VIBRATO: Task START: <Beating the Game.> 
+16:20:30 VIBRATO: Task START: <Get catalogued: {[iron_sword] x 1,[iron_pickaxe] x 2}: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:30 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:30 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container> 
+16:20:30 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron_sword x 1},RecipeTarget{_recipe=CraftingRecipe{craft iro
+16:20:30 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container: [[iron_ingot] x 8]> 
+16:20:30 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> 
+16:20:30 VIBRATO: Task START: <Mine And Collect: [[raw_iron] x 8]> 
+16:20:30 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:20:30 VIBRATO: Task START: <Destroy block at 70, 61, 6> 
+16:20:34 VIBRATO: Task START: <Destroy block at 71, 60, 5> 
+16:20:35 VIBRATO: Task START: <Destroy block at 73, 50, 6> 
+16:20:35 CHAT Set own game mode to Survival Mode
+16:20:37 VIBRATO: Chain Interrupted: User Tasks by MLG Water Bucket Fall Chain
+16:20:37 VIBRATO: Task START: <Epic gaemer moment> 
+16:20:37 VIBRATO: Chain Interrupted: MLG Water Bucket Fall Chain by User Tasks
+16:20:37 VIBRATO: Task START: <Beating the Game.> Getting gear for Ender Eye journey
+16:20:37 VIBRATO: Task START: <Get catalogued: {[iron_sword] x 1,[iron_pickaxe] x 2}: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:37 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:37 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container> craft does NOT have RECIPE MATERIALS: [RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron
+16:20:37 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron_sword x 1},RecipeTarget{_recipe=CraftingRecipe{craft iro
+16:20:37 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container: [[iron_ingot] x 8]> 
+16:20:37 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Getting Materials
+16:20:37 VIBRATO: Task START: <Mine And Collect: [[raw_iron] x 8]> 
+16:20:37 VIBRATO: Task START: <Destroy block at 73, 50, 6> Getting to block...
+16:20:37 VIBRATO: Task START: <Destroy block at 71, 49, 5> 
+16:20:39 CHAT [Vibrato] Unstuck RECENTER_ON_BLOCK (EDGE_JAM)
+16:20:39 VIBRATO: Chain Interrupted: User Tasks by Never Stuck Navigation Chain
+16:20:41 VIBRATO: Task START: <Beating the Game.> Getting gear for Ender Eye journey
+16:20:41 VIBRATO: Task START: <Get catalogued: {[iron_sword] x 1,[iron_pickaxe] x 2}: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:41 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:20:41 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container> craft does NOT have RECIPE MATERIALS: [RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron
+16:20:41 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron_sword x 1},RecipeTarget{_recipe=CraftingRecipe{craft iro
+16:20:41 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container: [[iron_ingot] x 8]> 
+16:20:41 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Getting Materials
+16:20:41 VIBRATO: Task START: <Mine And Collect: [[raw_iron] x 8]> 
+16:20:41 VIBRATO: Task START: <Destroy block at 73, 50, 6> 
+16:20:55 VIBRATO: Task START: <Destroy block at 74, 49, 6> 
+16:20:56 VIBRATO: Task START: <Destroy block at 73, 49, 6> 
+16:20:56 VIBRATO: Task START: <Destroy block at 73, 49, 5> 
+16:20:56 VIBRATO: Task START: <Destroy block at 72, 49, 6> 
+16:20:57 VIBRATO: Task START: <Destroy block at 72, 49, 5> 
+16:20:57 VIBRATO: Task START: <Destroy block at 72, 48, 5> 
+16:20:57 VIBRATO: Task START: <Destroy block at 71, 49, 5> 
+16:20:57 VIBRATO: Task START: <Collect Fuel: x8.0> 
+16:20:57 VIBRATO: Task START: <Mine And Collect: [[coal] x 1]> 
+16:20:57 VIBRATO: Task START: <Destroy block at 70, 49, 5> 
+16:21:33 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:21:33 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:21:41 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+16:21:43 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:21:43 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:21:53 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:21:53 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:22:01 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+16:22:03 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:22:03 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:22:11 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+16:22:13 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:22:13 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:22:23 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:22:23 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:22:31 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+16:22:33 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:22:33 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Waiting...
+16:22:41 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+16:22:43 VIBRATO: Task START: <Picking up from container at (42, 68, -13): [[iron_ingot] x 8]> 
+16:22:44 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft sticks}, _item=minecraft:stick x 5}}> 
+16:22:44 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,strip
+16:22:44 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:22:44 VIBRATO: Task START: <Mine And Collect: [[stick] x 5]> 
+16:22:44 VIBRATO: Task START: <Destroy block at 33, 65, -9> 
+16:22:47 VIBRATO: Task START: <Destroy block at 30, 64, -11> 
+16:22:48 VIBRATO: Task START: <Mine And Collect: [[stick] x 5]> 
+16:22:48 VIBRATO: Task START: <Destroy block at 16, 64, -8> 
+16:23:00 VIBRATO: Blacklist RESET: BlockPos{x=16, y=64, z=-8}
+16:23:00 VIBRATO: Blacklist: BlockPos{x=16, y=64, z=-8}: Try 1 / 4
+16:23:00 VIBRATO: Task START: <Wander for 5.0 blocks> 
+16:23:01 Path goes for 123.10158406779338 blocks
+16:23:02 CHAT [Vibrato] Increased wander range
+16:23:04 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft sticks}, _item=minecraft:stick x 5}}> 
+16:23:04 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,strip
+16:23:04 VIBRATO: Task START: <Destroy block at 18, 64, -8> 
+16:23:06 VIBRATO: Task START: <Crafting (w/ RECIPE): RecipeTarget{_recipe=CraftingRecipe{craft planks}, _item=minecraft:oak_planks x 2}> 
+16:23:06 VIBRATO: Task START: <Crafting (w/ RECIPE): RecipeTarget{_recipe=CraftingRecipe{craft sticks}, _item=minecraft:stick x 5}> 
+16:23:07 VIBRATO: Task START: <Mine And Collect: [[crafting_table] x 1]> 
+16:23:08 VIBRATO: Task START: <Destroy block at 43, 68, -13> 
+16:23:14 VIBRATO: Task START: <Get catalogued: {[iron_sword] x 1,[iron_pickaxe] x 2}: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:23:14 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container: [[iron_sword] x 1, [iron_pickaxe] x 2]> 
+16:23:14 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container> 
+16:23:14 VIBRATO: Task START: <Place [Block{minecraft:crafting_table}] nearby> 
+16:23:14 VIBRATO: Task START: <Crafting (w/ RECIPE): RecipeTarget{_recipe=CraftingRecipe{craft iron_sword}, _item=minecraft:iron_sword x 1}> 
+16:23:14 VIBRATO: Task START: <Crafting (w/ RECIPE): RecipeTarget{_recipe=CraftingRecipe{craft iron_pickaxe}, _item=minecraft:iron_pickaxe x 2}> 
+16:23:15 VIBRATO: Task START: <Collect 220.0 units of food.> 
+16:23:15 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:23:15 VIBRATO: Task START: <Killing entity.minecraft.cow> 
+16:23:15 VIBRATO: Task START: <Mine And Collect: [[crafting_table] x 1]> 
+16:23:15 VIBRATO: Task START: <Destroy block at 45, 68, -13> 
+16:23:16 VIBRATO: Task START: <Collect 220.0 units of food.> 
+16:23:16 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:23:16 VIBRATO: Task START: <Killing entity.minecraft.cow>   (x2)
+16:23:24 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:24 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.PigEntity: [[porkchop] x 1]> 
+16:23:24 VIBRATO: Task START: <Killing entity.minecraft.pig> 
+16:23:33 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:33 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:23:33 VIBRATO: Task START: <Killing entity.minecraft.cow> 
+16:23:39 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:39 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:23:39 VIBRATO: Task START: <Killing entity.minecraft.sheep>   (x2)
+16:23:49 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:49 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:23:49 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:23:53 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:53 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:23:53 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:23:55 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:55 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:23:55 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:23:59 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:23:59 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:23:59 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:24:01 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:01 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:24:01 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:24:06 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:06 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:24:06 VIBRATO: Task START: <Killing entity.minecraft.cow> 
+16:24:12 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:12 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:24:12 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:24:22 CHAT [Vibrato] Unstuck JUMP (STATIONARY_WITH_INTENT)
+16:24:22 VIBRATO: Chain Interrupted: User Tasks by Never Stuck Navigation Chain
+16:24:22 VIBRATO: Task START: <Beating the Game.> Getting Food for Ender Eye journey
+16:24:22 VIBRATO: Task START: <Collect 220.0 units of food.> Killing entity.minecraft.sheep
+16:24:22 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]>   (x2)
+16:24:27 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:24:38 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:38 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:24:38 VIBRATO: Task START: <Killing entity.minecraft.cow> 
+16:24:49 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:49 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:24:49 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:24:55 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:24:56 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.CowEntity: [[beef] x 1]> 
+16:24:56 VIBRATO: Task START: <Killing entity.minecraft.cow> 
+16:25:00 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:25:00 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:25:00 VIBRATO: Task START: <Killing entity.minecraft.sheep>   (x2)
+16:25:03 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:25:03 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:25:03 VIBRATO: Task START: <Killing entity.minecraft.sheep> 
+16:25:11 CHAT [Vibrato] Unstuck JUMP (STATIONARY_WITH_INTENT)
+16:25:11 VIBRATO: Chain Interrupted: User Tasks by Never Stuck Navigation Chain
+16:25:11 VIBRATO: Task START: <Beating the Game.> Getting Food for Ender Eye journey
+16:25:11 VIBRATO: Task START: <Collect 220.0 units of food.> Killing entity.minecraft.sheep
+16:25:11 VIBRATO: Task START: <Collect items from public class net.minecraft.entity.passive.SheepEntity: [[mutton] x 1]> 
+16:25:13 VIBRATO: Task START: <Wander for 64.0 blocks> 
+16:25:13 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container: [cooked_beef x 11]> 
+16:25:13 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> 
+16:25:13 VIBRATO: Task START: <Place [Block{minecraft:furnace}] nearby> 
+16:25:14 VIBRATO: Task START: <Collect Fuel: x11.0> 
+16:25:14 VIBRATO: Task START: <Mine And Collect: [[coal] x 2]> 
+16:25:14 VIBRATO: Task START: <Destroy block at 64, 60, 13> 
+16:25:14 VIBRATO: Task START: <Destroy block at 18, 56, 15> 
+16:25:16 VIBRATO: Chain Interrupted: User Tasks by MLG Water Bucket Fall Chain
+16:25:16 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+16:25:16 VIBRATO: Chain Interrupted: MLG Water Bucket Fall Chain by User Tasks
+16:25:16 VIBRATO: Task START: <Beating the Game.> Getting Food for Ender Eye journey
+16:25:16 VIBRATO: Task START: <Collect 220.0 units of food.> Cooking...
+16:25:16 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container: [cooked_beef x 11]> 
+16:25:16 VIBRATO: Task START: <Doing stuff in [furnace] x 1 container> Getting Fuel
+16:25:16 VIBRATO: Task START: <Collect Fuel: x11.0> Collecting coal.
+16:25:16 VIBRATO: Task START: <Mine And Collect: [[coal] x 2]> 
+16:25:16 VIBRATO: Task START: <Destroy block at 18, 56, 15> Getting to block...
+16:25:18 VIBRATO: Task START: <Destroy block at 17, 56, 15> 
+16:25:18 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container: [[furnace] x 1]> 
+16:25:18 VIBRATO: Task START: <Doing stuff in crafting_table x 1 container> 
+16:25:18 VIBRATO: Task START: <Place [Block{minecraft:crafting_table}] nearby> 
+16:25:18 VIBRATO: Task START: <Crafting (w/ RECIPE): RecipeTarget{_recipe=CraftingRecipe{craft furnace}, _item=minecraft:furnace x 1}> 
+16:25:19 VIBRATO: Task START: <Place [Block{minecraft:furnace}] nearby> Placing since we can...
+16:25:19 VIBRATO: Task START: <Place structure{Block{minecraft:furnace}} at 19, 55, 15> 
+16:25:19 CHAT [Vibrato] Task failed: PlaceBlockTask: No usable block to place at 19, 55, 15 (requested [Block{minecraft:furnace}])
+16:25:19 CHAT [Vibrato] Stopped
+16:25:19 VIBRATO: User task cancelled after 4 minutes and 48.664.
