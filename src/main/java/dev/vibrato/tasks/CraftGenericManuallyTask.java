@@ -2,6 +2,7 @@ package dev.vibrato.tasks;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.slot.ClickSlotTask;
+import dev.vibrato.tasks.slot.EnsureFreeCursorSlotTask;
 import dev.vibrato.tasks.slot.MoveItemToSlotFromInventoryTask;
 import dev.vibrato.tasks.slot.ReceiveCraftingOutputSlotTask;
 import dev.vibrato.tasks.slot.ThrowCursorTask;
@@ -51,6 +52,12 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
 
         Slot outputSlot = bigCrafting ? CraftingTableSlot.OUTPUT_SLOT : PlayerSlot.CRAFT_OUTPUT_SLOT;
 
+        ItemStack output = StorageHelper.getItemStackInSlot(outputSlot);
+        if (!output.isEmpty() && output.getItem() == _target.getOutputItem()) {
+            // A valid recipe can use stacks larger than the remaining request.
+            return new ReceiveCraftingOutputSlotTask(outputSlot, _target.getTargetCount());
+        }
+
         // Example:
         // We need 9 sticks
         // plank recipe results in 4 sticks
@@ -58,6 +65,17 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
         int requiredPerSlot = requiredPerSlot(_target.getTargetCount(),
                 mod.getItemStorage().getItemCountInventoryOnly(_target.getOutputItem()),
                 _target.getRecipe().outputCount());
+
+        // Once a grid is partly filled, first make one complete recipe. This
+        // lets a shared stack be split between several inputs without moving
+        // its last item back and forth between slots.
+        boolean partlyFilled = false;
+        for (int i = 0; i < _target.getRecipe().getSlotCount(); i++) {
+            Slot slot = bigCrafting ? CraftingTableSlot.getInputSlot(i, _target.getRecipe().isBig())
+                    : PlayerSlot.getCraftInputSlot(i);
+            if (!StorageHelper.getItemStackInSlot(slot).isEmpty()) partlyFilled = true;
+        }
+        requiredPerSlot = inputCountForGrid(requiredPerSlot, partlyFilled);
 
         // For each slot in table
         for (int craftSlot = 0; craftSlot < _target.getRecipe().getSlotCount(); ++craftSlot) {
@@ -75,6 +93,7 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
                 if (present.getItem() != Items.AIR) {
                     // Move this item OUT if it should be empty
                     setDebugState("Found INVALID slot");
+                    if (!StorageHelper.getItemStackInCursorSlot().isEmpty()) return new EnsureFreeCursorSlotTask();
                     return new ClickSlotTask(currentCraftSlot);
                 }
             } else {
@@ -92,21 +111,26 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
                         } else {
                             // Clear an incorrect ingredient so it cannot block the recipe.
                             if (!present.isEmpty() && !correctItem) {
+                                if (!StorageHelper.getItemStackInCursorSlot().isEmpty()) return new EnsureFreeCursorSlotTask();
                                 return new ClickSlotTask(currentCraftSlot);
                             }
-                            // Move on to the next slot, we can't fill this one anymore.
+                            // Another input may contain several of this ingredient.
+                            // Split it only when it is actually needed here, and only
+                            // with an empty cursor (right-click otherwise adds an item).
+                            Slot donor = findDonorSlot(toFill, craftSlot, bigCrafting);
+                            if (donor != null) {
+                                if (!StorageHelper.getItemStackInCursorSlot().isEmpty()) {
+                                    return new EnsureFreeCursorSlotTask();
+                                }
+                                setDebugState("Splitting an ingredient between recipe slots");
+                                return new ClickSlotTask(donor, 1);
+                            }
                             continue;
                         }
                     }
 
                     setDebugState("Moving item to slot...");
                     return new MoveItemToSlotFromInventoryTask(new ItemTarget(toFill, requiredPerSlot), currentCraftSlot);
-                }
-                // We could be OVER satisfied
-                boolean oversatisfies = present.getCount() > requiredPerSlot;
-                if (oversatisfies) {
-                    setDebugState("OVER SATISFIED slot! Right clicking slot to extract half and spread it out more.");
-                    return new ClickSlotTask(currentCraftSlot, 1);
                 }
             }
         }
@@ -129,6 +153,25 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
             // Wait
             return null;
         }
+    }
+
+    private Slot findDonorSlot(ItemTarget needed, int destinationIndex, boolean bigCrafting) {
+        for (int i = 0; i < _target.getRecipe().getSlotCount(); i++) {
+            if (i == destinationIndex) continue;
+            Slot slot = bigCrafting ? CraftingTableSlot.getInputSlot(i, _target.getRecipe().isBig())
+                    : PlayerSlot.getCraftInputSlot(i);
+            ItemStack stack = StorageHelper.getItemStackInSlot(slot);
+            if (canSplitDonor(stack.getCount(), needed.matches(stack.getItem()))) return slot;
+        }
+        return null;
+    }
+
+    static boolean canSplitDonor(int count, boolean ingredientMatches) {
+        return ingredientMatches && count > 1;
+    }
+
+    static int inputCountForGrid(int remainingCrafts, boolean partlyFilled) {
+        return partlyFilled ? Math.min(1, remainingCrafts) : remainingCrafts;
     }
 
     static int requiredPerSlot(int targetCount, int heldCount, int outputCount) {
