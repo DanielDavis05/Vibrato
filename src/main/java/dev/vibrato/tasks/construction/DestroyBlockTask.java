@@ -96,7 +96,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
                 if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
                     // Try breaking normally.
                     mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-                    Debug.logMessage("Break Block: Restarting builder process");
+                    Debug.logInternal("Break Block: Restarting builder process");
                     mod.getClientBaritone().getBuilderProcess().build("destroy block", new PlaceBlockSchematic(Blocks.AIR), _pos);
                 }
             }

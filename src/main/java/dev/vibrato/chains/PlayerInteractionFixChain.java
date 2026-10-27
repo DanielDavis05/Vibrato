@@ -73,7 +73,7 @@ public class PlayerInteractionFixChain extends TaskChain {
                     if (StorageHelper.getItemStackInSlot(currentEquipped).getItem() != StorageHelper.getItemStackInSlot(bestToolSlot.get()).getItem()) {
                         boolean isAllowedToManage = !mod.getClientBaritone().getPathingBehavior().isPathing() || bestToolSlot.get().getInventorySlot() >= 9;
                         if (isAllowedToManage) {
-                            Debug.logMessage("Found better tool in inventory, equipping.");
+                            Debug.logInternal("Found better tool in inventory, equipping.");
                             mod.getSlotHandler().forceEquipSlot(bestToolSlot.get());
                         }
                     }
@@ -85,7 +85,7 @@ public class PlayerInteractionFixChain extends TaskChain {
         // Sneak is held on purpose while bridging or pillaring, so only release it when nothing is being built.
         if (mod.getInputControls().isHeldDown(Input.SNEAK)) {
             if (_shiftDepressTimeout.elapsed() && !mod.getClientBaritone().getBuilderProcess().isActive()) {
-                Debug.logMessage("Unpressing shift/sneak");
+                Debug.logInternal("Unpressing shift/sneak");
                 mod.getInputControls().release(Input.SNEAK);
             }
         } else {
@@ -95,7 +95,7 @@ public class PlayerInteractionFixChain extends TaskChain {
         // Refresh inventory
         if (_generalDuctTapeSwapTimeout.elapsed()) {
             if (!mod.getControllerExtras().isBreakingBlock()) {
-                Debug.logMessage("Refreshed inventory...");
+                Debug.logInternal("Refreshed inventory...");
                 mod.getSlotHandler().refreshInventory();
                 _generalDuctTapeSwapTimeout.reset();
                 return Float.NEGATIVE_INFINITY;

@@ -127,7 +127,7 @@ public class CollectRecipeCataloguedResourcesTask extends Task {
         if (_finished) {
             if (!StorageHelper.hasRecipeMaterialsOrTarget(mod, this._targets)) {
                 _finished = false;
-                Debug.logMessage("Invalid collect recipe \"finished\" state, resetting.");
+                Debug.logInternal("Invalid collect recipe \"finished\" state, resetting.");
             }
         }
         return _finished;

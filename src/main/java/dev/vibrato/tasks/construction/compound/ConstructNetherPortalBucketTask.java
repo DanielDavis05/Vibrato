@@ -111,7 +111,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     protected Task onTick(Vibrato mod) {
 
         if (_refreshTimer.elapsed()) {
-            Debug.logMessage("Duct tape: Refreshing inventory again just in case");
+            Debug.logInternal("Duct tape: Refreshing inventory again just in case");
             _refreshTimer.reset();
             mod.getSlotHandler().refreshInventory();
         }

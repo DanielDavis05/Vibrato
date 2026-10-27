@@ -54,7 +54,8 @@ public class Debug {
 
     public static void logMessage(String message, boolean prefix) {
         if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-            MutableText text = prefix ? chatPrefix() : Text.empty();
+            MutableText text = Text.empty();
+            if (prefix) text.append(chatPrefix());
             MinecraftClient.getInstance().player.sendMessage(text.append(chatBody(message)), false);
         } else {
             logInternal(message);
@@ -73,7 +74,7 @@ public class Debug {
         logInternal("WARNING: " + message);
         if (jankModInstance != null && !jankModInstance.getModSettings().shouldHideAllWarningLogs()) {
             if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(chatPrefix().append(chatBody(message).formatted(Formatting.RED)), false);
+                MinecraftClient.getInstance().player.sendMessage(Text.empty().append(chatPrefix()).append(chatBody(message).formatted(Formatting.RED)), false);
                 //MinecraftClient.getInstance().player.sendChatMessage(msg);
             }
         }
@@ -89,7 +90,7 @@ public class Debug {
         System.err.println("at:");
         System.err.println(stacktrace);
         if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.sendMessage(chatPrefix().append(Text.literal("[ERROR] " + message + "\nat:\n" + stacktrace).formatted(Formatting.RED)), false);
+            MinecraftClient.getInstance().player.sendMessage(Text.empty().append(chatPrefix()).append(Text.literal("[ERROR] " + message + "\nat:\n" + stacktrace).formatted(Formatting.RED)), false);
         }
     }
 

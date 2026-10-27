@@ -210,6 +210,7 @@ public class Vibrato implements ModInitializer {
 
         // Cancel shortcut
         if (InputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) && InputHelper.isKeyPressed(GLFW.GLFW_KEY_K)) {
+            FleetBootstrap.stopForSession();
             _userTaskChain.cancel(this);
             if (_taskRunner.getCurrentTaskChain() != null) {
                 _taskRunner.getCurrentTaskChain().stop(this);

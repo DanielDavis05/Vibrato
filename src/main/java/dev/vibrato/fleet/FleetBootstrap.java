@@ -39,6 +39,7 @@ public final class FleetBootstrap {
 
     private static long _ticksSinceJoin;
     private static boolean _started;
+    private static boolean _manuallyStopped;
     private static long _startedAtMillis;
     private static boolean _everJoined;
     private static long _lastConnectAttempt = AutostartGate.NEVER;
@@ -50,11 +51,17 @@ public final class FleetBootstrap {
         EventBus.subscribe(ClientTickEvent.class, evt -> onClientTick(mod));
     }
 
+    /** Suppress automatic starts and restarts until the current world session ends. */
+    public static void stopForSession() {
+        _manuallyStopped = true;
+    }
+
     private static void onClientTick(Vibrato mod) {
         FleetConfig config = mod.getFleetConfig();
         if (!Vibrato.inGame()) {
             _ticksSinceJoin = 0;
             _started = false;
+            _manuallyStopped = false;
             if (config.world() != null) {
                 maybeEnterWorld(config);
             } else {
@@ -67,6 +74,8 @@ public final class FleetBootstrap {
         if (_ticksSinceJoin == 1 && config.autostart()) {
             MinecraftClient.getInstance().mouse.unlockCursor();
         }
+
+        if (_manuallyStopped) return;
 
         boolean busy = mod.getUserTaskChain().isActive() && !mod.getUserTaskChain().isRunningIdleTask();
         boolean directorRunning = mod.getUserTaskChain().getCurrentTask() instanceof DirectorTask;
