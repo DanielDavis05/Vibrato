@@ -14,7 +14,8 @@ public abstract class PacketCoverageBundleMixin {
     @Redirect(method = "onBundle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V"))
     private <T extends PacketListener> void vibrato$handledBundlePacket(Packet<T> packet, T listener) {
         var context = PacketCoverage.capture();
+        String phase = listener.getPhase().name();
         packet.apply(listener);
-        PacketCoverage.success(context, "PLAY", packet.getPacketId().side().name(), packet.getPacketId().id().toString());
+        PacketCoverage.success(context, phase, packet.getPacketId().side().name(), packet.getPacketId().id().toString());
     }
 }
