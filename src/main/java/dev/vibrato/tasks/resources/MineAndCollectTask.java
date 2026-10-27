@@ -1,6 +1,7 @@
 package dev.vibrato.tasks.resources;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Debug;
 import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
 import dev.vibrato.tasks.ResourceTask;
@@ -96,6 +97,14 @@ public class MineAndCollectTask extends ResourceTask {
             return new SatisfyMiningRequirementTask(_requirement);
         }
 
+        // Hand-harvestable blocks can still be much faster with a tool. Only
+        // invest in one for a substantial request; small bootstrap collections
+        // needed to craft the tool itself must remain possible by hand.
+        Item usefulTool = bulkHandHarvestTool(mod);
+        if (usefulTool != null) {
+            return TaskCatalogue.getItemTask(usefulTool, 1);
+        }
+
         if (_subtask.isMining()) {
             makeSureToolIsEquipped(mod);
         }
@@ -125,6 +134,33 @@ public class MineAndCollectTask extends ResourceTask {
     @Override
     protected String toDebugStringName() {
         return "Mine And Collect";
+    }
+
+    private Item bulkHandHarvestTool(Vibrato mod) {
+        if (_requirement != MiningRequirement.HAND || _blocksToMine.length == 0) return null;
+        int remaining = 0;
+        for (ItemTarget target : _itemTargets) {
+            remaining += Math.max(0, target.getTargetCount()
+                    - mod.getItemStorage().getItemCountInventoryOnly(target.getMatches()));
+        }
+        if (remaining < 8) return null;
+
+        // A tool is useful only if it speeds up every block in this request.
+        // This avoids crafting an axe for a mixed set of unrelated blocks.
+        for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
+            if (speedsEveryBlock(stack)) return null;
+        }
+        if (speedsEveryBlock(new ItemStack(Items.WOODEN_AXE))) return Items.WOODEN_AXE;
+        if (speedsEveryBlock(new ItemStack(Items.WOODEN_SHOVEL))) return Items.WOODEN_SHOVEL;
+        return null;
+    }
+
+    private boolean speedsEveryBlock(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        for (Block block : _blocksToMine) {
+            if (stack.getMiningSpeedMultiplier(block.getDefaultState()) <= 1.0f) return false;
+        }
+        return true;
     }
 
     private void makeSureToolIsEquipped(Vibrato mod) {

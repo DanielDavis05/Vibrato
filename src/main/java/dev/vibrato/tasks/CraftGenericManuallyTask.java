@@ -81,12 +81,17 @@ public class CraftGenericManuallyTask extends Task implements ITaskUsesCraftingG
                 if (!isSatisfied) {
                     // We have items that satisfy, but we CAN NOT fill in the current slot!
                     // In that case, just grab from the output.
-                    if (!mod.getItemStorage().hasItemInventoryOnly(present.getItem())) {
+                    if (!mod.getItemStorage().hasItemInventoryOnly(toFill.getMatches())
+                            && !toFill.matches(StorageHelper.getItemStackInCursorSlot().getItem())) {
                         if (!StorageHelper.getItemStackInSlot(outputSlot).isEmpty()) {
                             setDebugState("NO MORE to fit: grabbing from output.");
                             return new ReceiveCraftingOutputSlotTask(outputSlot, _target.getTargetCount());
                         } else {
-                            // Move on to the NEXT slot, we can't fill this one anymore.
+                            // Clear an incorrect ingredient so it cannot block the recipe.
+                            if (!present.isEmpty() && !correctItem) {
+                                return new ClickSlotTask(currentCraftSlot);
+                            }
+                            // Move on to the next slot, we can't fill this one anymore.
                             continue;
                         }
                     }

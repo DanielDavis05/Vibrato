@@ -12,6 +12,7 @@ import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.slots.CraftingTableSlot;
 import dev.vibrato.util.slots.PlayerSlot;
 import dev.vibrato.util.slots.Slot;
+import dev.vibrato.util.time.TimerGame;
 import net.minecraft.item.ItemStack;
 
 import java.util.Arrays;
@@ -20,6 +21,8 @@ import java.util.Optional;
 public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCraftingGrid {
 
     private final RecipeTarget _target;
+    private final TimerGame _recipeWait = new TimerGame(5);
+    private boolean _useManual;
 
     public CraftGenericWithRecipeBooksTask(RecipeTarget target) {
         _target = target;
@@ -27,7 +30,8 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
 
     @Override
     protected void onStart(Vibrato mod) {
-
+        _useManual = false;
+        _recipeWait.reset();
     }
 
     @Override
@@ -35,6 +39,9 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
 
         
 
+        if (_useManual) {
+            return new CraftGenericManuallyTask(_target);
+        }
         boolean bigCrafting = StorageHelper.isBigCraftingOpen();
 
         if (!bigCrafting && !StorageHelper.isPlayerInventoryOpen()) {
@@ -47,6 +54,7 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
         Slot outputSlot = bigCrafting ? CraftingTableSlot.OUTPUT_SLOT : PlayerSlot.CRAFT_OUTPUT_SLOT;
         ItemStack output = StorageHelper.getItemStackInSlot(outputSlot);
         if (_target.getOutputItem() == output.getItem() && mod.getItemStorage().getItemCount(_target.getOutputItem()) < _target.getTargetCount()) {
+            _recipeWait.reset();
             setDebugState("Getting output");
             return new ReceiveCraftingOutputSlotTask(outputSlot, _target.getTargetCount());
         }  // TODO Migrate this back to Craft In Inventory
@@ -76,6 +84,15 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
                 // Crafting grid is full, and we still have the item, throw it away.
                 return new ThrowCursorTask();
             }
+        }
+
+        // A server can reject a recipe-book request (for example when the
+        // recipe has not been unlocked). Keep crafting by placing the already
+        // collected ingredients directly instead of clicking forever.
+        if (_recipeWait.elapsed()) {
+            _useManual = true;
+            setDebugState("Recipe book did not fill the grid; crafting manually");
+            return new CraftGenericManuallyTask(_target);
         }
 
         // Request to fill in a recipe. Just piggy back off of the slot delay system.
