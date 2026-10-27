@@ -3,7 +3,7 @@ plugins {
     id "maven-publish"
 }
 
-// Builds the patched Baritone submodule and exposes `baritoneDist`
+// Builds the sibling Baritone engine and exposes its content-versioned dependency.
 apply from: "gradle/baritone.gradle"
 
 java {
