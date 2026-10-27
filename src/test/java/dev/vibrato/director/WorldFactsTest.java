@@ -38,6 +38,21 @@ class WorldFactsTest {
     }
 
     @Test
+    void rareItemsHeldInTheInventoryBecomeStartFacts() {
+        Set<Fact> facts = WorldFacts.compose("overworld", true, List.of("saddle", "stone", "enchanted_book"));
+
+        assertTrue(facts.contains(Fact.has("saddle")));
+        assertTrue(facts.contains(Fact.has("enchanted_book")));
+        assertFalse(facts.contains(Fact.has("stone")));
+    }
+
+    @Test
+    void rareItemFactsAreObservable() {
+        assertTrue(WorldFacts.isObservable(Fact.has("elytra")));
+        assertFalse(WorldFacts.isObservable(Fact.has("iron_ingot")));
+    }
+
+    @Test
     void observableFactsAreDimensionLocationAndPickaxes() {
         assertTrue(WorldFacts.isObservable(Fact.dimension("end")));
         assertTrue(WorldFacts.isObservable(WorldFacts.SURFACE));
