@@ -24,6 +24,22 @@ Real recordings: `run/traces/walk1-*.jsonl` (older format, bot mostly crafting),
 `python3 -I -B scripts/human/discriminate.py --human <human.jsonl> --bot <bot.jsonl>` and
 `python3 -I -B scripts/human/fit.py <human.jsonl> -o human_profile.json`.
 
+## Existing algorithmic humanization (user's observation: it made movement fragile and clunky)
+
+The user reports that the humanization already on `master` (written before this branch, not the key layer, camera submovements or
+recorder described above) has made movement fragile and clunky, and that this showed in play. Treat it as the leading suspect
+for stalls and stop-and-go until an experiment says otherwise. Not yet read in detail; pointers from the commit history:
+
+* Search behaviour: `tasks/movement/SearchOpportunityController`, `SearchOpportunityTask`, `SearchDetourBudget`, `SearchActiveClock`,
+  `TimeoutWanderTask`, `tasks/resources/LandAnimalSearchTask` (commits `7a79a01`, `f704bed`, `7caece2`: bounded detours during resource
+  searches, opportunities kept across navigation legs, "safe search pauses while walking"). Pauses and detours inside a walk are a
+  direct source of stop-and-go.
+* Pickup: `tasks/movement/OpportunisticPickupPolicy`. Idle glances: `human/IdleBehavior`. The original camera (`HumanLook`, since
+  replaced by the submovement model on this branch, but overshoot tied to its target was patched in `f11713c`).
+* Design smell to look for: humanization that sits inside the task logic and can block or re-route the real task. A humanizer should
+  fail open (if anything is unsure, do nothing), be bounded by a budget, never hold the bot still while a path is active unless it is
+  a deliberate, short, logged pause, and be switchable off per component.
+
 ## Findings from run1 (the evidence behind the tasks below)
 
 * Bot moved at 4.2 blocks/s while moving (p90 5.6); the human at 5.6 (p90 6.9). The human bunny-hops on flat ground
@@ -54,11 +70,17 @@ Build a dev-only scripted-run harness so the same route can be run unattended an
   effect when the property is unset. Write `run/script-result.json` on exit. Document in `docs/smoke-test.md`.
 * Copy `run/saves/human` to `run/saves/ab-water` and use `-Dvibrato.world=ab-water`. The route: from the first tick of
   `run1-bot.jsonl` west across the water to about (119, 62, 20).
-* Run the same script four times and record each: stock (`-Dvibrato.human=off`), camera only (`-Dvibrato.humanKeys=off`), keys only
-  (needs a `-Dvibrato.humanLook=off` switch in `Human.install`, add it), and everything on, with `-Dvibrato.debugKeys=true`.
-  Compare per run: moving speed, forward releases, sprint restarts, stationary ticks, StuckDetector firings.
-* Decision rule: if the water stall happens with `-Dvibrato.human=off` it is Baritone/nav, otherwise it is the camera or keys.
-  If speed and stutter are fine with human off and bad with it on, use the `Keys stats` lines to find which component acts.
+* There are three humanization layers to separate, so add one kill switch each and use them as a matrix:
+  (a) the existing behavioural layer on `master` (search pauses and detours, opportunistic pickup, idle glances; add
+  `-Dvibrato.humanBehavior=off` that disables those components, defaulting to on), (b) the camera (`-Dvibrato.humanLook=off`, add it in
+  `Human.install`; today `-Dvibrato.human=off` turns off camera and keys together), (c) the key layer (`-Dvibrato.humanKeys=off`).
+* Run the same script for: everything off, each layer alone, and everything on, with `-Dvibrato.debugKeys=true`. Use both a pure `@goto`
+  route and a search task (`@get` of something that needs searching), because the behavioural layer only acts in the latter.
+  Compare per run: moving speed, forward releases, sprint restarts, stationary ticks while a path exists, StuckDetector firings,
+  task restarts.
+* Decision rule: if a stall or stop-and-go happens with everything off it is Baritone/nav. If it appears only with (a) on it is the
+  behavioural layer: fix it per the design rules above, or default it off until it is. If only with (b)/(c), use the `Keys stats`
+  lines and `LookTrace` to find which component acts.
 
 ### 2. Water stall and stuck detection (after step 1 says where it comes from)
 * `nav/StuckDetector`: use horizontal displacement when in water, climbing or airborne without gravity progress; keep 3D otherwise.
@@ -67,6 +89,13 @@ Build a dev-only scripted-run harness so the same route can be run unattended an
   the target, then a sidestep, then replan. Keep the existing rungs for other states. Unit tests for every change.
 * If step 1 shows Baritone sends no forward in water: log in `MovementTraverse.updateState` near line 261 (the vine wait) and check
   whether it waits on a rotation target that `HumanLook` does not reach. That is a Baritone edit: tell the user.
+
+### 2b. Rework the behavioural humanization if step 1 implicates it
+Do not add more humanization until the existing one is safe. For each component in the list above: make it fail open, bound it with a
+budget, forbid pauses while a path is active unless short (under about 1 s), logged and cancelled by any danger or stuck signal, and
+add a regression test asserting the bot makes progress on a scripted route with the component on (for example at least 90% of the
+no-humanization speed). If a component cannot meet that, remove it from the default configuration. The goal is humanization that is
+statistically visible in traces but never changes whether the task succeeds.
 
 ### 3. Task-loop crash
 Reproduce with `@get wooden_axe` (or the autonomous crafting path) on a fresh world. The cycle is a planning loop: the sticks step
