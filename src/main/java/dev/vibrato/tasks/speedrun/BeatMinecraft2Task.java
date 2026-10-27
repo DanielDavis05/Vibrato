@@ -124,6 +124,8 @@ public class BeatMinecraft2Task extends Task {
 
     private Task _foodTask;
     private Task _gearTask;
+    private final GamerStageRecovery _stageRecovery = new GamerStageRecovery();
+    private boolean _retryFoodStage;
     private Task _lootTask;
     private final Task _buildMaterialsTask;
     private final PlaceBedAndSetSpawnTask _setBedSpawnTask = new PlaceBedAndSetSpawnTask();
@@ -179,6 +181,12 @@ public class BeatMinecraft2Task extends Task {
 
     @Override
     protected Task onTick(Vibrato mod) {
+        if (_foodTask != null && _foodTask.isFinished(mod)) _stageRecovery.completed(GamerStageRecovery.Stage.FOOD);
+        if (_retryFoodStage) {
+            _retryFoodStage = false;
+            _foodTask = new CollectFoodTask(_config.foodUnits);
+            return _foodTask;
+        }
         /*
         if in the overworld:
           if end portal found:
@@ -481,6 +489,23 @@ public class BeatMinecraft2Task extends Task {
         mod.getBlockTracker().stopTracking(TRACK_BLOCKS);
         mod.getBlockTracker().stopTracking(ItemHelper.itemsToBlocks(ItemHelper.BED));
         mod.getBehaviour().pop();
+    }
+
+    @Override
+    protected boolean onChildFailure(Vibrato mod, Task child, String reason) {
+        if (child != _foodTask) return false;
+        GamerStageRecovery.Stage stage = GamerStageRecovery.Stage.FOOD;
+        if (!_stageRecovery.retry(stage, reason)) {
+            if (!GamerStageRecovery.isPlacementHandoff(reason)) return false;
+            fail(stage.name().toLowerCase(Locale.ROOT) + " stage placement retry limit reached: " + reason);
+            return true;
+        }
+        // The failed task cannot be reused. Re-evaluate this stage against the
+        // retained inventory on the next tick; other long-lived state is preserved.
+        _foodTask = null;
+        _retryFoodStage = true;
+        Debug.logMessage("Retrying " + stage.name().toLowerCase(Locale.ROOT) + " stage after " + reason);
+        return true;
     }
 
     @Override

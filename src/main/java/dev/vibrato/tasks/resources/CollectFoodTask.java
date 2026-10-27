@@ -7,6 +7,7 @@ import dev.vibrato.tasks.container.CraftInTableTask;
 import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.entity.KillEntityTask;
 import dev.vibrato.tasks.movement.PickupDroppedItemTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
@@ -143,6 +144,14 @@ public class CollectFoodTask extends Task {
             setDebugState("Cooking...");
             return _smeltTask;
         }
+
+        // Don't recalculate the absolute target halfway through a kill or its
+        // pickup just because the periodic search timer expired. Search-only
+        // tasks can still be reconsidered on schedule.
+        if (_currentResourceTask instanceof KillAndLootTask && _currentResourceTask.isActive()
+                && !_currentResourceTask.isFinished(mod) && !_currentResourceTask.thisOrChildAreTimedOut()
+                && _currentResourceTask.thisOrChildSatisfies(t -> t instanceof KillEntityTask
+                        || t instanceof PickupDroppedItemTask)) return _currentResourceTask;
 
         if (_checkNewOptionsTimer.elapsed()) {
             // Try a new resource task
@@ -352,7 +361,10 @@ public class CollectFoodTask extends Task {
     }
 
     private Task killTaskOrNull(Vibrato mod, Entity entity, Item itemToGrab) {
-        return new KillAndLootTask(entity.getClass(), new ItemTarget(itemToGrab, 1));
+        // ResourceTask targets are absolute inventory counts. Request one more
+        // than we already hold rather than immediately satisfying every later kill.
+        int held = mod.getItemStorage().getItemCountInventoryOnly(itemToGrab);
+        return new KillAndLootTask(entity.getClass(), new ItemTarget(itemToGrab, FoodAnimalTarget.nextCount(held)));
     }
 
     /**
