@@ -3,6 +3,8 @@ package dev.vibrato.tasks.resources;
 import dev.vibrato.Vibrato;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Debug;
+import dev.vibrato.nav.EscapeUndergroundTask;
+import dev.vibrato.nav.SurfaceAccess;
 import dev.vibrato.tasks.AbstractDoToClosestObjectTask;
 import dev.vibrato.tasks.ResourceTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
@@ -27,8 +29,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.MiningToolItem;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
 
 import java.util.*;
 
@@ -43,6 +48,8 @@ public class MineAndCollectTask extends ResourceTask {
     private final MineOrCollectTask _subtask;
     private Item _acquiringGatherTool;
     private boolean _allowGatherTool = true;
+    private EscapeUndergroundTask _surfaceEscape;
+    private long _escapeRetryAfter;
 
     public MineAndCollectTask(ItemTarget[] itemTargets, Block[] blocksToMine, MiningRequirement requirement) {
         super(itemTargets);
@@ -111,6 +118,16 @@ public class MineAndCollectTask extends ResourceTask {
             // Keep the commitment while its ingredients move into the crafting
             // grid; rechecking their inventory counts would cancel it mid-craft.
             return TaskCatalogue.getItemTask(_acquiringGatherTool, 1);
+        }
+
+        if (_surfaceEscape != null) {
+            if (!_surfaceEscape.isFinished(mod)) return _surfaceEscape;
+            if (_surfaceEscape.hasFailed()) _escapeRetryAfter = System.nanoTime() + 30_000_000_000L;
+            _surfaceEscape = null;
+        }
+        if (_subtask.takeSurfaceEscapeRequest() && System.nanoTime() >= _escapeRetryAfter) {
+            _surfaceEscape = new EscapeUndergroundTask();
+            return _surfaceEscape;
         }
 
         if (_subtask.isMining()) {
@@ -242,9 +259,15 @@ public class MineAndCollectTask extends ResourceTask {
         private final Block[] _blocks;
         private final ItemTarget[] _targets;
         private final Set<BlockPos> _blacklist = new HashSet<>();
+        private final Map<BlockPos, Long> _failedBlocks = new HashMap<>();
+        private final MiningFailurePolicy<BlockPos> _logFailures = new MiningFailurePolicy<>();
+        private final MiningApproachWatchdog<BlockPos> _approachWatchdog = new MiningApproachWatchdog<>();
+        private BlockPos _excavating;
+        private static final long BLOCK_RETRY_NANOS = 30_000_000_000L;
         private final MovementProgressChecker _progressChecker = new MovementProgressChecker(1);
         private final Task _pickupTask;
         private BlockPos _miningPos;
+        private boolean _surfaceEscapeRequested;
         private Vibrato _mod;
 
         public MineOrCollectTask(Block[] blocks, ItemTarget[] targets) {
@@ -299,16 +322,16 @@ public class MineAndCollectTask extends ResourceTask {
             BlockPos feet = mod.getPlayer().getBlockPos();
             Optional<BlockPos> closestBlock = mod.getBlockTracker().getNearestWithinRange(pos, 4, check -> {
                 if (check.getY() < feet.getY()) return false;
-                if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
+                if (check.getSquaredDistance(pos) > 16 || isExcluded(mod, check)) return false;
                 return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
             }, _blocks);
             if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestWithinRange(pos, 4, check -> {
                 if (check.getX() == feet.getX() && check.getZ() == feet.getZ() && check.getY() < feet.getY()) return false;
-                if (check.getSquaredDistance(pos) > 16 || _blacklist.contains(check)) return false;
+                if (check.getSquaredDistance(pos) > 16 || isExcluded(mod, check)) return false;
                 return LookHelper.getReach(check).isPresent() && WorldHelper.canBreak(mod, check);
             }, _blocks);
             if (closestBlock.isEmpty()) closestBlock = mod.getBlockTracker().getNearestTracking(pos, check -> {
-                if (_blacklist.contains(check)) return false;
+                if (isExcluded(mod, check)) return false;
                 return WorldHelper.canBreak(mod, check);
             }, _blocks);
 
@@ -332,6 +355,25 @@ public class MineAndCollectTask extends ResourceTask {
             }
         }
 
+        private boolean isExcluded(Vibrato mod, BlockPos pos) {
+            if (_blacklist.contains(pos)) return true;
+            long now = System.nanoTime();
+            _failedBlocks.entrySet().removeIf(entry -> now - entry.getValue() >= BLOCK_RETRY_NANOS);
+            if (_failedBlocks.containsKey(pos)) return true;
+            if (!mod.getWorld().getBlockState(pos).isIn(BlockTags.LOGS)) return false;
+            Vec3d player = mod.getPlayer().getPos();
+            return _logFailures.suppress(pos, player.x, player.y, player.z, now,
+                    (a, b) -> connectedVerticalLogs(mod, a, b));
+        }
+
+        private boolean connectedVerticalLogs(Vibrato mod, BlockPos a, BlockPos b) {
+            if (a.getX() != b.getX() || a.getZ() != b.getZ() || Math.abs(a.getY() - b.getY()) > 16) return false;
+            for (int y = Math.min(a.getY(), b.getY()); y <= Math.max(a.getY(), b.getY()); y++) {
+                if (!mod.getWorld().getBlockState(new BlockPos(a.getX(), y, a.getZ())).isIn(BlockTags.LOGS)) return false;
+            }
+            return true;
+        }
+
         @Override
         protected Vec3d getOriginPos(Vibrato mod) {
             return mod.getPlayer().getPos();
@@ -340,14 +382,55 @@ public class MineAndCollectTask extends ResourceTask {
         @Override
         protected Task onTick(Vibrato mod) {
             _mod = mod;
-            if (_miningPos != null && !_progressChecker.check(mod)) {
-                Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
-                mod.getBlockTracker().requestBlockUnreachable(_miningPos, 2);
-                _blacklist.add(_miningPos);
+            if (_miningPos != null && mod.getChunkTracker().isChunkLoaded(_miningPos) && WorldHelper.isAir(mod, _miningPos)) {
+                // Breaking a block demonstrates that this approach works.
+                _failedBlocks.clear();
+                _logFailures.clear();
                 _miningPos = null;
                 _progressChecker.reset();
             }
+            long now = System.nanoTime();
+            if (_excavating != null && mod.getChunkTracker().isChunkLoaded(_excavating)
+                    && WorldHelper.isAir(mod, _excavating)) {
+                _approachWatchdog.excavationCompleted(now);
+                _excavating = null;
+            }
+            if (mod.getControllerExtras().isBreakingBlock()) {
+                BlockPos breaking = mod.getControllerExtras().getBreakingBlockPos();
+                if (breaking != null && mod.getChunkTracker().isChunkLoaded(breaking)
+                        && !WorldHelper.isAir(mod, breaking)) _excavating = breaking;
+            }
+            if (_miningPos != null) {
+                Vec3d player = mod.getPlayer().getPos();
+                boolean stalled = _approachWatchdog.stalled(_miningPos, now,
+                        (a, b) -> a.equals(b) || connectedVerticalLogs(mod, a, b),
+                        anchor -> Math.sqrt(anchor.getSquaredDistance(player)));
+                if (stalled) {
+                    Debug.logMessage("Mining approach made no progress; trying another target.");
+                    failApproach(mod, now, true);
+                    _approachWatchdog.clear();
+                } else if (!_progressChecker.check(mod)) {
+                    Debug.logMessage("Failed to mine block. Suggesting it may be unreachable.");
+                    failApproach(mod, now, false);
+                }
+            }
             return super.onTick(mod);
+        }
+
+        private void failApproach(Vibrato mod, long now, boolean rejectTrunk) {
+            BlockPos failed = _miningPos;
+            _failedBlocks.put(failed, now);
+            if (mod.getWorld().getBlockState(failed).isIn(BlockTags.LOGS)) {
+                Vec3d player = mod.getPlayer().getPos();
+                if (rejectTrunk) _logFailures.rejectApproach(failed, player.x, player.y, player.z, now);
+                else _logFailures.record(failed, player.x, player.y, player.z, now);
+                int top = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING, failed.getX(), failed.getZ());
+                if (mod.getWorld().getRegistryKey().equals(World.OVERWORLD)
+                        && failed.getY() - mod.getPlayer().getBlockPos().getY() >= 12 && top - failed.getY() <= 16
+                        && !SurfaceAccess.isAtSurface(mod)) _surfaceEscapeRequested = true;
+            }
+            _miningPos = null;
+            _progressChecker.reset();
         }
 
         @Override
@@ -376,7 +459,7 @@ public class MineAndCollectTask extends ResourceTask {
             if (obj instanceof BlockPos b) {
                 // A failed progress check blacklists the active pursuit as well as future searches.
                 // Otherwise AbstractDoToClosestObjectTask keeps returning that same block forever.
-                if (_blacklist.contains(b)) return false;
+                if (isExcluded(mod, b)) return false;
                 if (!mod.getBlockTracker().blockIsValid(b, _blocks)) return false;
                 if (WorldHelper.canBreak(mod, b)) return true;
                 // Blocks in unloaded chunks are assumed to be breakable, so we only know for sure once the chunk loads.
@@ -419,6 +502,29 @@ public class MineAndCollectTask extends ResourceTask {
         @Override
         protected String toDebugString() {
             return "Mining or Collecting";
+        }
+
+        @Override
+        public boolean recoverFromStall(Vibrato mod) {
+            if (_miningPos == null || !mod.getBlockTracker().blockIsValid(_miningPos, _blocks)) return false;
+            BlockPos failed = _miningPos;
+            long now = System.nanoTime();
+            _failedBlocks.put(failed, now);
+            if (mod.getWorld().getBlockState(failed).isIn(BlockTags.LOGS)) {
+                Vec3d player = mod.getPlayer().getPos();
+                _logFailures.rejectApproach(failed, player.x, player.y, player.z, now);
+            }
+            _miningPos = null;
+            _progressChecker.reset();
+            _approachWatchdog.clear();
+            resetSearch();
+            return true;
+        }
+
+        boolean takeSurfaceEscapeRequest() {
+            boolean requested = _surfaceEscapeRequested;
+            _surfaceEscapeRequested = false;
+            return requested;
         }
 
         public boolean isMining() {

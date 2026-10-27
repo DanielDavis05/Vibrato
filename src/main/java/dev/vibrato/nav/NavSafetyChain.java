@@ -8,7 +8,7 @@ import dev.vibrato.director.DirectorTask;
 import dev.vibrato.director.StepAbandonable;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
 import dev.vibrato.util.Dimension;
-import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasks.construction.RecoveryPlaceBlockTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.tasksystem.TaskRunner;
@@ -52,6 +52,8 @@ public class NavSafetyChain extends TaskChain {
     private final WasteGuard _waste = WasteGuard.defaults();
     private final ActionRateLimiter _rateLimit = new ActionRateLimiter();
     private final PerStepCap _backOffCap = new PerStepCap(2);
+    private final ResourceRecovery _resourceRecovery = new ResourceRecovery();
+    private final PerStepCap _surfaceEscapeCap = new PerStepCap(1);
 
     private long _tick;
     private Task _watchedTask;
@@ -92,6 +94,8 @@ public class NavSafetyChain extends TaskChain {
             _ladder.onProgress();
             _detector.reset();
             _backOffCap.reset();
+            _resourceRecovery.reset();
+            _surfaceEscapeCap.reset();
             _progress.reset();
         }
 
@@ -138,7 +142,7 @@ public class NavSafetyChain extends TaskChain {
                 _ladder.markFired(_tick);
                 startAction(mod, action, state.name(), state == StuckState.LOW_AIR ? PRIORITY_AIR : PRIORITY_ACTION);
             } else if (!directorEscaping(task) && shouldEscapeUnderground(mod)
-                    && _rateLimit.tryAcquire(_tick)) {
+                    && _rateLimit.tryAcquire(_tick) && _surfaceEscapeCap.tryUse(serial)) {
                 startAction(mod, UnstuckAction.ESCAPE_SURFACE, "underground", PRIORITY_ACTION);
             }
         }
@@ -169,6 +173,8 @@ public class NavSafetyChain extends TaskChain {
         _miningProgress.reset();
         _lastBreakTick = NavGate.NEVER;
         _watchedTask = null;
+        _resourceRecovery.reset();
+        _surfaceEscapeCap.reset();
     }
 
     @Override
@@ -192,6 +198,9 @@ public class NavSafetyChain extends TaskChain {
     }
 
     private void startAction(Vibrato mod, UnstuckAction action, String reason, float priority) {
+        // The cached descendants are still active here. Once this chain takes
+        // control their parent is interrupted and may discard the failed target.
+        if (action == UnstuckAction.ABANDON_TASK && recoverResource(mod, reason)) return;
         Debug.logMessage("Unstuck " + action + " (" + reason + ")");
         if (action.cancelsPath()) {
             mod.getClientBaritone().getPathingBehavior().cancelEverything();
@@ -220,6 +229,22 @@ public class NavSafetyChain extends TaskChain {
             }
         }
         _delegate = createDelegate(mod, action);
+    }
+
+    private boolean recoverResource(Vibrato mod, String reason) {
+        if (!(_watchedTask instanceof StepAbandonable)
+                && _resourceRecovery.attempt(mod, _watchedTask, mod.getUserTaskChain().getTasks())) {
+            Debug.logMessage("Trying another resource approach: " + reason + "; keeping " + _watchedTask);
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
+            releaseMovement(mod);
+            _detector.reset();
+            _ladder.onProgress();
+            _waste.onProgress(_tick);
+            _backOffCap.reset();
+            _progress.reset();
+            return true;
+        }
+        return false;
     }
 
     private void finishAction(Vibrato mod) {
@@ -333,6 +358,9 @@ public class NavSafetyChain extends TaskChain {
     private boolean tickDelegate(Vibrato mod, int maxTicks) {
         if (_delegate == null || _actionTicks >= maxTicks) return true;
         _delegate.tick(mod, this);
+        if (_delegate instanceof EscapeUndergroundTask escape && escape.hasFailed()) {
+            Debug.logWarning("Surface escape exhausted its safe options; resuming the requested task.");
+        }
         return _delegate.isFinished(mod) || _delegate.stopped();
     }
 
@@ -349,9 +377,9 @@ public class NavSafetyChain extends TaskChain {
             case DIG_DOWN -> WorldHelper.isSolid(mod, feet.down()) ? new DestroyBlockTask(feet.down()) : null;
             case PLACE_STEP_BLOCK -> {
                 BlockPos step = front.down();
-                yield new PlaceBlockNearbyTask(pos -> pos.equals(step), Blocks.DIRT, Blocks.COBBLESTONE);
+                yield new RecoveryPlaceBlockTask(mod, step);
             }
-            case ESCAPE_SURFACE -> new EscapeUndergroundTask();
+            case ESCAPE_SURFACE -> EscapeUndergroundTask.forRecovery(mod);
             default -> null;
         };
     }
@@ -412,8 +440,16 @@ public class NavSafetyChain extends TaskChain {
         BlockPos current = controller.getBreakingBlockPos();
         Long currentKey = current == null ? null : current.asLong();
         Long trackedKey = _miningProgress.trackedPosition();
-        boolean currentIsAir = currentKey != null && mod.getWorld().getBlockState(BlockPos.fromLong(currentKey)).isAir();
-        boolean trackedIsAir = trackedKey != null && mod.getWorld().getBlockState(BlockPos.fromLong(trackedKey)).isAir();
+        boolean currentIsAir = currentKey != null && mod.getChunkTracker().isChunkLoaded(current)
+                && mod.getWorld().getBlockState(current).isAir();
+        boolean trackedIsAir = trackedKey != null && mod.getChunkTracker().isChunkLoaded(BlockPos.fromLong(trackedKey))
+                && mod.getWorld().getBlockState(BlockPos.fromLong(trackedKey)).isAir();
+        // Only a completed block renews the resource retry allowance. Turning,
+        // walking in circles and starting another path calculation do not.
+        if (trackedIsAir && _action == null) {
+            _resourceRecovery.reset();
+            _surfaceEscapeCap.reset();
+        }
         return _miningProgress.observe(currentKey, controller.getBreakingBlockProgress(), currentIsAir, trackedIsAir);
     }
 

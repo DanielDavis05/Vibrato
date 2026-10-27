@@ -5,6 +5,8 @@ import dev.vibrato.tasks.construction.compound.ConstructIronGolemTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.CraftGenericManuallyTask;
 import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasks.construction.RecoveryPlaceBlockTask;
+import dev.vibrato.nav.EscapeUndergroundTask;
 import dev.vibrato.tasks.construction.PlaceSignTask;
 import dev.vibrato.tasks.construction.PlaceStructureBlockTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
@@ -125,6 +127,20 @@ public class Playground {
         Debug.logMessage("Running test...");
 
         switch (arg) {
+            // Deterministic survival checks used by docs/NETHER_FIX_VALIDATION_2026-10-27.md.
+            case "escape":
+                mod.runUserTask(new EscapeUndergroundTask());
+                break;
+            case "recovery":
+            case "recovery-protected": {
+                mod.getBehaviour().push();
+                if (arg.equals("recovery-protected")) mod.getBehaviour().addProtectedItems(Items.DIRT);
+                RecoveryPlaceBlockTask recovery = new RecoveryPlaceBlockTask(mod, mod.getPlayer().getBlockPos().east().down());
+                // Model the parent releasing its protection before the delegate starts.
+                mod.getBehaviour().pop();
+                mod.runUserTask(recovery);
+                break;
+            }
             case "":
                 // None specified
                 Debug.logWarning("Please specify a test (ex. stacked, bed, terminate)");

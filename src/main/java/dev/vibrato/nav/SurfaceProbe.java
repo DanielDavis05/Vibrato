@@ -27,7 +27,23 @@ public final class SurfaceProbe {
         BLOCKED
     }
 
+    public enum Ascent { DIG, CLIMB, STOP }
+
     private SurfaceProbe() {}
+
+    /** Decide only the immediate step; open space above still requires the bot to climb. */
+    public static Ascent ascent(List<Cell> column, boolean hasPickaxe, boolean adjacentLiquid) {
+        if (column.isEmpty() || adjacentLiquid || column.contains(Cell.FALLING) || column.contains(Cell.LIQUID)) {
+            return Ascent.STOP;
+        }
+        // An inaccessible ceiling does not prevent climbing through clear headroom first.
+        if (column.get(0) == Cell.AIR) return Ascent.CLIMB;
+        Verdict verdict = decide(column, hasPickaxe);
+        if (verdict == Verdict.HAZARD || verdict == Verdict.BLOCKED || verdict == Verdict.NEEDS_PICKAXE) {
+            return Ascent.STOP;
+        }
+        return Ascent.DIG;
+    }
 
     public static Verdict decide(List<Cell> column, boolean hasPickaxe) {
         int next = -1;

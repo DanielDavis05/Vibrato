@@ -172,6 +172,14 @@ public abstract class Task {
         return false;
     }
 
+    /**
+     * Give a stalled task an opportunity to reject its current target before its
+     * chain is interrupted. Return true only when a concrete retry was arranged.
+     */
+    public boolean recoverFromStall(Vibrato mod) {
+        return false;
+    }
+
     public boolean isActive() {
         return _active;
     }

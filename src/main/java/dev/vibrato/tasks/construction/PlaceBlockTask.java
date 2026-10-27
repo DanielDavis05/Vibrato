@@ -177,7 +177,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 // Place!!
                 for (BlockState possible : available) {
                     if (possible == null) continue;
-                    if (_useThrowaways && _mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(possible.getBlock().asItem())) {
+                    if (_useThrowaways && _mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(possible.getBlock().asItem())
+                            && !_mod.getBehaviour().isProtected(possible.getBlock().asItem())) {
                         return possible;
                     }
                     if (Arrays.asList(_toPlace).contains(possible.getBlock())) {
@@ -186,10 +187,17 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 }
                 if (!_warnedNoThrowaway) {
                     _warnedNoThrowaway = true;
-                    Debug.logInternal("Failed to find throwaway block");
+                    Debug.logInternal("No requested placeable block in Baritone's inventory candidates at "
+                            + _target.toShortString() + "; throwaway=" + _useThrowaways
+                            + ", requested=" + Arrays.toString(_toPlace) + ", candidates=" + available);
                 }
-                // No throwaways available!!
-                return new BlockOptionalMeta(Blocks.COBBLESTONE).getAnyBlockState();
+                // For explicit placement, keep the requested goal so the builder can
+                // report missing materials instead of silently substituting cobblestone.
+                // Never choose a protected fallback for throwaway placement.
+                if (!_useThrowaways && _toPlace.length > 0) {
+                    return new BlockOptionalMeta(_toPlace[0]).getAnyBlockState();
+                }
+                return Blocks.AIR.getDefaultState();
             }
             // Don't care.
             return blockState;

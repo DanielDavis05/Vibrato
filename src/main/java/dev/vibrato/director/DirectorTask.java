@@ -143,6 +143,8 @@ public class DirectorTask extends Task implements StepAbandonable {
                 return null;
             } else if (_interrupts.harassed(_tick)) {
                 completeStep(false, "harassed by interruptions");
+            } else if (_stepTask instanceof dev.vibrato.nav.EscapeUndergroundTask escape && escape.hasFailed()) {
+                completeStep(false, "surface escape failed");
             } else if (_stepTask.isFinished(mod)) {
                 completeStep(true, "finished");
             } else if (_stepBudget.elapsed(_tick)) {
