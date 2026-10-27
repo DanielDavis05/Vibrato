@@ -56,6 +56,16 @@ test {
     useJUnitPlatform()
 }
 
+// Explicit integration gate: succeeds only when captures prove all requested packet types.
+tasks.register('packetCoverageReport', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'dev.vibrato.packetcoverage.PacketCoverageCli'
+    def captures = providers.gradleProperty('packetCaptures').orElse('').get().split(',').findAll { !it.isBlank() }
+    args(providers.gradleProperty('packetReport').orElse(layout.buildDirectory.file('reports/protocol/coverage.json').get().asFile.absolutePath).get())
+    args(captures)
+}
+
 // Extra JVM properties for runClient, e.g. -PgameProps="-Dvibrato.world=smoke -Dvibrato.autostart=true"
 loom {
     runs {

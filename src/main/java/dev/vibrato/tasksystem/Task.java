@@ -3,6 +3,8 @@ package dev.vibrato.tasksystem;
 import dev.vibrato.Vibrato;
 import dev.vibrato.Debug;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.packetcoverage.PacketCoverage;
+import dev.vibrato.director.DirectorTask;
 
 import java.util.function.Predicate;
 
@@ -21,6 +23,11 @@ public abstract class Task {
 
     public void tick(Vibrato mod, TaskChain parentChain) {
         parentChain.addTaskToChain(this);
+        if (PacketCoverage.enabled()) {
+            Task root = parentChain.getTasks().getFirst();
+            String step = root instanceof DirectorTask director ? director.currentStepDescription().split("\\{", 2)[0] : "none";
+            PacketCoverage.setTask(root.getClass().getSimpleName(), step);
+        }
         if (_first) {
             Debug.logInternal("Task START: " + this);
             _active = true;

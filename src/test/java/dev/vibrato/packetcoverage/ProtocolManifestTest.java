@@ -10,7 +10,7 @@ class ProtocolManifestTest {
                 && r.packet().direction().equals(direction) && r.packet().id() == id).findFirst().orElseThrow();
     }
     private static PacketCoverage.Snapshot snapshot(PacketCoverage.Entry... entries) {
-        return new PacketCoverage.Snapshot(767, "test", List.of(entries));
+        return new PacketCoverage.Snapshot(767, "test", List.of(entries), List.of());
     }
     @Test void manifestHasEveryPacketAndRuntimeIdentity() throws Exception {
         var manifest = ProtocolManifest.load(); // load validates uniqueness of wire and runtime keys
