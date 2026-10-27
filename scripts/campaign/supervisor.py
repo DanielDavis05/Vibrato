@@ -28,36 +28,75 @@ def classify(*, death=False, crash=False, failure=False, stuck=False, churn=Fals
     return 'invalid:incomplete'
 
 
+def leaf_identity(text):
+    # Debug state follows the closing angle bracket and changes during a task.
+    # Ambiguous or malformed strings are not evidence for churn.
+    if not isinstance(text, str): return None
+    match = re.match(r'^<([^<>]+)>(?:\s|$)', text.strip())
+    return match.group(1) if match else None
+
+
 class Evidence:
     def __init__(self, now):
         self.last_progress = now
         self.last_pos = None
         self.task_starts = collections.deque(maxlen=50)
         self.task_start_count = 0
+        self.restart_count = 0
+        self.seen_tasks = set()
         self.recent = collections.deque()
+        self.observed_leaves = collections.deque()
         self.churn = False
         self.failure = False
+        self.failure_messages = collections.deque(maxlen=50)
         self.stuck = False
+        self.unstuck_count = 0
+        self.abandon_count = 0
+        self.deaths = 0
+        self.was_dead = False
         self.tps = []
+        self.server_tps = []
         self.last_heartbeat = None
         self.start = None
 
+    def detect_churn(self, now):
+        while self.recent and now - self.recent[0][0] > 10: self.recent.popleft()
+        while self.observed_leaves and now - self.observed_leaves[0][0] > 10: self.observed_leaves.popleft()
+        classes = collections.defaultdict(set)
+        for _, identity, cls in self.observed_leaves: classes[identity].add(cls)
+        corroborated = {identity for identity, types in classes.items() if len(types) == 1}
+        counts = collections.Counter(identity for _, identity in self.recent if identity in corroborated)
+        if any(count > 8 for count in counts.values()): self.churn = True
+
     def lines(self, lines, now):
         for line in lines:
+            stamp = re.match(r'^\[(\d{2}):(\d{2}):(\d{2})\]', line)
+            event_time = now
+            if stamp:
+                local = time.localtime()
+                current = local.tm_hour * 3600 + local.tm_min * 60 + local.tm_sec
+                logged = int(stamp[1]) * 3600 + int(stamp[2]) * 60 + int(stamp[3])
+                event_time = now - ((current - logged + 43200) % 86400 - 43200)
             match = TASK.search(line)
             if match:
                 name = match.group(1).strip()
                 self.task_starts.append(name)
                 self.task_start_count += 1
-                self.last_progress = now
-                # Count only starts corroborated as the current leaf. Parent tasks
-                # can restart normally during higher-priority interruptions.
-                if self.last_heartbeat and self.last_heartbeat.get('leaf') == name:
-                    self.recent.append((now, name))
-                    while self.recent and now - self.recent[0][0] > 10: self.recent.popleft()
-                    if sum(1 for _, task in self.recent if task == name) > 8: self.churn = True
-            if 'Task failed:' in line: self.failure = True
-            if 'ABANDON_TASK' in line: self.stuck = True
+                identity = leaf_identity(name)
+                if identity:
+                    if identity in self.seen_tasks: self.restart_count += 1
+                    self.seen_tasks.add(identity)
+                    self.recent.append((event_time, identity))
+                self.last_progress = max(self.last_progress, event_time)
+            if 'Task failed:' in line:
+                self.failure = True
+                self.failure_messages.append(line.strip())
+            if 'Unstuck ' in line:
+                self.unstuck_count += 1
+                if 'ABANDON_TASK' in line:
+                    self.abandon_count += 1
+                    self.stuck = True
+        self.detect_churn(now)
 
     def heartbeat(self, data, now):
         if data == self.last_heartbeat: return
@@ -70,11 +109,21 @@ class Evidence:
             if self.last_pos is None or math.dist(pos, self.last_pos) >= 0.25:
                 self.last_pos = pos
                 self.last_progress = now
-        tps = data.get('tps')
-        if isinstance(tps, (int, float)) and math.isfinite(tps): self.tps.append(tps)
+        dead = bool(data.get('dead') or data.get('health', 1) <= 0)
+        if dead and not self.was_dead: self.deaths += 1
+        self.was_dead = dead
+        identity = leaf_identity(data.get('leaf'))
+        cls = data.get('leafClass')
+        if identity and isinstance(cls, str) and cls:
+            self.observed_leaves.append((now, identity, cls))
+        self.detect_churn(now)
+        for key, samples in [('tps', self.tps), ('serverTps', self.server_tps)]:
+            tps = data.get(key)
+            if isinstance(tps, (int, float)) and math.isfinite(tps): samples.append(tps)
 
     def overloaded(self):
-        return any(sum(self.tps[i:i + 10]) / 10 < 18 for i in range(len(self.tps) - 9))
+        return any(sum(samples[i:i + 10]) / 10 < 18 for samples in (self.tps, self.server_tps)
+                   for i in range(len(samples) - 9))
 
 
 def terminate(proc):
@@ -145,7 +194,7 @@ def run(args):
                                        stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
             metadata = {'schema_version':1, 'run_id':run_id, 'git_sha':sha, 'jar_sha256':jar_hash,
                         'world_seed':seed, 'profile_seed':seed, 'bot_id':bot, 'stage':'full-to-nether',
-                        'budget_seconds':args.budget, 'display':args.display, 'pid':process.pid,
+                        'budget_seconds':args.budget, 'telemetry_version':2, 'display':args.display, 'pid':process.pid,
                         'start_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                         'goal':'enter minecraft:the_nether', 'control':'default'}
             (path / 'metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
@@ -187,14 +236,19 @@ def run(args):
                     status = classify(death=death, crash=crash, failure=evidence.failure, stuck=evidence.stuck,
                                       churn=evidence.churn, stall=stall, timeout=timeout, pass_goal=goal,
                                       overloaded=evidence.overloaded())
-                    if len(evidence.tps) < 10 and not crash and not death: status = 'invalid:insufficient-tps'
+                    if (len(evidence.tps) < 10 or len(evidence.server_tps) < 10) and not crash and not death and status != 'invalid:overloaded': status = 'invalid:insufficient-tps'
                     summary = {**r['metadata'], 'classification':status, 'watchdog_cause':cause,
                                'elapsed_seconds':now-r['started'], 'exit_code':proc.returncode,
                                'last_heartbeat':hb, 'last_50_task_starts':list(evidence.task_starts),
-                               'task_starts_observed':evidence.task_start_count, 'task_failure_observed':evidence.failure,
+                               'task_starts_observed':evidence.task_start_count, 'task_restarts_observed':evidence.restart_count,
+                               'deaths_observed':evidence.deaths if hb else None, 'unstuck_firings_observed':evidence.unstuck_count,
+                               'stuck_abandons_observed':evidence.abandon_count, 'failure_messages':list(evidence.failure_messages),
+                               'task_failure_observed':evidence.failure,
                                'stuck_abandon_observed':evidence.stuck, 'churn_observed':evidence.churn,
                                'client_tps_mean':sum(evidence.tps)/len(evidence.tps) if evidence.tps else None,
-                               'client_tps_samples':len(evidence.tps), 'peak_rss_bytes':r['peak_rss'],
+                               'client_tps_samples':len(evidence.tps),
+                               'server_tps_mean':sum(evidence.server_tps)/len(evidence.server_tps) if evidence.server_tps else None,
+                               'server_tps_samples':len(evidence.server_tps), 'peak_rss_bytes':r['peak_rss'],
                                'cpu_seconds':r['cpu'], 'cpu_percent_one_core': (r['cpu'] * 100 / (now-r['started'])) if r['cpu'] is not None else None, 'script_result':result,
                                'jar_unchanged':digest(jar) == jar_hash}
                     (path / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')

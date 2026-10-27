@@ -31,6 +31,7 @@ public final class ScriptRunner {
     private long previousNanos;
     private long heartbeatNanos;
     private int heartbeatTicks;
+    private int previousServerTicks = -1;
     private boolean forward, sprint, haveSample;
     private double x, z, movingDistance;
     private long movingTicks, samples, pathStationaryTicks, forwardReleases, sprintRestarts;
@@ -81,7 +82,13 @@ public final class ScriptRunner {
                 heartbeat.put("dead", client.player.isDead());
                 heartbeat.put("dimension", client.world.getRegistryKey().getValue().toString());
                 heartbeat.put("leaf", currentLeaf == null ? null : currentLeaf.toString());
+                heartbeat.put("leafClass", currentLeaf == null ? null : currentLeaf.getClass().getSimpleName());
                 heartbeat.put("tps", heartbeatTicks * 1e9 / (now - heartbeatNanos));
+                var server = client.getServer();
+                int serverTicks = server == null ? -1 : server.getTicks();
+                heartbeat.put("serverTps", serverTicks < 0 || previousServerTicks < 0 || serverTicks < previousServerTicks
+                        ? null : (serverTicks - previousServerTicks) * 1e9 / (now - heartbeatNanos));
+                previousServerTicks = serverTicks;
                 try { writeAtomic(client.runDirectory.toPath().resolve("campaign-heartbeat.json"), heartbeat); }
                 catch (IOException error) { Debug.logInternal("Campaign heartbeat write failed: " + error.getMessage()); }
                 heartbeatNanos = now;

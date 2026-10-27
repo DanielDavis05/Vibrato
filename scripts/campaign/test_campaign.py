@@ -25,11 +25,34 @@ class CampaignTest(unittest.TestCase):
 
     def test_churn_uses_observed_leaf_not_parent(self):
         e = Evidence(0)
-        e.heartbeat({'position':[0, 64, 0], 'leaf':'<Leaf>', 'tps':20}, 1)
+        e.heartbeat({'position':[0, 64, 0], 'leaf':'<Leaf> active', 'leafClass':'LeafTask', 'tps':20}, 1)
         e.lines(['Task START: <Parent>'] * 9, 2)
         self.assertFalse(e.churn)
         e.lines(['Task START: <Leaf>'] * 9, 3)
         self.assertTrue(e.churn)
+
+    def test_alternating_starts_before_debug_state_is_sampled(self):
+        e = Evidence(0)
+        for n in range(9):
+            e.lines(['Task START: <Place target A>', 'Task START: <Go target B>'], n)
+        self.assertFalse(e.churn)
+        e.heartbeat({'position':[1, 64, 0], 'leaf':'<Place target A> Placing',
+                     'leafClass':'PlaceTask', 'tps':20, 'serverTps':19}, 9)
+        self.assertTrue(e.churn)
+        self.assertEqual(16, e.restart_count)
+        self.assertEqual([19], e.server_tps)
+
+    def test_missing_class_does_not_guess_leaf(self):
+        e = Evidence(0)
+        e.lines(['Task START: <Leaf>'] * 9, 1)
+        e.heartbeat({'position':[0,64,0], 'leaf':'<Leaf> Running'}, 2)
+        self.assertFalse(e.churn)
+
+    def test_overload_in_either_tick_stream(self):
+        e = Evidence(0)
+        e.tps = [20] * 10
+        e.server_tps = [17] * 10
+        self.assertTrue(e.overloaded())
 
     def test_redaction(self):
         line = 'Player123 /home/alice/private 192.168.1.20 a@b.com token=secret 01234567-89ab-cdef-0123-456789abcdef'

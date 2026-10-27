@@ -2,26 +2,167 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vibrato isolated campaign run summary",
   "type": "object",
-  "required": ["schema_version", "run_id", "git_sha", "jar_sha256", "jar_unchanged", "world_seed", "profile_seed", "stage", "classification", "budget_seconds", "elapsed_seconds", "client_tps_mean", "client_tps_samples", "peak_rss_bytes", "cpu_seconds", "cpu_percent_one_core", "last_50_task_starts", "last_heartbeat", "script_result"],
+  "required": [
+    "schema_version",
+    "run_id",
+    "git_sha",
+    "jar_sha256",
+    "jar_unchanged",
+    "world_seed",
+    "profile_seed",
+    "stage",
+    "classification",
+    "budget_seconds",
+    "elapsed_seconds",
+    "client_tps_mean",
+    "client_tps_samples",
+    "peak_rss_bytes",
+    "cpu_seconds",
+    "cpu_percent_one_core",
+    "last_50_task_starts",
+    "last_heartbeat",
+    "script_result",
+    "telemetry_version",
+    "server_tps_mean",
+    "server_tps_samples",
+    "deaths_observed",
+    "task_restarts_observed",
+    "unstuck_firings_observed",
+    "stuck_abandons_observed",
+    "failure_messages"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "run_id": {"type": "string"},
-    "git_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-    "jar_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "jar_unchanged": {"type": "boolean"},
-    "world_seed": {"type": "integer"},
-    "profile_seed": {"type": "integer"},
-    "stage": {"type": "string"},
-    "classification": {"enum": ["pass", "fail:task-failure", "fail:stuck-abandon", "fail:stall", "fail:death", "fail:crash", "fail:timeout", "fail:churn", "invalid:overloaded", "invalid:incomplete", "invalid:insufficient-tps"]},
-    "budget_seconds": {"type": "number", "minimum": 0},
-    "elapsed_seconds": {"type": "number", "minimum": 0},
-    "client_tps_mean": {"type": ["number", "null"]},
-    "client_tps_samples": {"type": "integer", "minimum": 0},
-    "peak_rss_bytes": {"type": "integer", "minimum": 0},
-    "cpu_seconds": {"type": ["number", "null"]},
-    "cpu_percent_one_core": {"type": ["number", "null"]},
-    "last_50_task_starts": {"type": "array", "maxItems": 50, "items": {"type": "string"}},
-    "last_heartbeat": {"type": ["object", "null"]},
-    "script_result": {"type": ["object", "null"]}
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "jar_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "jar_unchanged": {
+      "type": "boolean"
+    },
+    "world_seed": {
+      "type": "integer"
+    },
+    "profile_seed": {
+      "type": "integer"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "pass",
+        "fail:task-failure",
+        "fail:stuck-abandon",
+        "fail:stall",
+        "fail:death",
+        "fail:crash",
+        "fail:timeout",
+        "fail:churn",
+        "invalid:overloaded",
+        "invalid:incomplete",
+        "invalid:insufficient-tps"
+      ]
+    },
+    "budget_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elapsed_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "client_tps_mean": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "client_tps_samples": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "peak_rss_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cpu_seconds": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "cpu_percent_one_core": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "last_50_task_starts": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_heartbeat": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "script_result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "telemetry_version": {
+      "const": 2
+    },
+    "server_tps_mean": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "server_tps_samples": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deaths_observed": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "task_restarts_observed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unstuck_firings_observed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stuck_abandons_observed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failure_messages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   }
 }
