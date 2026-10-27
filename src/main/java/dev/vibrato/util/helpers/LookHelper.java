@@ -3,6 +3,7 @@ package dev.vibrato.util.helpers;
 import dev.vibrato.Vibrato;
 import dev.vibrato.human.Human;
 import dev.vibrato.human.HumanLook;
+import dev.vibrato.human.LookTrace;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.RayTraceUtils;
@@ -231,7 +232,9 @@ public interface LookHelper {
         Rotation current = new Rotation(player.getYaw(), player.getPitch());
         float yawOffset = Rotation.normalizeYaw(target.getYaw() - current.getYaw());
         Rotation desired = new Rotation(current.getYaw() + yawOffset, target.getPitch());
+        LookTrace.source("lookAt");
         Rotation next = look.smooth(current, desired);
+        LookTrace.source(LookTrace.BARITONE);
         player.setYaw(next.getYaw());
         player.setPitch(next.getPitch());
     }
