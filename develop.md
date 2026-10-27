@@ -50,7 +50,13 @@ git clone --recurse-submodules <repo>     # or: git submodule update --init bari
 
 The numbered patches are applied in order. The bootstrap composes them against submodule `HEAD` in a temporary Git index, then recognizes the newest applied prefix in the working tree. It applies only the missing suffix when the tree is compatible; overlapping edits are left untouched and reported for manual resolution. Non-overlapping tracked source edits are included in the build stamp and trigger a rebuild.
 
-When changing a hook, update the ordered patch stack so each patch applies after its predecessors. Preserve any local edits before resolving a conflicting stack. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip the bootstrap.
+For independent Baritone development, pass `-PbaritoneSource=/path/to/Baritone` to build from that Git checkout. It must already contain the Vibrato hooks and have a `gradlew`; this mode does not apply or validate the patch stack. The build fingerprint includes tracked changes and untracked source/build configuration files, so edits trigger a rebuild. Generated build, runtime and distribution files are excluded. For example:
+
+```
+./gradlew build -PbaritoneSource=/opt/Baritone
+```
+
+When changing a hook in the default submodule workflow, update the ordered patch stack so each patch applies after its predecessors. Preserve any local edits before resolving a conflicting stack. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip the bootstrap.
 
 ## Task Development Guides
 

@@ -6,7 +6,7 @@ It opens a game window, so only run it on a machine where that is acceptable.
 Run from the repository root (or a worktree):
 
 ```bash
-./gradlew runClient -PbaritoneDist=/home/nathan/Source/Vibrato/baritone/dist \
+./gradlew runClient \
   -PgameProps="-Dvibrato.world=smoke -Dvibrato.worldSeed=424242 -Dvibrato.autostart=true -Dvibrato.botId=smoke1 -Dvibrato.seed=7 -Dvibrato.startDelay=8" \
   --args="--width 854 --height 480"
 ```
