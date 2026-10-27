@@ -31,6 +31,22 @@ public final class AutostartGate {
         if (!onTitleScreen || !autostart || !hasServer || everJoined) {
             return false;
         }
+        return backoffElapsed(nowMillis, lastAttemptMillis);
+    }
+
+    /**
+     * Load or create the configured singleplayer world from the title screen, once per process: no attempt after the
+     * player has joined, and a new attempt only after {@link #CONNECT_BACKOFF_MILLIS} since the previous one.
+     */
+    public static boolean shouldEnterWorld(boolean onTitleScreen, boolean hasWorld, boolean everJoined,
+                                           long nowMillis, long lastAttemptMillis) {
+        if (!onTitleScreen || !hasWorld || everJoined) {
+            return false;
+        }
+        return backoffElapsed(nowMillis, lastAttemptMillis);
+    }
+
+    private static boolean backoffElapsed(long nowMillis, long lastAttemptMillis) {
         return lastAttemptMillis == NEVER || nowMillis - lastAttemptMillis >= CONNECT_BACKOFF_MILLIS;
     }
 }

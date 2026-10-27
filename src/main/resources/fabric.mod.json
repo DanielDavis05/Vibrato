@@ -8,9 +8,9 @@
     "TacoTechnica",
     "James Green"
   ],
-  "contributors": {
-    "Adris Jautakas": "Original AltoClef author (MIT)"
-  },
+  "contributors": [
+    "Adris Jautakas"
+  ],
   "custom": {
     "credits": "Based on AltoClef by Adris Jautakas (MIT)"
   },

@@ -65,4 +65,19 @@ class AutostartGateTest {
     void doesNotReconnectAfterJoiningOnce() {
         assertFalse(AutostartGate.shouldConnect(true, true, true, true, 1_000_000, AutostartGate.NEVER));
     }
+
+    @Test
+    void entersTheWorldOnceFromTheTitleScreen() {
+        assertTrue(AutostartGate.shouldEnterWorld(true, true, false, 1_000, AutostartGate.NEVER));
+        assertFalse(AutostartGate.shouldEnterWorld(false, true, false, 1_000, AutostartGate.NEVER));
+        assertFalse(AutostartGate.shouldEnterWorld(true, false, false, 1_000, AutostartGate.NEVER));
+        assertFalse(AutostartGate.shouldEnterWorld(true, true, true, 1_000_000, AutostartGate.NEVER));
+    }
+
+    @Test
+    void entersTheWorldAgainOnlyAfterTheBackoff() {
+        long first = 2_000_000;
+        assertFalse(AutostartGate.shouldEnterWorld(true, true, false, first + 29_999, first));
+        assertTrue(AutostartGate.shouldEnterWorld(true, true, false, first + 30_000, first));
+    }
 }

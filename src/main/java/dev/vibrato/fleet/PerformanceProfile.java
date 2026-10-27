@@ -37,11 +37,12 @@ public final class PerformanceProfile {
 
     public static String describe(FleetConfig config) {
         return String.format(Locale.ROOT,
-                "fleet bot=%s seed=%d persona=%s autostart=%s planLength=%d startDelay=%ds server=%s perf=%s dataDir=%s",
+                "fleet bot=%s seed=%d persona=%s autostart=%s planLength=%d startDelay=%ds server=%s world=%s perf=%s dataDir=%s",
                 config.botId(), config.seed(),
                 config.persona() == null ? "auto" : config.persona(),
                 config.autostart(), config.planLength(), config.startDelaySeconds(),
                 config.serverAddress() == null ? "none" : config.serverAddress(),
+                config.world() == null ? "none" : config.world() + "/" + config.worldSeed(),
                 config.perfMode().name().toLowerCase(Locale.ROOT), config.dataDir());
     }
 
