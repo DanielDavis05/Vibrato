@@ -5,6 +5,7 @@ import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.eventbus.EventBus;
 import dev.vibrato.eventbus.events.ClientTickEvent;
+import dev.vibrato.eventbus.events.TaskFinishedEvent;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.IOException;
@@ -24,6 +25,9 @@ public final class ScriptRunner {
     private final WorldReadyGate readyGate = new WorldReadyGate();
     private final Path result;
     private final List<Map<String, Object>> commands = new ArrayList<>();
+    private final List<Map<String, Object>> taskOutcomes = new ArrayList<>();
+    private final List<Map<String, Object>> timeline = new ArrayList<>();
+    private long startNanos, lastTimelineNanos;
     private long previousNanos;
     private boolean forward, sprint, haveSample;
     private double x, z, movingDistance;
@@ -44,6 +48,7 @@ public final class ScriptRunner {
         try {
             ScriptRunner runner = new ScriptRunner(mod, ScriptPlan.parse(Files.readAllLines(Path.of(file))), result);
             EventBus.subscribe(ClientTickEvent.class, event -> runner.tick());
+            EventBus.subscribe(TaskFinishedEvent.class, runner::taskFinished);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> runner.finish("shutdown"), "vibrato-script-result"));
             Debug.logMessage("Script loaded: " + file);
         } catch (IOException | IllegalArgumentException e) {
@@ -57,6 +62,7 @@ public final class ScriptRunner {
     private void tick() {
         MinecraftClient client = MinecraftClient.getInstance();
         long now = System.nanoTime();
+        if (startNanos == 0) startNanos = now;
         double dt = previousNanos == 0 ? 0 : Math.max(0, (now - previousNanos) / 1e9);
         previousNanos = now;
         boolean ready = readyGate.ready(client.player != null && client.world != null, client.currentScreen != null);
@@ -64,6 +70,21 @@ public final class ScriptRunner {
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
         sample(client, path);
+        if (lastTimelineNanos == 0 || now - lastTimelineNanos >= 1_000_000_000L) {
+            lastTimelineNanos = now;
+            Map<String, Object> point = new LinkedHashMap<>();
+            point.put("seconds", elapsed());
+            point.put("position", List.of(client.player.getX(), client.player.getY(), client.player.getZ()));
+            point.put("dimension", client.world.getRegistryKey().getValue().toString());
+            point.put("health", client.player.getHealth());
+            point.put("pathing", path);
+            var chain = mod.getTaskRunner().getCurrentTaskChain();
+            var tasks = chain == null ? List.<dev.vibrato.tasksystem.Task>of() : chain.getTasks();
+            var leaf = tasks.isEmpty() ? null : tasks.getLast();
+            point.put("leafClass", leaf == null ? null : leaf.getClass().getSimpleName());
+            point.put("leaf", leaf == null ? null : leaf.toString());
+            timeline.add(point);
+        }
         boolean idle = !path && !mod.getUserTaskChain().isActive();
         ScriptState.Action action = state.tick(dt, true, idle);
         if (action == null) return;
@@ -96,6 +117,19 @@ public final class ScriptRunner {
         if (state.finished() && step.kind() != ScriptPlan.Kind.EXIT) finish("finished");
     }
 
+    private double elapsed() { return startNanos == 0 ? 0 : (System.nanoTime() - startNanos) / 1e9; }
+
+    private void taskFinished(TaskFinishedEvent event) {
+        Map<String, Object> outcome = new LinkedHashMap<>();
+        outcome.put("seconds", elapsed());
+        outcome.put("task", event.lastTaskRan == null ? null : event.lastTaskRan.toString());
+        outcome.put("durationSeconds", event.durationSeconds);
+        String failure = event.lastTaskRan == null ? null : event.lastTaskRan.failureReason();
+        outcome.put("status", failure != null ? "failed" : event.cancelled ? "cancelled" : "completed");
+        outcome.put("failureReason", failure);
+        taskOutcomes.add(outcome);
+    }
+
     private void sample(MinecraftClient client, boolean path) {
         var player = client.player;
         boolean nextForward = player.input.movementForward > 0;
@@ -124,7 +158,8 @@ public final class ScriptRunner {
         metrics.put("pathStationaryTicks", pathStationaryTicks);
         metrics.put("stuckFirings", null);
         metrics.put("taskRestarts", null);
-        try { writeAtomic(result, Map.of("status", status, "commands", commands, "metrics", metrics)); }
+        try { writeAtomic(result, Map.of("status", status, "commands", commands, "metrics", metrics,
+                "taskOutcomes", taskOutcomes, "timeline", timeline)); }
         catch (IOException e) { Debug.logError("Cannot write script result: " + e); }
     }
 

@@ -5,6 +5,7 @@ import dev.vibrato.tasks.construction.compound.ConstructIronGolemTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.CraftGenericManuallyTask;
 import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
+import dev.vibrato.tasks.construction.PlaceObsidianBucketTask;
 import dev.vibrato.tasks.construction.RecoveryPlaceBlockTask;
 import dev.vibrato.nav.EscapeUndergroundTask;
 import dev.vibrato.tasks.construction.PlaceSignTask;
@@ -127,6 +128,10 @@ public class Playground {
         Debug.logMessage("Running test...");
 
         switch (arg) {
+            case "cast":
+                // Disposable-world fixture: no inventory or terrain is supplied by the task.
+                mod.runUserTask(new PlaceObsidianBucketTask(mod.getPlayer().getBlockPos().east(3)));
+                break;
             // Deterministic survival checks used by docs/NETHER_FIX_VALIDATION_2026-10-27.md.
             case "escape":
                 mod.runUserTask(new EscapeUndergroundTask());
