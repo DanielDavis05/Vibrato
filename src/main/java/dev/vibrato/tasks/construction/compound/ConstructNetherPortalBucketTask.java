@@ -102,7 +102,7 @@ public class ConstructNetherPortalBucketTask extends Task {
         });
 
         // Protect some used items
-        mod.getBehaviour().addProtectedItems(Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
+        mod.getBehaviour().addProtectedItems(Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.FLINT_AND_STEEL, Items.FIRE_CHARGE, Items.IRON_INGOT);
 
         _progressChecker.reset();
     }
@@ -143,14 +143,21 @@ public class ConstructNetherPortalBucketTask extends Task {
         if (bucketCount < 2) {
             setDebugState("Getting buckets");
             _progressChecker.reset();
-            // If we have lava/water, get the inverse. Otherwise we dropped a bucket, just get a bucket.
+            // Recover an existing bucket before deciding how much iron to gather.
+            if (mod.getEntityTracker().itemDropped(Items.WATER_BUCKET, Items.LAVA_BUCKET)) {
+                return new PickupDroppedItemTask(new ItemTarget(new Item[]{Items.WATER_BUCKET, Items.LAVA_BUCKET}, 1), true);
+            }
+            boolean hasIgniter = mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
+            int ironGoal = PortalIronPlan.ingotGoal(bucketCount, hasIgniter);
+            if (mod.getItemStorage().getItemCount(Items.IRON_INGOT) < ironGoal) {
+                setDebugState("Collecting " + ironGoal + " iron ingots for buckets and ignition");
+                return TaskCatalogue.getItemTask(Items.IRON_INGOT, ironGoal);
+            }
+            // If we have lava/water, get the inverse; otherwise craft the buckets.
             if (mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) {
                 return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
             } else if (mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
                 return TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
-            }
-            if (mod.getEntityTracker().itemDropped(Items.WATER_BUCKET, Items.LAVA_BUCKET)) {
-                return new PickupDroppedItemTask(new ItemTarget(new Item[]{Items.WATER_BUCKET, Items.LAVA_BUCKET}, 1), true);
             }
             return TaskCatalogue.getItemTask(Items.BUCKET, 2);
         }

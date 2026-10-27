@@ -40,6 +40,13 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
 
     private final PickupDroppedItemTask _pickupTask;
     private ContainerCache _currentContainer;
+    private final DeferredContainers<ContainerKey> _deferredContainers = new DeferredContainers<>();
+
+    private record ContainerKey(Dimension dimension, BlockPos pos) { }
+
+    private static ContainerKey containerKey(ContainerCache container) {
+        return new ContainerKey(container.getDimension(), container.getBlockPos());
+    }
     private final EnsureFreePlayerCraftingGridTask _ensureFreeCraftingGridTask = new EnsureFreePlayerCraftingGridTask();
     // Extra resource parameters
     private Block[] _mineIfPresent = null;
@@ -149,11 +156,13 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         // Check for chests and grab resources from them.
         if (_currentContainer == null) {
             List<ContainerCache> containersWithItem = mod.getItemStorage().getContainersWithItem(Arrays.stream(_itemTargets).reduce(new Item[0], (items, target) -> ArrayUtils.addAll(items, target.getMatches()), ArrayUtils::addAll));
-            if (!containersWithItem.isEmpty()) {
-                ContainerCache closest = containersWithItem.stream().min(StlHelper.compareValues(container -> container.getBlockPos().getSquaredDistance(mod.getPlayer().getPos()))).get();
-                if (closest.getBlockPos().isWithinDistance(mod.getPlayer().getPos(), mod.getModSettings().getResourceChestLocateRange())) {
-                    _currentContainer = closest;
-                }
+            Optional<ContainerCache> closest = containersWithItem.stream()
+                    .filter(container -> _deferredContainers.eligible(containerKey(container),
+                            container.getBlockPos().getSquaredDistance(mod.getPlayer().getPos())))
+                    .min(StlHelper.compareValues(container -> container.getBlockPos().getSquaredDistance(mod.getPlayer().getPos())));
+            if (closest.isPresent() && closest.get().getBlockPos().isWithinDistance(
+                    mod.getPlayer().getPos(), mod.getModSettings().getResourceChestLocateRange())) {
+                _currentContainer = closest.get();
             }
         }
         if (_currentContainer != null) {
@@ -208,6 +217,15 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         }
 
         return onResourceTick(mod);
+    }
+
+    @Override
+    public boolean recoverFromStall(Vibrato mod) {
+        if (_currentContainer == null) return false;
+        _deferredContainers.defer(containerKey(_currentContainer),
+                _currentContainer.getBlockPos().getSquaredDistance(mod.getPlayer().getPos()));
+        _currentContainer = null;
+        return true;
     }
 
     /** Direct mining tasks already search their targets and must keep their prerequisites. */

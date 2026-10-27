@@ -29,3 +29,10 @@ A subsequent review tightened ascent completion: the bot must land before advanc
 `./gradlew :test :build`: 583 tests passed, no failures or skipped tests. Live validation of the changes is in progress; this file will be updated with outcomes and limitations.
 
 No sibling Baritone source changes were made for this fix.
+
+
+## Longer dependency run
+
+The first Nether dependency run passed log collection, crafting table and furnace construction, and two-bucket crafting. It then requested a seventh iron ingot for ignition, dug down again, and got stuck retrieving coal from the cached furnace above. The mining-only scoped recovery could not handle that container branch, and the root was cancelled after 224.776 seconds. This was a real remaining failure, not a successful Nether run.
+
+The follow-up batches iron for missing buckets plus ignition before crafting (7 ingots for two missing buckets without an igniter), and extends scoped recovery to a resource task's current container. A stalled container is deferred locally, retaining its cached contents; entering interaction range enables it again. Other containers and normal resource collection remain available. The global two-recovery limit still applies.
