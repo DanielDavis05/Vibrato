@@ -61,6 +61,7 @@ public final class ServerTelemetry implements ModInitializer {
             data.put("schemaVersion", 1);
             data.put("wall", System.currentTimeMillis() / 1000.0);
             data.put("ticks", totalTicks);
+            data.put("monotonicSeconds", now / 1e9);
             data.put("sampleTicks", sampleTicks);
             data.put("sampleSeconds", (now - intervalStart) / 1e9);
             data.put("tps", sampleTicks * 1e9 / (now - intervalStart));
