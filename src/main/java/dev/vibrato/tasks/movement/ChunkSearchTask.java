@@ -33,6 +33,7 @@ abstract class ChunkSearchTask extends Task {
     // We definitely were searched before.
     private final Set<ChunkPos> _searchedAlready = new HashSet<>();
     private final ArrayList<ChunkPos> _searchLater = new ArrayList<>();
+    private final StableSearchTarget<ChunkPos> _target = new StableSearchTarget<>();
     private final ArrayList<ChunkPos> _justLoaded = new ArrayList<>();
     private boolean _first = true;
     private boolean _finished = false;
@@ -100,7 +101,7 @@ abstract class ChunkSearchTask extends Task {
         }
 
         // Now that we have an updated map, go to the nearest
-        ChunkPos closest = getBestChunk(mod, _searchLater);
+        ChunkPos closest = _target.select(_searchLater, () -> getBestChunk(mod, _searchLater));
 
         if (closest == null) {
             _finished = true;

@@ -103,6 +103,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         _origin = mod.getPlayer().getPos();
         _progressChecker.reset();
         _failCounter = 0;
+        _executingPlanB = false;
         StorageHelper.closeScreen();
     }
 
@@ -201,6 +202,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof TimeoutWanderTask task) {
+            if (task._increaseRange != _increaseRange || task._forceExplore != _forceExplore) return false;
             if (Float.isInfinite(task._distanceToWander) || Float.isInfinite(_distanceToWander)) {
                 return Float.isInfinite(task._distanceToWander) == Float.isInfinite(_distanceToWander);
             }
