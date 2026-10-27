@@ -43,13 +43,12 @@ public class FarmCropsTask extends Task {
     private final Item _seed;
     private final Block _cropBlock;
 
-    public FarmCropsTask(Item crop, int rows) {
-        _crop = crop;
+    public FarmCropsTask(CropGrowth growth, int rows) {
+        _growth = growth;
         _rows = rows;
-        _growth = CropGrowth.forItemId(Registries.ITEM.getId(crop).getPath())
-                .orElseThrow(() -> new IllegalArgumentException("Not a farmable crop: " + crop));
-        _seed = Registries.ITEM.get(Identifier.of("minecraft", _growth.seedId()));
-        _cropBlock = Registries.BLOCK.get(Identifier.of("minecraft", _growth.blockId()));
+        _crop = Registries.ITEM.get(Identifier.of("minecraft", growth.itemId()));
+        _seed = Registries.ITEM.get(Identifier.of("minecraft", growth.seedId()));
+        _cropBlock = Registries.BLOCK.get(Identifier.of("minecraft", growth.blockId()));
     }
 
     private int fieldSize() {

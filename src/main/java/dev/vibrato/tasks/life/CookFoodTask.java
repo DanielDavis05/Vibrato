@@ -6,9 +6,9 @@ import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.SmeltTarget;
-import dev.vibrato.util.helpers.ItemHelper;
-
 import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 
 /**
  * Smelts raw food in a furnace until the inventory holds a number of cooked items. Eating is left to the food chain.
@@ -20,10 +20,12 @@ public class CookFoodTask extends Task {
     private final int _count;
     private SmeltInFurnaceTask _smelt;
 
-    public CookFoodTask(Item raw, int count) {
-        _raw = raw;
-        _cooked = ItemHelper.getCookedFood(raw)
-                .orElseThrow(() -> new IllegalArgumentException("Not a smeltable food: " + raw));
+    /** @throws IllegalArgumentException if {@code rawId} is not in {@link CookableFoods} */
+    public CookFoodTask(String rawId, int count) {
+        String cookedId = CookableFoods.cookedIdFor(rawId)
+                .orElseThrow(() -> new IllegalArgumentException("Not a cookable food: " + rawId));
+        _raw = Registries.ITEM.get(Identifier.of("minecraft", rawId));
+        _cooked = Registries.ITEM.get(Identifier.of("minecraft", cookedId));
         _count = count;
     }
 

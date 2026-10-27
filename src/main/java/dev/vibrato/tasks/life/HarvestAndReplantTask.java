@@ -10,7 +10,8 @@ import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -19,18 +20,19 @@ import net.minecraft.util.math.BlockPos;
  */
 public class HarvestAndReplantTask extends ResourceTask {
 
-    private final Item _crop;
+    private final HarvestableCrops _crop;
     private final Block _block;
     private final int _count;
 
-    public HarvestAndReplantTask(Item crop, int count) {
-        super(crop, count);
+    public HarvestAndReplantTask(HarvestableCrops crop, int count) {
+        super(itemOf(crop), count);
         _crop = crop;
         _count = count;
-        _block = crop == Items.MELON_SLICE ? Blocks.MELON : Block.getBlockFromItem(crop);
-        if (_block == Blocks.AIR) {
-            throw new IllegalArgumentException("Not a harvestable crop: " + crop);
-        }
+        _block = Registries.BLOCK.get(Identifier.of("minecraft", crop.blockId()));
+    }
+
+    private static Item itemOf(HarvestableCrops crop) {
+        return Registries.ITEM.get(Identifier.of("minecraft", crop.itemId()));
     }
 
     @Override
@@ -65,11 +67,11 @@ public class HarvestAndReplantTask extends ResourceTask {
 
     @Override
     protected String toDebugStringName() {
-        return "Harvesting " + _count + " " + _crop.getTranslationKey();
+        return "Harvesting " + _count + " " + _crop.itemId();
     }
 
     private boolean isHarvestable(Vibrato mod, BlockPos pos) {
-        if (_block == Blocks.SUGAR_CANE) {
+        if (_crop == HarvestableCrops.SUGAR_CANE) {
             // Only the cane above the base block; the base is what regrows.
             return mod.getWorld().getBlockState(pos.down()).isOf(Blocks.SUGAR_CANE) && WorldHelper.canBreak(mod, pos);
         }

@@ -1,6 +1,7 @@
 package dev.vibrato.tasks.life;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,6 +47,10 @@ public enum CropGrowth {
 
     public boolean isMature(int age) {
         return age >= _maxAge;
+    }
+
+    public static List<String> itemIds() {
+        return Arrays.stream(values()).map(CropGrowth::itemId).toList();
     }
 
     public static Optional<CropGrowth> forItemId(String itemId) {

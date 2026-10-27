@@ -31,14 +31,15 @@ public class BreedAnimalsTask extends Task {
     private int _pairsDone;
     private int _babiesSeen;
 
-    public BreedAnimalsTask(EntityType<?> type, int pairs) {
-        _type = type;
-        _name = Registries.ENTITY_TYPE.getId(type).getPath();
-        if (!BreedingFood.canBreed(_name)) {
-            throw new IllegalArgumentException("Cannot breed " + _name);
+    /** @throws IllegalArgumentException if {@code animal} is not in {@link BreedingFood} */
+    public BreedAnimalsTask(String animal, int pairs) {
+        if (!BreedingFood.canBreed(animal)) {
+            throw new IllegalArgumentException("Cannot breed " + animal);
         }
+        _name = animal;
+        _type = Registries.ENTITY_TYPE.get(Identifier.of("minecraft", animal));
         _pairs = pairs;
-        _feed = new FeedTask(type);
+        _feed = new FeedTask(_type);
     }
 
     @Override
