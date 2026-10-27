@@ -8,6 +8,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.world.GameMode;
 import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.screen.FurnaceScreenHandler;
+import net.minecraft.screen.CraftingScreenHandler;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
@@ -85,8 +90,9 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         scenario("registry_state", List.of("update_recipes", "recipe", "update_advancements", "select_advancements_tab", "server_data", "server_links", "debug_sample", "map_item_data", "chunks_biomes"), ProtocolFixture::registryState);
         scenario("unknown_deleted_signature", List.of("delete_chat"), p -> p.networkHandler.sendPacket(new RemoveMessageS2CPacket(new MessageSignatureData.Indexed(new MessageSignatureData(new byte[256])))));
         scenario("common", List.of("ping", "store_cookie", "cookie_request", "resource_pack_pop", "custom_report_details"), ProtocolFixture::common);
-        scenario("scoreboard", List.of("set_objective", "set_display_objective", "set_score", "reset_score", "set_player_team", "boss_event"), p -> commands(p,
-                "scoreboard objectives remove vprotocol", "scoreboard objectives add vprotocol dummy", "scoreboard objectives setdisplay sidebar vprotocol", "scoreboard players set @s vprotocol 5", "scoreboard players reset @s vprotocol", "team remove vprotocol", "team add vprotocol", "team join vprotocol @s", "team modify vprotocol color blue", "team leave @s", "team remove vprotocol", "bossbar remove vibrato:fixture", "bossbar add vibrato:fixture Fixture", "bossbar set vibrato:fixture players @s", "bossbar set vibrato:fixture value 60", "bossbar remove vibrato:fixture", "scoreboard objectives remove vprotocol"));
+        scenario("boss_bar", List.of("boss_event"), ProtocolFixture::bossBar);
+        scenario("scoreboard", List.of("set_objective", "set_display_objective", "set_score", "reset_score", "set_player_team", "boss_event"), p -> { commands(p,
+                "scoreboard objectives remove vprotocol", "scoreboard objectives add vprotocol dummy", "scoreboard objectives setdisplay sidebar vprotocol", "scoreboard players set @s vprotocol 5", "scoreboard players reset @s vprotocol", "team remove vprotocol", "team add vprotocol", "team join vprotocol @s", "team modify vprotocol color blue", "team leave @s", "team remove vprotocol", "bossbar remove vibrato:fixture", "bossbar add vibrato:fixture Fixture", "bossbar set vibrato:fixture players @s", "bossbar set vibrato:fixture value 60", "bossbar remove vibrato:fixture", "scoreboard objectives remove vprotocol"); bossBar(p); });
         scenario("world", List.of("set_time", "game_event", "change_difficulty", "initialize_border", "set_border_center", "set_border_size", "set_border_lerp_size", "set_border_warning_delay", "set_border_warning_distance", "level_particles", "sound", "stop_sound", "set_default_spawn_position"), ProtocolFixture::world);
         scenario("entities", List.of("add_entity", "add_experience_orb", "set_entity_data", "set_entity_motion", "set_equipment", "update_mob_effect", "update_attributes", "set_passengers", "remove_entities"), p -> commands(p,
                 "kill @e[tag=vprotocol_fixture]", "summon armor_stand ~2 ~ ~ {Tags:[\"vprotocol_fixture\"],CustomName:'\"Fixture\"',CustomNameVisible:1b}", "summon pig ~3 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon command_block_minecart ~4 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon villager ~-3 ~1 ~ {Tags:[\"vprotocol_fixture\"],VillagerData:{profession:\"minecraft:farmer\",level:2,type:\"minecraft:plains\"},Offers:{Recipes:[{buy:{id:\"minecraft:emerald\",count:1},sell:{id:\"minecraft:bread\",count:1},maxUses:999}]}}", "summon horse ~-4 ~1 ~ {Tags:[\"vprotocol_fixture\"],Tame:1b}", "summon experience_orb ~1 ~1 ~ {Value:3s}", "effect give @e[type=pig,tag=vprotocol_fixture,limit=1,sort=nearest] minecraft:speed 20 0 true", "item replace entity @e[type=armor_stand,tag=vprotocol_fixture,limit=1,sort=nearest] armor.head with minecraft:iron_helmet"));
@@ -112,6 +118,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity player = handler.player;
+            handler.sendPacket(new CustomPayloadS2CPacket(new BrandCustomPayload("vibrato-protocol-fixture")));
             server.getPlayerManager().addToOperators(player.getGameProfile());
             player.changeGameMode(GameMode.CREATIVE);
             commands(player, "fill ~-5 ~-1 ~-5 ~5 ~-1 ~5 minecraft:stone", "fill ~-5 ~ ~-5 ~5 ~3 ~5 minecraft:air",
@@ -153,14 +160,11 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         p.networkHandler.sendPacket(new ChunkDataS2CPacket(chunk, p.getServerWorld().getChunkManager().getLightingProvider(), null, null));
     }
     private static void ghostRecipe(ServerPlayerEntity p) {
-        commands(p, "setblock ~-2 ~ ~ minecraft:crafting_table");
-        var pos = p.getBlockPos().add(-2, 0, 0);
-        var state = p.getServerWorld().getBlockState(pos);
-        var factory = state.createScreenHandlerFactory(p.getServerWorld(), pos);
         var recipe = p.getServer().getRecipeManager().get(Identifier.of("minecraft", "crafting_table"));
-        if (factory != null && recipe.isPresent() && p.openHandledScreen(factory).isPresent()) {
-            p.networkHandler.sendPacket(new CraftFailedResponseS2CPacket(p.currentScreenHandler.syncId, recipe.get()));
-        }
+        if (recipe.isEmpty()) throw new IllegalStateException("Fixture crafting_table recipe is unavailable");
+        var factory = new SimpleNamedScreenHandlerFactory((id, inventory, player) -> new CraftingScreenHandler(id, inventory), Text.literal("Fixture crafting"));
+        if (p.openHandledScreen(factory).isEmpty()) throw new IllegalStateException("Could not open fixture crafting screen");
+        p.networkHandler.sendPacket(new CraftFailedResponseS2CPacket(p.currentScreenHandler.syncId, recipe.get()));
     }
     private static void projectileUpdate(ServerPlayerEntity p) {
         var entities = p.getServerWorld().getEntitiesByClass(ExplosiveProjectileEntity.class, p.getBoundingBox().expand(16), e -> e.getCommandTags().contains("vprotocol_fixture"));
@@ -183,9 +187,15 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         p.networkHandler.sendPacket(new ChunkSentS2CPacket(1));
     }
     private static void signEditor(ServerPlayerEntity p) {
-        commands(p, "setblock ~-2 ~ ~ minecraft:oak_sign");
-        var block = p.getServerWorld().getBlockEntity(p.getBlockPos().add(-2, 0, 0));
-        if (block instanceof SignBlockEntity sign) p.openEditSignScreen(sign, true);
+        var pos = p.getBlockPos().add(-2, 0, 0);
+        var world = p.getServerWorld();
+        world.setBlockState(pos.down(), Blocks.STONE.getDefaultState());
+        world.setBlockState(pos, Blocks.OAK_SIGN.getDefaultState());
+        var block = world.getBlockEntity(pos);
+        if (!(block instanceof SignBlockEntity sign)) throw new IllegalStateException("Fixture sign block entity was not created at " + pos);
+        sign.setEditor(p.getUuid());
+        p.networkHandler.sendPacket(BlockEntityUpdateS2CPacket.create(sign));
+        p.openEditSignScreen(sign, true);
     }
     private static void writtenBook(ServerPlayerEntity p) {
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
@@ -202,13 +212,17 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         var villagers = p.getServerWorld().getEntitiesByClass(VillagerEntity.class, p.getBoundingBox().expand(16), e -> e.getCommandTags().contains("vprotocol_fixture"));
         if (!villagers.isEmpty()) p.interact(villagers.getFirst(), Hand.MAIN_HAND);
     }
+    private static void bossBar(ServerPlayerEntity p) {
+        var boss = new ServerBossBar(Text.literal("Protocol fixture"), BossBar.Color.BLUE, BossBar.Style.PROGRESS);
+        boss.addPlayer(p);
+        boss.setPercent(0.6f);
+        boss.removePlayer(p);
+    }
     private static void container(ServerPlayerEntity p) {
-        commands(p, "setblock ~-2 ~ ~ minecraft:furnace");
-        var block = p.getServerWorld().getBlockEntity(p.getBlockPos().add(-2, 0, 0));
-        if (block instanceof NamedScreenHandlerFactory factory && p.openHandledScreen(factory).isPresent()) {
-            p.networkHandler.sendPacket(new ScreenHandlerPropertyUpdateS2CPacket(p.currentScreenHandler.syncId, 0, 0));
-            p.closeHandledScreen();
-        }
+        var factory = new SimpleNamedScreenHandlerFactory((id, inventory, player) -> new FurnaceScreenHandler(id, inventory), Text.literal("Fixture furnace"));
+        if (p.openHandledScreen(factory).isEmpty()) throw new IllegalStateException("Could not open fixture furnace screen");
+        p.networkHandler.sendPacket(new ScreenHandlerPropertyUpdateS2CPacket(p.currentScreenHandler.syncId, 0, 1));
+        p.closeHandledScreen();
     }
     private static void clientState(ServerPlayerEntity p) {
         var n = p.networkHandler;
