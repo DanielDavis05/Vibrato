@@ -11,8 +11,7 @@ import java.util.function.Supplier;
 
 public class GoalFollowEntity implements Goal {
 
-    // Ground collision coordinates can sit just below a whole-block surface.
-    private static final double GROUND_EPSILON = 0.01;
+    private static final double GROUND_EPSILON = 0.0001;
 
     private final Supplier<Vec3d> _position;
     private final BooleanSupplier _groundedItem;
@@ -70,7 +69,7 @@ public class GoalFollowEntity implements Goal {
     }
 
     private static int targetY(Vec3d target, boolean groundedItem) {
-        return groundedItem ? floor(target.y + GROUND_EPSILON) : floor(target.y);
+        return groundedItem ? (int) Math.ceil(target.y - GROUND_EPSILON) : floor(target.y);
     }
 
     private static int floor(double value) {
