@@ -21,7 +21,8 @@ final class AutonomousFoodPolicy {
     }
 
     boolean shouldCollect(int hunger, float healthFraction, int edibleFood, boolean completed) {
-        if (collecting && (completed || edibleFood >= TARGET_FOOD)) {
+        boolean recovered = hunger >= 18 && healthFraction >= 0.75f;
+        if (collecting && (completed || edibleFood >= TARGET_FOOD || recovered)) {
             collecting = false;
             searchTicks = 0;
         }

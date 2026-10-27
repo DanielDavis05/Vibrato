@@ -23,6 +23,23 @@ class AutonomousFoodPolicyTest {
         assertFalse(policy.shouldCollect(6, 0.2f, 0, true));
     }
 
+    @Test void recoveredPlayerAndRespawnClearStaleForaging() {
+        var policy = new AutonomousFoodPolicy();
+        assertTrue(policy.shouldCollect(6, 0.2f, 0, false));
+        assertFalse(policy.shouldCollect(20, 1f, 0, false));
+        assertFalse(policy.shouldCollect(19, 1f, 0, false));
+        assertTrue(policy.shouldCollect(6, 0.2f, 0, false));
+        // A newly spawned player resets both an active request and any old backoff.
+        policy.reset();
+        assertFalse(policy.shouldCollect(20, 1f, 0, false));
+        assertTrue(policy.shouldCollect(6, 0.2f, 0, false));
+        // Ordinary interruptions, and hunger or injury that still needs food, keep the latch.
+        policy.advance(false, false);
+        assertTrue(policy.shouldCollect(17, 0.4f, 1, false));
+        assertTrue(policy.shouldCollect(10, 1f, 1, false));
+        assertFalse(policy.shouldCollect(18, 0.75f, 1, false));
+    }
+
     @Test void timesOnlyActiveForagingAndBackoffOnlyNormalPlay() {
         var policy = new AutonomousFoodPolicy();
         assertTrue(policy.shouldCollect(6, 0.2f, 0, false));

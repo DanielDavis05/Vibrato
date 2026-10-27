@@ -36,6 +36,7 @@ public class FoodChain extends SingleTaskChain {
     private boolean _needsFood = false;
     private final AutonomousFoodPolicy _autonomousFood = new AutonomousFoodPolicy();
     private Task _foodDirector;
+    private ClientPlayerEntity _foodPlayer;
     private CollectFoodTask _autonomousFoodTask;
 
     private int _cachedFoodScore;
@@ -80,9 +81,10 @@ public class FoodChain extends SingleTaskChain {
 
         Task director = mod.getUserTaskChain().getCurrentTask();
         if (!(director instanceof DirectorTask)) director = null;
-        if (director != _foodDirector) {
+        if (director != _foodDirector || mod.getPlayer() != _foodPlayer) {
             _autonomousFood.reset();
             _foodDirector = director;
+            _foodPlayer = mod.getPlayer();
             if (_autonomousFoodTask != null && _mainTask == _autonomousFoodTask) setTask(null);
             _autonomousFoodTask = null;
         }
