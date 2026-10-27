@@ -25,6 +25,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("structure", new Requirement("Open a structure block as an authorized creative operator", List.of("Program Structure Block"))),
             Map.entry("beacon", new Requirement("Open a powered beacon with a payment item in its slot", List.of("Set Beacon Effect"))),
             Map.entry("recipe_book", new Requirement("Open the player inventory", List.of("Change Recipe Book Settings"))),
+            Map.entry("debug_samples", new Requirement("Join a world; server operator permission is needed to receive samples", List.of("Debug Sample Subscription"))),
             Map.entry("advancements", new Requirement("Join a world with an available root advancement", List.of("Seen Advancements"))),
             Map.entry("pick_item", new Requirement("Join a world with an item in inventory slot 9", List.of("Pick Item"))),
             Map.entry("creative_slot", new Requirement("Join a world in creative mode with an item in the first hotbar slot", List.of("Set Creative Mode Slot"))),
@@ -61,6 +62,11 @@ public final class ClientProtocolScenarioTask extends Task {
             case "structure" -> ScreenScenarios.programStructure();
             case "beacon" -> ScreenScenarios.setBeaconEffect();
             case "recipe_book" -> ScreenScenarios.toggleRecipeBook();
+            case "debug_samples" -> {
+                var hud = client.getDebugHud();
+                if (!hud.shouldRenderTickCharts()) hud.toggleRenderingAndTickCharts();
+                yield hud.shouldRenderTickCharts();
+            }
             case "advancements" -> openAdvancements(client);
             case "pick_item" -> {
                 if (client.currentScreen != null || client.player.getInventory().getStack(9).isEmpty()) yield false;
