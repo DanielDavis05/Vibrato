@@ -1,0 +1,37 @@
+# Disposable survival world, commands enabled. Creates an isolated surface fixture.
+# Pass: after water, exactly one water bucket and one empty bucket; after lava,
+# exactly one water bucket and one lava bucket, with no new bucket craft.
+1 /gamemode survival
+0 /difficulty peaceful
+0 /gamerule doMobSpawning false
+0 /time set day
+0 /forceload add 128 8 160 32
+2 /fill 128 79 8 160 79 32 stone
+0 /fill 128 80 8 160 89 32 air
+0 /fill 138 80 18 142 80 18 stone
+0 /fill 138 80 22 142 80 22 stone
+0 /fill 138 80 19 138 80 21 stone
+0 /fill 142 80 19 142 80 21 stone
+0 /setblock 140 80 20 water
+0 /fill 148 80 17 152 80 17 stone
+0 /fill 148 80 21 152 80 21 stone
+0 /fill 148 80 18 148 80 20 stone
+0 /fill 152 80 18 152 80 20 stone
+0 /setblock 150 80 19 lava
+0 /clear @s
+0 /give @s bucket 2
+1 /tp @s 140.5 80 20.5
+2 @record start water-lava-two-buckets bot
+0 @get water_bucket
+0 wait-idle 60
+0 @inventory water_bucket
+0 @inventory bucket
+0 @get lava_bucket
+0 wait-idle 90
+0 @inventory water_bucket
+0 @inventory lava_bucket
+0 @inventory bucket
+0 @coords
+0 @record stop
+0 @stop
+0 exit

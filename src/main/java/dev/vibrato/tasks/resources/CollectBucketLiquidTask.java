@@ -7,12 +7,14 @@ import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.InteractWithBlockTask;
 import dev.vibrato.tasks.ResourceTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.tasks.slot.EnsureFreeCursorSlotTask;
 import dev.vibrato.tasks.movement.*;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.Dimension;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.time.TimerGame;
 import dev.vibrato.util.helpers.LookHelper;
+import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
 import baritone.api.utils.input.Input;
@@ -20,6 +22,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -85,6 +88,14 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
     @Override
     protected Task onTick(Vibrato mod) {
+        // A forced descendant may keep this task ticking after its goal is met.
+        // Consult the actual main inventory before the submerged pickup shortcut
+        // (and before scheduling any other interaction) to avoid filling another
+        // empty bucket while the completed child is being released.
+        if (BucketCollectionPolicy.goalMet(_count, mainInventoryCount(mod, _target))) {
+            mod.getExtraBaritoneSettings().setInteractionPaused(false);
+            return null;
+        }
         Task result = super.onTick(mod);
         // Reset our "first time" timeout/wander flag.
         if (!thisOrChildAreTimedOut()) {
@@ -95,6 +106,14 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
     @Override
     protected Task onResourceTick(Vibrato mod) {
+
+        // A filled result on the cursor is not a free slot for a new pickup.
+        // Let it settle in the inventory, including for multi-bucket targets.
+        if (StorageHelper.getItemStackInCursorSlot().isOf(_target)) {
+            _progressChecker.reset();
+            setDebugState("Moving filled bucket from cursor to inventory");
+            return new EnsureFreeCursorSlotTask();
+        }
 
         // Run one update to prevent the false fail bug?
         _progressChecker.check(mod);
@@ -132,10 +151,11 @@ public class CollectBucketLiquidTask extends ResourceTask {
         }
 
         // Get buckets if we need em
-        int bucketsNeeded = _count - mod.getItemStorage().getItemCount(Items.BUCKET) - mod.getItemStorage().getItemCount(_target);
-        if (bucketsNeeded > 0) {
+        int bucketGoal = BucketCollectionPolicy.emptyBucketGoal(_count, mainInventoryCount(mod, _target));
+        if (mod.getItemStorage().getItemCountInventoryOnly(Items.BUCKET) < bucketGoal) {
             setDebugState("Getting bucket...");
-            return TaskCatalogue.getItemTask(Items.BUCKET, bucketsNeeded);
+            // ResourceTask expects the desired total, not the shortfall.
+            return TaskCatalogue.getItemTask(Items.BUCKET, bucketGoal);
         }
 
         Predicate<BlockPos> isSourceLiquid = blockPos -> {
@@ -198,6 +218,11 @@ public class CollectBucketLiquidTask extends ResourceTask {
         setDebugState("Searching for liquid by wandering around aimlessly");
 
         return new TimeoutWanderTask(Float.POSITIVE_INFINITY);
+    }
+
+    private static int mainInventoryCount(Vibrato mod, Item item) {
+        return BucketCollectionPolicy.countMain(mod.getPlayer().getInventory().main,
+                stack -> !stack.isEmpty() && stack.isOf(item), ItemStack::getCount);
     }
 
     private Optional<BlockPos> localSource(Vibrato mod, Predicate<BlockPos> isSourceLiquid) {
