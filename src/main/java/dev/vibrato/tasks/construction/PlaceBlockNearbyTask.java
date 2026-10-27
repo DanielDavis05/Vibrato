@@ -6,6 +6,7 @@ import dev.vibrato.eventbus.EventBus;
 import dev.vibrato.eventbus.Subscription;
 import dev.vibrato.eventbus.events.BlockPlaceEvent;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.ItemHelper;
 import dev.vibrato.util.helpers.LookHelper;
@@ -18,6 +19,8 @@ import baritone.api.utils.input.Input;
 import baritone.pathing.movement.MovementHelper;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -44,6 +47,7 @@ public class PlaceBlockNearbyTask extends Task {
     private final TimerGame _randomlookTimer = new TimerGame(0.25);
     private final Predicate<BlockPos> _canPlaceHere;
     private BlockPos _justPlaced; // Where we JUST placed a block.
+    private boolean _closedScreenForPlacement;
     private BlockPos _tryPlace;   // Where we should TRY placing a block.
     // Oof, necesarry for the onBlockPlaced action.
     private Vibrato _mod;
@@ -80,7 +84,21 @@ public class PlaceBlockNearbyTask extends Task {
         // - Prefer flat areas (open space, block below) closest to player
         // -
 
-        // Close screen first
+        // Preserve a just-crafted requested block before closing the crafting
+        // screen, which would otherwise race the cursor-to-inventory handoff.
+        ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
+        if (!cursor.isEmpty() && cursor.getItem() instanceof BlockItem item
+                && ArrayUtils.contains(_toPlace, item.getBlock())) {
+            var slot = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, true);
+            if (slot.isEmpty()) {
+                fail("No inventory space for the requested placement material");
+                return null;
+            }
+            _progressChecker.reset();
+            setDebugState("Moving placement material from cursor to inventory");
+            return new ClickSlotTask(slot.get());
+        }
+        if (MinecraftClient.getInstance().currentScreen != null) _closedScreenForPlacement = true;
         StorageHelper.closeScreen();
 
         // Try placing where we're looking right now.
@@ -118,7 +136,7 @@ public class PlaceBlockNearbyTask extends Task {
         if (_tryPlace != null) {
             setDebugState("Trying to place at " + _tryPlace);
             _justPlaced = _tryPlace;
-            return new PlaceBlockTask(_tryPlace, _toPlace);
+            return new PlaceBlockTask(_tryPlace, _toPlace, _closedScreenForPlacement);
         }
 
         // Look in random places to maybe get a random hit

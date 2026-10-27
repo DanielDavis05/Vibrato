@@ -122,6 +122,7 @@ public class UserTaskChain extends SingleTaskChain {
 
     @Override
     protected void onTaskFinish(Vibrato mod) {
+        Task oldTask = _mainTask;
         boolean shouldIdle = mod.getModSettings().shouldRunIdleCommandWhenNotActive();
         if (!shouldIdle) {
             // Stop.
@@ -130,7 +131,6 @@ public class UserTaskChain extends SingleTaskChain {
             mod.getClientBaritone().getInputOverrideHandler().clearAllKeys();
         }
         double seconds = _taskStopwatch.time();
-        Task oldTask = _mainTask;
         _mainTask = null;
         Runnable onFinish = _currentOnFinish;
         _currentOnFinish = null;

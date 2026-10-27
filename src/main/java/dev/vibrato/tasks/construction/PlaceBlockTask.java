@@ -5,6 +5,7 @@ import dev.vibrato.Debug;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.tasks.movement.GetToBlockTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.slot.ClickSlotTask;
 import dev.vibrato.tasksystem.ITaskRequiresGrounded;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
@@ -63,6 +64,7 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
     private Task _materialTask;
     private boolean _checkCollectedMaterials;
     private int _failCount = 0;
+    private int _handoffTicksRemaining;
 
     public PlaceBlockTask(BlockPos target, Block[] toPlace, boolean useThrowaways, boolean autoCollectStructureBlocks) {
         this(target, toPlace, useThrowaways, autoCollectStructureBlocks, null);
@@ -79,6 +81,11 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
 
     public PlaceBlockTask(BlockPos target, Block... toPlace) {
         this(target, toPlace, false, false);
+    }
+
+    PlaceBlockTask(BlockPos target, Block[] toPlace, boolean pendingScreenHandoff) {
+        this(target, toPlace, false, false);
+        _handoffTicksRemaining = pendingScreenHandoff ? 20 : 0;
     }
 
     public static int getMaterialCount(Vibrato mod) {
@@ -176,11 +183,34 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             }
         }
 
-        if (findPlaceableInventoryStack(mod).isEmpty()) {
-            releaseManualControl(mod);
-            fail("No usable block to place at " + _target.toShortString()
-                    + ( _useThrowaways ? " (no unprotected throwaway in main inventory)" : " (requested " + Arrays.toString(_toPlace) + ")"));
-            return null;
+        ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
+        PlacementMaterialPolicy.Action availability = PlacementMaterialPolicy.decide(
+                !findPlaceableInventoryStack(mod).isEmpty(), isPlaceableStack(mod, cursor), _handoffTicksRemaining);
+        switch (availability) {
+            case MOVE_CURSOR -> {
+                releaseManualControl(mod);
+                var slot = mod.getItemStorage().getSlotThatCanFitInPlayerInventory(cursor, true);
+                if (slot.isEmpty()) {
+                    fail("No inventory space for requested placement material at " + _target.toShortString());
+                    return null;
+                }
+                _progressChecker.reset();
+                setDebugState("Moving placement material from cursor to inventory");
+                return new ClickSlotTask(slot.get());
+            }
+            case WAIT -> {
+                _handoffTicksRemaining--;
+                _progressChecker.reset();
+                setDebugState("Waiting for container inventory handoff");
+                return null;
+            }
+            case FAIL -> {
+                releaseManualControl(mod);
+                fail("No usable block to place at " + _target.toShortString()
+                        + (_useThrowaways ? " (no unprotected throwaway in main inventory)" : " (requested " + Arrays.toString(_toPlace) + ")"));
+                return null;
+            }
+            case READY -> _handoffTicksRemaining = 0;
         }
 
         // Check if we're approaching our point. If we fail, wander for a bit.
@@ -254,14 +284,18 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         return _failCount % 4 == 3;
     }
 
+    private boolean isPlaceableStack(Vibrato mod, ItemStack stack) {
+        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) return false;
+        return _useThrowaways
+                ? mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
+                    && !mod.getBehaviour().isProtected(stack.getItem())
+                    && (_castOrigin == null || isStableCastMaterial(mod, stack.getItem(), _castOrigin))
+                : Arrays.asList(_toPlace).contains(item.getBlock());
+    }
+
     private ItemStack findPlaceableInventoryStack(Vibrato mod) {
         for (ItemStack stack : mod.getPlayer().getInventory().main) {
-            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem item)) continue;
-            if (_useThrowaways
-                    ? mod.getClientBaritoneSettings().acceptableThrowawayItems.value.contains(stack.getItem())
-                        && !mod.getBehaviour().isProtected(stack.getItem())
-                        && (_castOrigin == null || isStableCastMaterial(mod, stack.getItem(), _castOrigin))
-                    : Arrays.asList(_toPlace).contains(item.getBlock())) return stack;
+            if (isPlaceableStack(mod, stack)) return stack;
         }
         return ItemStack.EMPTY;
     }
