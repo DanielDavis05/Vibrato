@@ -36,12 +36,18 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker(3);
     private final TimeoutWanderTask _wanderTask = new TimeoutWanderTask(20);
     private final boolean _freeInventoryIfFull;
+    private final boolean _opportunistic;
     private boolean _collectingPickaxeForThisResource = false;
     private ItemEntity _currentDrop = null;
 
     public PickupDroppedItemTask(ItemTarget[] itemTargets, boolean freeInventoryIfFull) {
+        this(itemTargets, freeInventoryIfFull, false);
+    }
+
+    public PickupDroppedItemTask(ItemTarget[] itemTargets, boolean freeInventoryIfFull, boolean opportunistic) {
         _itemTargets = itemTargets;
         _freeInventoryIfFull = freeInventoryIfFull;
+        _opportunistic = opportunistic;
     }
 
     public PickupDroppedItemTask(ItemTarget target, boolean freeInventoryIfFull) {
@@ -123,7 +129,7 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     protected boolean isEqual(Task other) {
         // Same target items
         if (other instanceof PickupDroppedItemTask task) {
-            return Arrays.equals(task._itemTargets, _itemTargets) && task._freeInventoryIfFull == _freeInventoryIfFull;
+            return Arrays.equals(task._itemTargets, _itemTargets) && task._freeInventoryIfFull == _freeInventoryIfFull && task._opportunistic == _opportunistic;
         }
         return false;
     }
@@ -194,7 +200,10 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected boolean isValid(Vibrato mod, ItemEntity obj) {
-        return obj.isAlive() && !obj.isRemoved() && !obj.getStack().isEmpty()
+        var delta = obj.getPos().subtract(mod.getPlayer().getPos());
+        return (!_opportunistic || OpportunisticPickupPolicy.eligible(delta.x, delta.y, delta.z,
+                mod.getModSettings().getResourcePickupRange()))
+                && obj.isAlive() && !obj.isRemoved() && !obj.getStack().isEmpty()
                 && !_blacklist.contains(obj) && mod.getEntityTracker().isEntityReachable(obj)
                 && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(obj.getStack().getItem()));
     }

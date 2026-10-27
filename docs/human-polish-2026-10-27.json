@@ -1,0 +1,359 @@
+{
+  "date_utc": "2026-10-27",
+  "source_commit": "324f2cf5c4615c7e2e29582627770711f81b0c1a",
+  "jar": {
+    "filename": "vibrato-human-polish-0.1.0.jar",
+    "sha256": "6b433bdace7b14fe775086b78d2b6d5c53f74a5309d67d8efaa9d6e1c0d3f684",
+    "bundled_engine": [
+      {
+        "path": "META-INF/jars/baritone-unoptimized-fabric-1.11.3-vibrato-0bba0a28514d.jar",
+        "sha256": "0bba0a28514d4772c60c3bbab9d43ce647fb108ccea5e18bcbaf5fc05067f1fa"
+      }
+    ]
+  },
+  "tests": {
+    "vibrato": {
+      "tests": 435,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "baritone": {
+      "tests": 48,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "world": {
+    "name": "human-polish-20261027",
+    "seed": 1,
+    "mode": "survival",
+    "difficulty": "normal",
+    "cheats": false,
+    "interventions": "Vibrato task commands only; no give, teleport, game-mode, time or weather commands."
+  },
+  "fresh_boundary_world": {
+    "name": "human-polish-boundary-20261027",
+    "seed": 1,
+    "mode": "survival",
+    "cheats": false,
+    "initial_inventory": "empty",
+    "oak_log_request": 16,
+    "result": "completed using a crafted wooden axe"
+  },
+  "completed_live_checks": [
+    "Reproduced torch crafting waiting indefinitely on the recipe book in the old build.",
+    "Rebuilt client crafted eight torches from the same naturally gathered coal and sticks.",
+    "@play builder started a populated plan after torch completion; lasting 0/0 was not reproduced.",
+    "Reproduced and fixed parent gathering reclaiming ingredients from a prerequisite crafting grid.",
+    "Obtained an axe and completed the 24-oak-log request using it; climbed out of a mining shaft en route.",
+    "The later fresh-world 16-log request also completed after crafting an axe from an empty inventory.",
+    "Obtained a shovel and completed a 20-dirt request using it.",
+    "Observed a focused spider encounter with jump attacks followed by return to gathering.",
+    "Autonomous play smelted iron, crafted a bucket and successfully milked a cow.",
+    "Observed sprinting on eligible ascents, ordinary descents, pillaring and long coordinate travel.",
+    "Urgent autonomous foraging activated from an injured, hungry save; that test ended in a skeleton-shot death."
+  ],
+  "fixes_after_observed_failures": [
+    "Passive interaction targets no longer suppress danger escape; disabled guard-range sentinels are respected.",
+    "Vulnerable bots retreat from visible skeletons; ranged escape goals include skeletons.",
+    "Autonomous forage budgets stop after recovery or player replacement on respawn.",
+    "Prepare all missing milk buckets together instead of repeating iron-to-cow round trips.",
+    "Water route costs now use the actual 0-to-1 movement efficiency attribute; unenchanted water costs more than dry ground.",
+    "Dropped-item pursuit retains a valid target; airborne landing view no longer follows tiny reversed correction vectors.",
+    "Opportunistic resource pickups reject distant/deep detours such as a torch beneath the seabed; ordinary acquisition remains available.",
+    "Manual crafting accepts excess correct ingredients and splits donor inputs only when needed, with an empty cursor."
+  ],
+  "other_changes": [
+    "Safe path lookahead, calculation glances and optional clear-corridor sprint jumps preserve precise planner movement.",
+    "Bounded search opportunities carry across navigation legs and can harvest berries, limited seeds or reachable ore.",
+    "Activity-area shares no longer scale with registry size; activity novelty and draft-plan diversity retain persona bias.",
+    "The shear_sheep activity obtains shears and shears adults instead of using a kill-for-wool alias.",
+    "Smelting, smithing and partially failed resource startup release their behavior scopes.",
+    "Smaller crafting/fuel transfers can take half stacks, and source selection prefers the smallest sufficient stack."
+  ],
+  "limits": [
+    "Natural survival is not failure-free: one recorded low-health foraging run died to a skeleton before the ranged escape fix.",
+    "A separate diagnostic reload drowned while no task was active: its launch helper sent chat before world entry accepted it. This was an idle test-control failure, not an autonomous recovery result.",
+    "New shearing, optional flat-ground jump eligibility and opportunistic-search bounds have regression tests; not every case was exercised live.",
+    "Inventory packet-type coverage does not establish click-action-mode coverage. Recorded gameplay modes are listed per session.",
+    "The source-remapping task emits a source-jar warning; the playable jar, compilation and both test suites succeed.",
+    "The modified engine remains in the independent /opt/Baritone checkout. Its exact working diff and added source files are in the evidence archive."
+  ],
+  "sessions": [
+    {
+      "log": "baseline-client.log",
+      "observed_game_seconds": 393.0,
+      "movements": {
+        "none": 1085,
+        "MovementTraverse": 141,
+        "MovementDiagonal": 103,
+        "MovementAscend": 146,
+        "MovementDescend": 46,
+        "MovementFall": 7,
+        "MovementDownward": 35,
+        "MovementPillar": 9
+      },
+      "sprinting_ascent_samples": 0,
+      "inventory_click_modes": {},
+      "deaths": []
+    },
+    {
+      "log": "boundary-client.log",
+      "observed_game_seconds": 184.75,
+      "movements": {
+        "none": 548,
+        "MovementAscend": 17,
+        "MovementTraverse": 101,
+        "MovementDiagonal": 50,
+        "MovementDescend": 23
+      },
+      "sprinting_ascent_samples": 0,
+      "inventory_click_modes": {
+        "PICKUP:button0": 373,
+        "QUICK_MOVE:button0": 1,
+        "SWAP:button1": 3,
+        "SWAP:button0": 2
+      },
+      "deaths": []
+    },
+    {
+      "log": "final-client.log",
+      "observed_game_seconds": 236.75,
+      "movements": {
+        "none": 644,
+        "MovementTraverse": 116,
+        "MovementDiagonal": 167,
+        "MovementAscend": 13,
+        "MovementDescend": 7
+      },
+      "sprinting_ascent_samples": 5,
+      "inventory_click_modes": {
+        "PICKUP:button0": 445,
+        "QUICK_MOVE:button0": 1,
+        "SWAP:button1": 3,
+        "SWAP:button0": 1
+      },
+      "deaths": []
+    },
+    {
+      "log": "fixed-client.log",
+      "observed_game_seconds": 133.5,
+      "movements": {
+        "none": 372,
+        "MovementAscend": 7,
+        "MovementTraverse": 29,
+        "MovementDiagonal": 35,
+        "MovementDescend": 5,
+        "MovementPillar": 2,
+        "MovementDownward": 84
+      },
+      "sprinting_ascent_samples": 1,
+      "inventory_click_modes": {},
+      "deaths": []
+    },
+    {
+      "log": "needs-client.log",
+      "observed_game_seconds": 215.25,
+      "movements": {
+        "none": 116,
+        "MovementAscend": 23,
+        "MovementTraverse": 427,
+        "MovementDiagonal": 290,
+        "MovementDescend": 5
+      },
+      "sprinting_ascent_samples": 0,
+      "inventory_click_modes": {
+        "PICKUP:button0": 504
+      },
+      "deaths": [
+        "Player519 was shot by Skeleton"
+      ]
+    },
+    {
+      "log": "partial-fixed-client.log",
+      "observed_game_seconds": 76.0,
+      "movements": {
+        "none": 234,
+        "MovementTraverse": 8,
+        "MovementAscend": 5,
+        "MovementDiagonal": 4,
+        "MovementDownward": 48,
+        "MovementPillar": 1,
+        "MovementDescend": 4
+      },
+      "sprinting_ascent_samples": 0,
+      "inventory_click_modes": {
+        "PICKUP:button0": 149,
+        "PICKUP:button1": 2,
+        "QUICK_MOVE:button0": 2
+      },
+      "deaths": []
+    },
+    {
+      "log": "pickup-fixed-client.log",
+      "observed_game_seconds": 229.0,
+      "movements": {
+        "none": 751,
+        "MovementTraverse": 35,
+        "MovementDiagonal": 28,
+        "MovementDescend": 8,
+        "MovementDownward": 66,
+        "MovementPillar": 19,
+        "MovementAscend": 9
+      },
+      "sprinting_ascent_samples": 0,
+      "inventory_click_modes": {
+        "PICKUP:button0": 443,
+        "QUICK_MOVE:button0": 2,
+        "SWAP:button1": 1,
+        "PICKUP:button1": 378
+      },
+      "deaths": [
+        "Player296 drowned"
+      ]
+    },
+    {
+      "log": "release-client.log",
+      "observed_game_seconds": 266.25,
+      "movements": {
+        "none": 566,
+        "MovementTraverse": 121,
+        "MovementDescend": 53,
+        "MovementDiagonal": 36,
+        "MovementAscend": 229,
+        "MovementDownward": 46,
+        "MovementFall": 6,
+        "MovementPillar": 8
+      },
+      "sprinting_ascent_samples": 4,
+      "inventory_click_modes": {
+        "PICKUP:button0": 597,
+        "QUICK_MOVE:button0": 4,
+        "SWAP:button1": 6
+      },
+      "deaths": []
+    },
+    {
+      "log": "validated-client.log",
+      "observed_game_seconds": 192.25,
+      "movements": {
+        "none": 476,
+        "MovementTraverse": 134,
+        "MovementPillar": 49,
+        "MovementAscend": 38,
+        "MovementDiagonal": 26,
+        "MovementDescend": 27,
+        "MovementFall": 6,
+        "MovementDownward": 13
+      },
+      "sprinting_ascent_samples": 7,
+      "inventory_click_modes": {},
+      "deaths": []
+    }
+  ],
+  "total_observed_game_seconds": 1926.75,
+  "engine": {
+    "path": "/opt/Baritone",
+    "base_commit": "11ea66cd11c3bdf2eb7a8dfdbdec97b964fda6c7",
+    "build_stamp": "6d75cd843e105b1e9a8db07263eb86bf15db19026fa9077eedf0dab6b182fdec"
+  },
+  "final_live_check": {
+    "world_metadata_after_save": [
+      {
+        "name": "human-polish-20261027",
+        "game_type": 0,
+        "cheats": false,
+        "difficulty": 2,
+        "inventory": [
+          {
+            "id": "minecraft:birch_planks",
+            "count": 3
+          },
+          {
+            "id": "minecraft:wooden_axe",
+            "count": 1
+          },
+          {
+            "id": "minecraft:stick",
+            "count": 2
+          },
+          {
+            "id": "minecraft:oak_log",
+            "count": 7
+          }
+        ]
+      },
+      {
+        "name": "human-polish-boundary-20261027",
+        "game_type": 0,
+        "cheats": false,
+        "difficulty": 2,
+        "inventory": [
+          {
+            "id": "minecraft:oak_sapling",
+            "count": 1
+          },
+          {
+            "id": "minecraft:dirt",
+            "count": 4
+          },
+          {
+            "id": "minecraft:cobblestone",
+            "count": 8
+          },
+          {
+            "id": "minecraft:birch_planks",
+            "count": 2
+          },
+          {
+            "id": "minecraft:coal",
+            "count": 10
+          },
+          {
+            "id": "minecraft:stone_pickaxe",
+            "count": 1
+          },
+          {
+            "id": "minecraft:torch",
+            "count": 4
+          },
+          {
+            "id": "minecraft:wooden_pickaxe",
+            "count": 1
+          },
+          {
+            "id": "minecraft:oak_planks",
+            "count": 1
+          },
+          {
+            "id": "minecraft:stick",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "torch4_completed": true,
+    "half_stack_pickup_observed": true,
+    "single_item_placement_observed": true,
+    "play_farmer_plan_steps": 11,
+    "shore_route": {
+      "log": "final-client.log",
+      "start_health": 19,
+      "minimum_health_during_route": 19,
+      "end_health": 20,
+      "end_air": 300,
+      "end_position": [
+        112.349,
+        64,
+        180.5
+      ],
+      "note": "Idle diagnostic launch lost one health point before the active shore route began; route reached dry ground and full health."
+    },
+    "distant_torch_pickup_regression": {
+      "before": "Torch request pursued an item at y=32 from surface terrain near y=68.",
+      "after": "Same world request pursued coal/tool/stick prerequisites and the four-torch craft completed; no pursuit of the deep torch."
+    }
+  }
+}

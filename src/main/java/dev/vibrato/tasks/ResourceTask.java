@@ -4,6 +4,7 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.container.PickupFromContainerTask;
 import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
 import dev.vibrato.tasks.movement.PickupDroppedItemTask;
+import dev.vibrato.tasks.movement.OpportunisticPickupPolicy;
 import dev.vibrato.tasks.resources.MineAndCollectTask;
 import dev.vibrato.tasks.slot.*;
 import dev.vibrato.tasksystem.ITaskCanForce;
@@ -48,7 +49,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
 
     public ResourceTask(ItemTarget[] itemTargets) {
         _itemTargets = itemTargets;
-        _pickupTask = new PickupDroppedItemTask(_itemTargets, true);
+        _pickupTask = new PickupDroppedItemTask(_itemTargets, true, true);
     }
 
     public ResourceTask(ItemTarget target) {
@@ -125,30 +126,23 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
             return new ClickSlotTask(toMove.get());
         }
 
-        if (!shouldAvoidPickingUp(mod)) {
-            // Check if items are on the floor. If so, pick em up.
-            if (mod.getEntityTracker().itemDropped(_itemTargets)) {
-
-                // If we're picking up a pickaxe (we can't go far underground or mine much)
+        if (!shouldAvoidPickingUp(mod) && mod.getEntityTracker().itemDropped(_itemTargets)) {
+            var playerPos = mod.getPlayer().getPos();
+            double range = mod.getModSettings().getResourcePickupRange();
+            Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(playerPos, drop -> {
+                var delta = drop.getPos().subtract(playerPos);
+                return OpportunisticPickupPolicy.eligible(delta.x, delta.y, delta.z, range);
+            }, _itemTargets);
+            if (closest.isPresent()) {
                 if (PickupDroppedItemTask.isIsGettingPickaxeFirst(mod)) {
                     if (_pickupTask.isCollectingPickaxeForThis()) {
                         setDebugState("Picking up (pickaxe first!)");
-                        // Our pickup task is the one collecting the pickaxe, keep it going.
                         return _pickupTask;
                     }
-                    // Only get items that are CLOSE to us.
-                    Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _itemTargets);
-                    if (closest.isPresent() && !closest.get().isInRange(mod.getPlayer(), 10)) {
-                        return onResourceTick(mod);
-                    }
+                    if (!closest.get().isInRange(mod.getPlayer(), 10)) return onResourceTick(mod);
                 }
-
-                double range = mod.getModSettings().getResourcePickupRange();
-                Optional<ItemEntity> closest = mod.getEntityTracker().getClosestItemDrop(mod.getPlayer().getPos(), _itemTargets);
-                if (range < 0 || (closest.isPresent() && closest.get().isInRange(mod.getPlayer(), range)) || (_pickupTask.isActive() && !_pickupTask.isFinished(mod))) {
-                    setDebugState("Picking up");
-                    return _pickupTask;
-                }
+                setDebugState("Picking up");
+                return _pickupTask;
             }
         }
 
@@ -178,7 +172,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         }
 
         // We may just mine if a block is found.
-        if (_mineIfPresent != null) {
+        if (_mineIfPresent != null && shouldUseMineIfPresent()) {
             ArrayList<Block> satisfiedReqs = new ArrayList<>(Arrays.asList(_mineIfPresent));
             satisfiedReqs.removeIf(block -> !StorageHelper.miningRequirementMet(mod, MiningRequirement.getMinimumRequirementForBlock(block)));
             if (!satisfiedReqs.isEmpty()) {
@@ -214,6 +208,15 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         }
 
         return onResourceTick(mod);
+    }
+
+    /** Direct mining tasks already search their targets and must keep their prerequisites. */
+    protected boolean shouldUseMineIfPresent() {
+        return useMineIfPresent(this instanceof MineAndCollectTask);
+    }
+
+    static boolean useMineIfPresent(boolean alreadyMines) {
+        return !alreadyMines;
     }
 
     @Override

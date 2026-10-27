@@ -83,7 +83,6 @@ public class MineAndCollectTask extends ResourceTask {
         // We're mining, so don't throw away pickaxes.
         mod.getBehaviour().addProtectedItems(Items.WOODEN_PICKAXE, Items.STONE_PICKAXE, Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
 
-        _acquiringGatherTool = null;
         _subtask.resetSearch();
     }
 

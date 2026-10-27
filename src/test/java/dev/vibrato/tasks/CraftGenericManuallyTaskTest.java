@@ -18,6 +18,15 @@ class CraftGenericManuallyTaskTest {
     }
 
     @Test
+    void partiallyFilledGridFinishesOneRecipeBeforeBalancingSharedInputs() {
+        assertEquals(1, CraftGenericManuallyTask.inputCountForGrid(2, true));
+        assertEquals(2, CraftGenericManuallyTask.inputCountForGrid(2, false));
+        assertTrue(CraftGenericManuallyTask.canSplitDonor(2, true));
+        assertFalse(CraftGenericManuallyTask.canSplitDonor(1, true));
+        assertFalse(CraftGenericManuallyTask.canSplitDonor(4, false));
+    }
+
+    @Test
     void fallbackPlansOnlyTheRemainingOutput() {
         assertEquals(1, CraftGenericManuallyTask.requiredPerSlot(8, 4, 4));
         assertEquals(2, CraftGenericManuallyTask.requiredPerSlot(9, 4, 4));
