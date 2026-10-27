@@ -10,7 +10,7 @@ class StuckDetectorTest {
     private long tick;
 
     private MotionSample sample(double x, double z, float yaw, boolean wantsToMove) {
-        return new MotionSample(tick++, x, 64, z, yaw, 0f, true, false, false, false, wantsToMove, MotionSample.FULL_AIR);
+        return new MotionSample(tick++, x, 64, z, yaw, 0f, true, false, false, false, wantsToMove, MotionSample.FULL_AIR, false);
     }
 
     private MotionSample sample(double x, double z, boolean wantsToMove) {

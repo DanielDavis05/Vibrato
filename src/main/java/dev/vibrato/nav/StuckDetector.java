@@ -25,7 +25,7 @@ public final class StuckDetector {
         if (_size < _history.length) {
             _size++;
         }
-        _edgeRun = sample.horizontalCollision() && sample.wantsToMove() ? _edgeRun + 1 : 0;
+        _edgeRun = sample.horizontalCollision() && sample.wantsToMove() && !sample.productive() ? _edgeRun + 1 : 0;
         return classify(sample);
     }
 
@@ -38,6 +38,9 @@ public final class StuckDetector {
     private StuckState classify(MotionSample s) {
         if (s.underWater() && s.airTicksLeft() < _config.lowAirTicks()) {
             return StuckState.LOW_AIR;
+        }
+        if (s.productive()) {
+            return StuckState.OK;
         }
         if (s.inWater() && s.wantsToMove() && hasWindow(_config.waterTicks())
                 && horizontalDistance(ago(_config.waterTicks() - 1), s) < _config.waterMinMove()) {
@@ -54,7 +57,7 @@ public final class StuckDetector {
                 return StuckState.OSCILLATING;
             }
             if (hasWindow(_config.stationaryTicks())
-                    && horizontalDistance(ago(_config.stationaryTicks() - 1), s) < _config.stationaryMinMove()) {
+                    && distance3d(ago(_config.stationaryTicks() - 1), s) < _config.stationaryMinMove()) {
                 return StuckState.STATIONARY_WITH_INTENT;
             }
         }
@@ -120,6 +123,12 @@ public final class StuckDetector {
 
     private static int cell(double coordinate) {
         return (int) Math.floor(coordinate);
+    }
+
+    /** Vertical movement counts too, so a pillar (jump, place, repeat) is progress rather than standing still. */
+    private static double distance3d(MotionSample a, MotionSample b) {
+        double dy = a.y() - b.y();
+        return Math.sqrt(dy * dy + Math.pow(a.x() - b.x(), 2) + Math.pow(a.z() - b.z(), 2));
     }
 
     private static double horizontalDistance(MotionSample a, MotionSample b) {

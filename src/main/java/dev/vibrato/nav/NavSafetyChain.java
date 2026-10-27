@@ -4,14 +4,21 @@ import baritone.api.utils.input.Input;
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.control.InputControls;
+import dev.vibrato.director.DirectorTask;
+import dev.vibrato.director.StepAbandonable;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.util.Dimension;
 import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.tasksystem.TaskRunner;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -32,6 +39,7 @@ public class NavSafetyChain extends TaskChain {
     private static final int CLIMB_MAX_TICKS = 60;
     private static final int SWIM_MAX_TICKS = 100;
     private static final int DELEGATE_MAX_TICKS = 200;
+    private static final int ESCAPE_MAX_TICKS = 8 * 60 * 20;
     private static final double RECENTER_DONE_DISTANCE = 0.1;
     private static final double RECENTER_DEAD_ZONE = 0.02;
     private static final double RECENTER_SNEAK_DISTANCE = 0.5;
@@ -45,9 +53,13 @@ public class NavSafetyChain extends TaskChain {
     private final StuckDetector _detector = new StuckDetector(StuckConfig.defaults());
     private final UnstuckLadder _ladder = new UnstuckLadder();
     private final WasteGuard _waste = WasteGuard.defaults();
+    private final ActionRateLimiter _rateLimit = new ActionRateLimiter();
+    private final PerStepCap _backOffCap = new PerStepCap(2);
 
     private long _tick;
     private Task _watchedTask;
+    private int _watchedSerial;
+    private long _lastBreakTick = NavGate.NEVER;
     private boolean _anchored;
     private double _anchorX;
     private double _anchorZ;
@@ -80,29 +92,59 @@ public class NavSafetyChain extends TaskChain {
         _tick++;
 
         Task task = mod.getUserTaskChain().getCurrentTask();
-        if (task != _watchedTask) {
+        int serial = task instanceof StepAbandonable steps ? steps.stepSerial() : 0;
+        if (task != _watchedTask || serial != _watchedSerial) {
             _watchedTask = task;
+            _watchedSerial = serial;
             _waste.start(_tick);
             _ladder.onProgress();
             _detector.reset();
         }
 
-        boolean wantsToMove = mod.getUserTaskChain().isActive() && mod.getClientBaritone().getPathingBehavior().isPathing();
-        MotionSample sample = sample(mod.getPlayer(), wantsToMove);
+        // A path still being calculated is not movement yet, but standing still for it is not stuck either.
+        boolean calculating = mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
+        boolean wantsToMove = mod.getUserTaskChain().isActive()
+                && mod.getClientBaritone().getPathingBehavior().isPathing() && !calculating;
+        // Breaking, placing, an open container and a path being calculated are all work: never stuck, always progress.
+        if (isBreakingBlock()) {
+            _lastBreakTick = _tick;
+        }
+        boolean containerOpen = MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>;
+        boolean productive = calculating || NavGate.withinBreakGrace(_tick, _lastBreakTick) || containerOpen
+                || mod.getClientBaritone().getBuilderProcess().isActive();
+        if (productive) {
+            _waste.onProgress(_tick);
+        }
+        MotionSample sample = sample(mod.getPlayer(), wantsToMove, productive);
         StuckState state = _detector.update(sample);
         if (!wantsToMove) {
             _detector.reset();
         }
         trackProgress(sample, wantsToMove);
+        boolean suppressed = NavGate.suppressed(
+                !mod.getMobDefenseChain().getTasks().isEmpty(),
+                !mod.getFoodChain().getTasks().isEmpty(),
+                !mod.getMLGBucketChain().getTasks().isEmpty(),
+                MinecraftClient.getInstance().currentScreen instanceof DeathScreen,
+                MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>,
+                task instanceof DirectorTask director && director.currentStepStandsStill());
 
         if (_action == null) {
             updateWaterOverlay(mod, sample);
-            if (wantsToMove && _waste.isWasting(_tick)) {
-                startAction(mod, UnstuckAction.ABANDON_TASK, "no progress", PRIORITY_ACTION);
-            } else if (state != StuckState.OK && _ladder.ready(_tick)) {
+            if (suppressed) {
+                _detector.reset();
+            } else if (wantsToMove && _waste.isWasting(_tick) && _rateLimit.tryAcquire(_tick)) {
+                startAction(mod, UnstuckAction.ABANDON_TASK, "the step made no progress", PRIORITY_ACTION);
+            } else if (state != StuckState.OK && _ladder.ready(_tick) && _rateLimit.tryAcquire(_tick)) {
                 UnstuckAction action = _ladder.next(state);
+                if (action == UnstuckAction.BACK_OFF_AND_REPATH && !_backOffCap.tryUse(_watchedSerial)) {
+                    action = UnstuckAction.ABANDON_TASK;
+                }
                 _ladder.markFired(_tick);
                 startAction(mod, action, state.name(), state == StuckState.LOW_AIR ? PRIORITY_AIR : PRIORITY_ACTION);
+            } else if (!directorEscaping(task) && shouldEscapeUnderground(mod)
+                    && _rateLimit.tryAcquire(_tick)) {
+                startAction(mod, UnstuckAction.ESCAPE_SURFACE, "underground", PRIORITY_ACTION);
             }
         }
 
@@ -194,7 +236,9 @@ public class NavSafetyChain extends TaskChain {
     private void startAction(Vibrato mod, UnstuckAction action, String reason, float priority) {
         Debug.logMessage("Unstuck " + action + " (" + reason + ")");
         setOverlay(mod, false, false, false);
-        mod.getClientBaritone().getPathingBehavior().cancelEverything();
+        if (action.cancelsPath()) {
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
+        }
 
         ClientPlayerEntity player = mod.getPlayer();
         _action = action;
@@ -241,10 +285,15 @@ public class NavSafetyChain extends TaskChain {
             case RECENTER_ON_BLOCK -> recenter(mod);
             case SWIM_TO_SURFACE -> swimUp(mod);
             case CLIMB_OUT_OF_WATER -> climbOut(mod);
-            case BREAK_BLOCKING_BLOCK, PLACE_STEP_BLOCK, DIG_UP, DIG_DOWN -> tickDelegate(mod);
+            case BREAK_BLOCKING_BLOCK, PLACE_STEP_BLOCK, DIG_UP, DIG_DOWN -> tickDelegate(mod, DELEGATE_MAX_TICKS);
+            case ESCAPE_SURFACE -> tickDelegate(mod, ESCAPE_MAX_TICKS);
             case ABANDON_TASK -> {
-                Debug.logWarning("Abandoning task: " + _actionReason);
-                mod.getUserTaskChain().cancel(mod);
+                Debug.logWarning("Abandoning " + _actionReason);
+                if (mod.getUserTaskChain().getCurrentTask() instanceof StepAbandonable steps) {
+                    steps.abandonCurrentStep(_actionReason);
+                } else {
+                    mod.getUserTaskChain().cancel(mod);
+                }
                 yield true;
             }
         };
@@ -293,8 +342,8 @@ public class NavSafetyChain extends TaskChain {
         return false;
     }
 
-    private boolean tickDelegate(Vibrato mod) {
-        if (_delegate == null || _actionTicks >= DELEGATE_MAX_TICKS) return true;
+    private boolean tickDelegate(Vibrato mod, int maxTicks) {
+        if (_delegate == null || _actionTicks >= maxTicks) return true;
         _delegate.tick(mod, this);
         return _delegate.isFinished(mod) || _delegate.stopped();
     }
@@ -314,6 +363,7 @@ public class NavSafetyChain extends TaskChain {
                 BlockPos step = front.down();
                 yield new PlaceBlockNearbyTask(pos -> pos.equals(step), Blocks.DIRT, Blocks.COBBLESTONE);
             }
+            case ESCAPE_SURFACE -> new EscapeUndergroundTask();
             default -> null;
         };
     }
@@ -344,10 +394,31 @@ public class NavSafetyChain extends TaskChain {
         return BlockPos.ofFloored(x - Math.sin(radians) * FRONT_REACH, y, z + Math.cos(radians) * FRONT_REACH);
     }
 
-    private MotionSample sample(ClientPlayerEntity player, boolean wantsToMove) {
+    private MotionSample sample(ClientPlayerEntity player, boolean wantsToMove, boolean productive) {
         return new MotionSample(_tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 player.isOnGround(), player.isTouchingWater(), player.isSubmergedInWater(),
-                player.horizontalCollision, wantsToMove, player.getAir());
+                player.horizontalCollision, wantsToMove, player.getAir(), productive);
+    }
+
+    /** Underground in the overworld, with no way out on its own: the escape rung handles it. */
+    private boolean shouldEscapeUnderground(Vibrato mod) {
+        if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
+            return false;
+        }
+        boolean underground = !mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        boolean hasPickaxe = mod.getItemStorage().hasItem(Items.WOODEN_PICKAXE, Items.STONE_PICKAXE,
+                Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
+        return EscapeTrigger.shouldEscape(underground, hasPickaxe, _waste.ticksSinceProgress(_tick));
+    }
+
+    /** The Director already runs its own escape step; do not run a second one on top. */
+    private static boolean directorEscaping(Task task) {
+        return task instanceof DirectorTask director && director.currentStepIs("escape_underground");
+    }
+
+    private static boolean isBreakingBlock() {
+        var interactions = MinecraftClient.getInstance().interactionManager;
+        return interactions != null && interactions.isBreakingBlock();
     }
 
     private static void setKey(InputControls input, Input key, boolean pressed) {

@@ -82,8 +82,9 @@ public class PlayerInteractionFixChain extends TaskChain {
         }
 
         // Unpress shift (it gets stuck for some reason???)
+        // Sneak is held on purpose while bridging or pillaring, so only release it when nothing is being built.
         if (mod.getInputControls().isHeldDown(Input.SNEAK)) {
-            if (_shiftDepressTimeout.elapsed()) {
+            if (_shiftDepressTimeout.elapsed() && !mod.getClientBaritone().getBuilderProcess().isActive()) {
                 Debug.logMessage("Unpressing shift/sneak");
                 mod.getInputControls().release(Input.SNEAK);
             }

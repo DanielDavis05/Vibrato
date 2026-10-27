@@ -60,7 +60,7 @@ public final class SocialActivities {
                 (mod, v) -> new FollowFriendTask(v.getInt("seconds"))));
 
         registry.register(activity("emote", FeatureArea.SOCIAL, Set.of(), Set.of(Fact.of("social:emoted")),
-                List.of(ParamSpec.choice("kind", "jump", "sneak_spam", "spin")), v -> Duration.ofSeconds(30),
+                List.of(ParamSpec.choice("kind", "jump", "sneak_spam", "spin")), v -> Duration.ofMinutes(1),
                 (mod, v) -> new EmoteTask(EmoteTask.Emote.valueOf(v.getString("kind").toUpperCase()))));
 
         registry.register(activity("reply_whispers", FeatureArea.CHAT, Set.of(), Set.of(Fact.of("social:replied")),
