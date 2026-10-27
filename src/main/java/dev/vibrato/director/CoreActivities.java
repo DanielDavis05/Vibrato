@@ -56,6 +56,7 @@ public final class CoreActivities {
         registerStorage(registry);
         registerFarm(registry);
         registerExplore(registry);
+        registerRare(registry);
         registerTransport(registry);
         registerSleep(registry);
     }
@@ -83,13 +84,13 @@ public final class CoreActivities {
                 () -> TaskCatalogue.getItemTask("stone_pick", 1));
         fixed(registry, "craft_iron_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("iron_pickaxe"), Fact.of("tool:iron")), 6,
                 () -> TaskCatalogue.getItemTask("iron_pick", 1));
-        fixed(registry, "craft_diamond_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("diamond_pickaxe"), Fact.of("tool:diamond")), 10,
+        fixed(registry, "craft_diamond_pickaxe", FeatureArea.CRAFT, Set.of(Fact.has("diamond")), Set.of(Fact.has("diamond_pickaxe"), Fact.of("tool:diamond")), 10,
                 () -> TaskCatalogue.getItemTask("diamond_pick", 1));
         registry.register(new CoreActivity("craft_iron_tool", FeatureArea.CRAFT, Set.of(), Set.of(Fact.of("tool:iron")), List.of(
                 ParamSpec.choice("tool", "sword", "axe", "shovel", "hoe")),
                 values -> Duration.ofMinutes(6),
                 (mod, values) -> TaskCatalogue.getItemTask("iron_" + values.getString("tool"), 1)));
-        registry.register(new CoreActivity("craft_diamond_tool", FeatureArea.CRAFT, Set.of(), Set.of(Fact.of("tool:diamond")), List.of(
+        registry.register(new CoreActivity("craft_diamond_tool", FeatureArea.CRAFT, Set.of(Fact.has("diamond")), Set.of(Fact.of("tool:diamond")), List.of(
                 ParamSpec.choice("tool", "sword", "axe", "shovel", "hoe")),
                 values -> Duration.ofMinutes(10),
                 (mod, values) -> TaskCatalogue.getItemTask("diamond_" + values.getString("tool"), 1)));
@@ -99,7 +100,7 @@ public final class CoreActivities {
                         TaskCatalogue.getItemTarget("iron_chestplate", 1),
                         TaskCatalogue.getItemTarget("iron_leggings", 1),
                         TaskCatalogue.getItemTarget("iron_boots", 1)));
-        fixed(registry, "craft_diamond_armor_set", FeatureArea.CRAFT, Set.of(Fact.of("armor:diamond")), 15,
+        fixed(registry, "craft_diamond_armor_set", FeatureArea.CRAFT, Set.of(Fact.has("diamond")), Set.of(Fact.of("armor:diamond")), 15,
                 () -> TaskCatalogue.getSquashedItemTask(
                         TaskCatalogue.getItemTarget("diamond_helmet", 1),
                         TaskCatalogue.getItemTarget("diamond_chestplate", 1),
@@ -113,7 +114,7 @@ public final class CoreActivities {
                 () -> TaskCatalogue.getItemTask("chest", 1));
         fixed(registry, "craft_furnace", FeatureArea.CRAFT, Set.of(Fact.has("furnace")), 4,
                 () -> TaskCatalogue.getItemTask("furnace", 1));
-        fixed(registry, "craft_bed", FeatureArea.CRAFT, Set.of(Fact.has("bed")), 8,
+        fixed(registry, "craft_bed", FeatureArea.CRAFT, Set.of(Fact.has("wool")), Set.of(Fact.has("bed")), 8,
                 () -> TaskCatalogue.getItemTask("bed", 1));
         registry.register(new CoreActivity("craft_torches", FeatureArea.CRAFT, Set.of(), Set.of(Fact.has("torch")), List.of(
                 ParamSpec.ints("count", 1, 64)),
@@ -160,16 +161,30 @@ public final class CoreActivities {
     }
 
     private static void registerFarm(ActivityRegistry registry) {
-        registry.register(new CoreActivity("farm_crop", FeatureArea.FARM, Set.of(), Set.of(), List.of(
+        registry.register(new CoreActivity("farm_crop", FeatureArea.FARM, Set.of(Fact.of("loc:surface")), Set.of(), List.of(
                 ParamSpec.choice("crop", CROPS),
                 ParamSpec.ints("count", 1, 64)),
                 values -> Duration.ofMinutes(Math.min(15, 4 + values.getInt("count") / 8)),
                 (mod, values) -> TaskCatalogue.getItemTask(values.getString("crop"), values.getInt("count"))));
 
-        registry.register(new CoreActivity("harvest_food", FeatureArea.FARM, Set.of(), Set.of(Fact.of("food:stocked")), List.of(
+        registry.register(new CoreActivity("harvest_food", FeatureArea.FARM, Set.of(Fact.of("loc:surface")), Set.of(Fact.of("food:stocked")), List.of(
                 ParamSpec.ints("units", 4, 20)),
                 values -> Duration.ofMinutes(8),
                 (mod, values) -> new CollectFoodTask(values.getInt("units"))));
+    }
+
+    /** Rare materials get their own activity so the planner only chains them in when something needs them. */
+    private static void registerRare(ActivityRegistry registry) {
+        fixed(registry, "gather_string", FeatureArea.GATHER, Set.of(), Set.of(Fact.has("string")), 8,
+                () -> TaskCatalogue.getItemTask("string", 8));
+        fixed(registry, "gather_diamond", FeatureArea.GATHER, Set.of(Fact.has("iron_pickaxe")), Set.of(Fact.has("diamond")), 12,
+                () -> TaskCatalogue.getItemTask("diamond", 3));
+        fixed(registry, "gather_obsidian", FeatureArea.GATHER, Set.of(Fact.has("diamond_pickaxe")), Set.of(Fact.has("obsidian")), 12,
+                () -> TaskCatalogue.getItemTask("obsidian", 10));
+        fixed(registry, "gather_blaze_rods", FeatureArea.GATHER, Set.of(Fact.dimension("nether"), Fact.has("iron_pickaxe")),
+                Set.of(Fact.has("blaze_rod")), 15, () -> TaskCatalogue.getItemTask("blaze_rod", 6));
+        fixed(registry, "gather_ender_pearls", FeatureArea.GATHER, Set.of(), Set.of(Fact.has("ender_pearl")), 12,
+                () -> TaskCatalogue.getItemTask("ender_pearl", 12));
     }
 
     private static void registerExplore(ActivityRegistry registry) {
@@ -184,14 +199,14 @@ public final class CoreActivities {
     }
 
     private static void registerTransport(ActivityRegistry registry) {
-        registry.register(new CoreActivity("craft_boat", FeatureArea.TRANSPORT, Set.of(), Set.of(Fact.has("boat")), List.of(
+        registry.register(new CoreActivity("craft_boat", FeatureArea.TRANSPORT, Set.of(Fact.of("loc:surface")), Set.of(Fact.has("boat")), List.of(
                 ParamSpec.choice("wood", WOODS)),
                 values -> Duration.ofMinutes(4),
                 (mod, values) -> TaskCatalogue.getItemTask(values.getString("wood") + "_boat", 1)));
 
-        fixed(registry, "build_nether_portal", FeatureArea.TRANSPORT, Set.of(Fact.of("portal:built")), 15,
+        fixed(registry, "build_nether_portal", FeatureArea.TRANSPORT, Set.of(Fact.has("diamond_pickaxe")), Set.of(Fact.of("portal:built")), 15,
                 ConstructNetherPortalObsidianTask::new);
-        fixed(registry, "go_nether", FeatureArea.TRANSPORT, Set.of(Fact.dimension("nether")), 15,
+        fixed(registry, "go_nether", FeatureArea.TRANSPORT, Set.of(Fact.has("iron_pickaxe")), Set.of(Fact.dimension("nether")), 15,
                 () -> new DefaultGoToDimensionTask(Dimension.NETHER));
         registry.register(new CoreActivity("go_overworld", FeatureArea.TRANSPORT, Set.of(Fact.dimension("nether")),
                 Set.of(Fact.dimension("overworld")), List.of(), values -> Duration.ofMinutes(15),
@@ -199,10 +214,10 @@ public final class CoreActivities {
     }
 
     private static void registerSleep(ActivityRegistry registry) {
-        registry.register(new CoreActivity("place_bed_and_set_spawn", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld")),
+        registry.register(new CoreActivity("place_bed_and_set_spawn", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld"), Fact.of("loc:surface")),
                 Set.of(Fact.of("spawn:set")), List.of(), values -> Duration.ofMinutes(8),
                 (mod, values) -> new PlaceBedAndSetSpawnTask()));
-        registry.register(new CoreActivity("sleep_through_night", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld")),
+        registry.register(new CoreActivity("sleep_through_night", FeatureArea.SLEEP, Set.of(Fact.dimension("overworld"), Fact.of("loc:surface")),
                 Set.of(), List.of(), values -> Duration.ofMinutes(15),
                 (mod, values) -> new SleepThroughNightTask()));
     }
@@ -219,7 +234,12 @@ public final class CoreActivities {
 
     private static void fixed(ActivityRegistry registry, String id, FeatureArea area, Set<Fact> provides, int minutes,
                               Supplier<Task> task) {
-        registry.register(new CoreActivity(id, area, Set.of(), provides, List.of(),
+        fixed(registry, id, area, Set.of(), provides, minutes, task);
+    }
+
+    private static void fixed(ActivityRegistry registry, String id, FeatureArea area, Set<Fact> requires,
+                              Set<Fact> provides, int minutes, Supplier<Task> task) {
+        registry.register(new CoreActivity(id, area, requires, provides, List.of(),
                 values -> Duration.ofMinutes(minutes), (mod, values) -> task.get()));
     }
 

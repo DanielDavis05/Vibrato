@@ -42,7 +42,7 @@ public final class LifeActivities {
     private LifeActivities() {}
 
     public static void register(ActivityRegistry registry) {
-        add(registry, "sleep_through_night", FeatureArea.SLEEP, facts("has:bed"), facts(),
+        add(registry, "sleep_through_night", FeatureArea.SLEEP, facts("has:bed", "loc:surface"), facts(),
                 List.of(ParamSpec.choice("spawn_set", "yes", "no")),
                 values -> Duration.ofMinutes(12),
                 (mod, values) -> new SleepInBedTask(values.getString("spawn_set").equals("yes")));
@@ -52,30 +52,34 @@ public final class LifeActivities {
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new NightShelterTask());
 
-        add(registry, "set_spawn_point", FeatureArea.SLEEP, facts(), facts("spawn:set", "home:set"),
+        add(registry, "set_spawn_point", FeatureArea.SLEEP, facts("loc:surface"), facts("spawn:set", "home:set"),
                 List.of(),
                 values -> Duration.ofMinutes(6),
                 (mod, values) -> new PlaceBedAndSetSpawnTask());
 
-        add(registry, "build_bed", FeatureArea.CRAFT, facts(), facts("has:bed"),
+        add(registry, "build_bed", FeatureArea.CRAFT, facts("has:wool"), facts("has:bed"),
                 List.of(),
                 values -> Duration.ofMinutes(8),
                 (mod, values) -> TaskCatalogue.getItemTask("bed", 1));
 
-        add(registry, "farm_crop", FeatureArea.FARM, facts(), facts("farm:built"),
+        add(registry, "farm_crop", FeatureArea.FARM, facts("loc:surface"), facts("farm:built"),
                 List.of(ParamSpec.choice("crop", CROPS.keySet().toArray(String[]::new)), ParamSpec.ints("rows", 2, 8)),
                 values -> Duration.ofMinutes(20),
                 (mod, values) -> new FarmCropsTask(CROPS.get(values.getString("crop")), values.getInt("rows")));
 
-        add(registry, "breed_animals", FeatureArea.FARM, facts(), facts(),
+        add(registry, "breed_animals", FeatureArea.FARM, facts("loc:surface"), facts(),
                 List.of(ParamSpec.choice("animal", ANIMALS.keySet().toArray(String[]::new)), ParamSpec.ints("pairs", 1, 3)),
                 values -> Duration.ofMinutes(10),
                 (mod, values) -> new BreedAnimalsTask(ANIMALS.get(values.getString("animal")), values.getInt("pairs")));
 
-        add(registry, "fish", FeatureArea.GATHER, facts(), facts("food:stocked"),
+        add(registry, "fish", FeatureArea.GATHER, facts("has:fishing_rod", "loc:surface"), facts("food:stocked"),
                 List.of(ParamSpec.ints("count", 2, 16)),
                 values -> Duration.ofMinutes(Math.min(20, 3 + values.getInt("count"))),
                 (mod, values) -> new FishingTask(values.getInt("count")));
+
+        add(registry, "craft_fishing_rod", FeatureArea.CRAFT, facts("has:string"), facts("has:fishing_rod"),
+                List.of(), values -> Duration.ofMinutes(4),
+                (mod, values) -> TaskCatalogue.getItemTask("fishing_rod", 1));
 
         add(registry, "cook_food", FeatureArea.CRAFT, facts(), facts("food:stocked"),
                 List.of(ParamSpec.choice("raw", RAW_FOODS.keySet().toArray(String[]::new)), ParamSpec.ints("count", 4, 32)),
@@ -102,32 +106,32 @@ public final class LifeActivities {
                 values -> Duration.ofMinutes(15),
                 (mod, values) -> new GainXpLevelsTask(30));
 
-        add(registry, "harvest_sugar_cane", FeatureArea.FARM, facts(), facts(),
+        add(registry, "harvest_sugar_cane", FeatureArea.FARM, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 8, 48)),
                 values -> Duration.ofMinutes(10),
                 (mod, values) -> new HarvestAndReplantTask(Items.SUGAR_CANE, values.getInt("count")));
 
-        add(registry, "harvest_pumpkin", FeatureArea.FARM, facts(), facts(),
+        add(registry, "harvest_pumpkin", FeatureArea.FARM, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 4, 24)),
                 values -> Duration.ofMinutes(10),
                 (mod, values) -> new HarvestAndReplantTask(Items.PUMPKIN, values.getInt("count")));
 
-        add(registry, "harvest_melon", FeatureArea.FARM, facts(), facts(),
+        add(registry, "harvest_melon", FeatureArea.FARM, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 8, 48)),
                 values -> Duration.ofMinutes(10),
                 (mod, values) -> new HarvestAndReplantTask(Items.MELON_SLICE, values.getInt("count")));
 
-        add(registry, "shear_sheep", FeatureArea.GATHER, facts(), facts(),
+        add(registry, "shear_sheep", FeatureArea.GATHER, facts("loc:surface"), facts("has:wool"),
                 List.of(ParamSpec.ints("count", 1, 6)),
                 values -> Duration.ofMinutes(6),
                 (mod, values) -> new CollectWoolTask(values.getInt("count")));
 
-        add(registry, "collect_milk", FeatureArea.GATHER, facts(), facts(),
+        add(registry, "collect_milk", FeatureArea.GATHER, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 1, 6)),
                 values -> Duration.ofMinutes(5),
                 (mod, values) -> new CollectMilkTask(values.getInt("count")));
 
-        add(registry, "get_eggs", FeatureArea.GATHER, facts(), facts(),
+        add(registry, "get_eggs", FeatureArea.GATHER, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 4, 16)),
                 values -> Duration.ofMinutes(5),
                 (mod, values) -> new CollectEggsTask(values.getInt("count")));
