@@ -11,6 +11,12 @@ import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.network.packet.s2c.common.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.item.Items;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.explosion.Explosion;
 import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.network.message.MessageType;
@@ -38,6 +44,8 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     static {
         scenario("ui", List.of("system_chat", "set_title_text", "set_subtitle_text", "set_action_bar_text", "set_titles_animation", "clear_titles", "custom_chat_completions", "tab_list", "disguised_chat"), ProtocolFixture::ui);
         scenario("client_state", List.of("cooldown", "player_abilities", "set_experience", "set_health", "set_carried_item", "set_camera", "set_chunk_cache_center", "set_chunk_cache_radius", "set_simulation_distance", "set_default_spawn_position", "ticking_state", "ticking_step", "award_stats", "player_combat_enter", "player_combat_end", "hurt_animation", "set_entity_motion", "animate", "entity_event", "rotate_head", "teleport_entity", "set_passengers", "set_entity_link", "update_mob_effect", "remove_mob_effect", "damage_event"), ProtocolFixture::clientState);
+        scenario("entity_motion", List.of("move_entity_pos", "move_entity_rot", "move_entity_pos_rot", "sound_entity", "explode", "level_event"), ProtocolFixture::entityMotion);
+        scenario("unknown_player_removed", List.of("player_info_remove"), p -> p.networkHandler.sendPacket(new PlayerRemoveS2CPacket(List.of(UUID.fromString("00000000-0000-0000-0000-000000000767")))));
         scenario("registry_state", List.of("update_recipes", "recipe", "update_advancements", "select_advancements_tab", "server_data", "server_links", "debug_sample", "map_item_data", "chunks_biomes"), ProtocolFixture::registryState);
         scenario("unknown_deleted_signature", List.of("delete_chat"), p -> p.networkHandler.sendPacket(new RemoveMessageS2CPacket(new MessageSignatureData.Indexed(new MessageSignatureData(new byte[256])))));
         scenario("common", List.of("ping", "store_cookie", "cookie_request", "resource_pack_pop", "custom_report_details"), ProtocolFixture::common);
@@ -122,6 +130,16 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         n.sendPacket(new EntityDamageS2CPacket(p, p.getDamageSources().generic()));
         n.sendPacket(new EntityStatusEffectS2CPacket(p.getId(), new StatusEffectInstance(StatusEffects.SPEED, 20), false));
         n.sendPacket(new RemoveEntityStatusEffectS2CPacket(p.getId(), StatusEffects.SPEED));
+    }
+    private static void entityMotion(ServerPlayerEntity p) {
+        var n = p.networkHandler;
+        n.sendPacket(new EntityS2CPacket.MoveRelative(p.getId(), (short) 0, (short) 0, (short) 0, p.isOnGround()));
+        n.sendPacket(new EntityS2CPacket.Rotate(p.getId(), (byte) 0, (byte) 0, p.isOnGround()));
+        n.sendPacket(new EntityS2CPacket.RotateAndMoveRelative(p.getId(), (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, p.isOnGround()));
+        n.sendPacket(new PlaySoundFromEntityS2CPacket(RegistryEntry.of(SoundEvents.ENTITY_PIG_AMBIENT), SoundCategory.NEUTRAL, p, 0.2f, 1, 767));
+        n.sendPacket(new ExplosionS2CPacket(p.getX() + 2, p.getY(), p.getZ(), 0, List.of(), Vec3d.ZERO,
+                Explosion.DestructionType.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.ENTITY_GENERIC_EXPLODE));
+        n.sendPacket(new WorldEventS2CPacket(1000, p.getBlockPos(), 0, false));
     }
     private static void registryState(ServerPlayerEntity p) {
         var n = p.networkHandler;
