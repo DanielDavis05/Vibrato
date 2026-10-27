@@ -9,6 +9,7 @@ import baritone.api.utils.Rotation;
  */
 final class AimSimulation {
 
+    private static final double SENSITIVITY = 0.5;
     private static final float DEGREES_PER_PIXEL = 0.15f;
 
     private final HumanLook look;
@@ -17,6 +18,8 @@ final class AimSimulation {
 
     AimSimulation(HumanLook look, float yaw, float pitch) {
         this.look = look;
+        // The camera snaps its own turns to the mouse grid, as the mouse does in game, so the simulation sets it too.
+        look.setSensitivitySource(() -> SENSITIVITY);
         this.yaw = yaw;
         this.pitch = pitch;
     }
