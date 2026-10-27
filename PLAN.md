@@ -153,3 +153,65 @@ branches for parallel workstreams are merged by the Lead.
 * **Licensing**: Vibrato stays MIT; UnionClef (GPL-3.0) is idea-only. Copying its code would make the combined
   work GPL-3.0 — say so if you want that.
 * **Fleet** = N game clients, not N bots in one JVM (the mod is bound to the client singleton).
+
+## 9. Status (updated 2026-10-27)
+
+`./gradlew build` is green on `master` with 99 unit tests. **Nothing has been run in the game yet**: every
+runtime behavior below is compile-checked and unit-tested for its pure logic only.
+
+| Workstream | State | Notes |
+|---|---|---|
+| P0 rename, Baritone submodule + patch, Director contract | done | |
+| D Director (sampler, Knuth estimator, coverage, personas, `DirectorTask`, 34 core activities) | done | follow-up in progress: `FleetBootstrap` (autostart on join, auto-connect) |
+| N nav safety (stuck detector, unstuck ladder, waste guard, waypoints, `NavSafetyChain`) | done | thresholds untuned; chain interplay with `PlayerInteractionFixChain`/`WorldSurvivalChain` unverified |
+| H human camera (`HumanLook`, input timing, idle glances) | done | `LookHelper.lookAt` is smoothed; use `lookAtInstant` only for same-tick aim-and-act (MLG clutch) |
+| F fleet (`FleetConfig`, `PerformanceProfile`, `scripts/fleet/launch.py`) | done | launcher install/up paths untested; unfocused 20 FPS cap not implemented |
+| T1 trade / enchant / anvil / brew | in progress | helpers + tests written, tasks and activities pending |
+| T2 sleep / shelter / farm / breed / fish / xp | in progress | crop/breeding/xp helpers, sleep + night shelter written |
+| T5 chat / commands / advancements | paused (only `TypingDelay`) | see findings below |
+| T6 combat / mob tactics / gear | paused (no code) | see findings below |
+| T4 building / chests / inventory | paused (no code; design settled) | blueprint coordinates: dy=0 ground, doors dy=1..2, palette is item-id strings only |
+| T3 transport / exploration | paused (`WaterCrossingPlanner`, `CompassDirection`, `DiscoveryLog` written) | |
+
+Resume order once slots free up (max 2-3 agents at a time): T5, T6, T4, T3.
+
+Findings carried over from the paused agents:
+* Advancement progress: `MinecraftClient.getNetworkHandler().getAdvancementHandler()`, map field
+  `ClientAdvancementManager.advancementProgresses` (needs one accessor mixin). Only about 11 overworld advancements
+  map onto existing `get` commands; the rest need new tasks (sleep, trade, breed, kill, plant), so the advancement
+  table must not fake specs. `Activity.provides()` cannot depend on params, so each advancement is its own activity.
+* Entities in `EntityTracker` are keyed by exact class; `EntityType` lookups must iterate `getWorld().getEntities()`.
+* `ArmorRequirement` is deprecated; combat gear upgrades use a tier enum with catalogue names, one activity per tier.
+* The brief's "SCP/ShootArrow" trajectory code does not exist; use `ProjectileHelper.calculateAnglesForSimpleProjectileMotion`.
+* Boat/minecart/elytra/horse behavior is the least certain area; the planner decides swim vs boat vs bridge.
+
+Open items for the lead: run a single-bot smoke test in the game (needs the user's go-ahead because it opens a
+window); decide whether to build a headless test stand (Docker, software GL, offline server) so agents can verify
+in-game behavior without touching the user's display.
+
+## 10. Final pass: make it one system (planned 2026-10-27)
+
+Starts when T4, T6 and the first smoke test report; T3 (boats and exploration) is the last feature workstream.
+At most 3 agents at a time. Each item is an agent assignment; the lead reviews, merges and verifies.
+
+### Integration workstreams (I)
+
+| ID | What | Why it matters |
+|---|---|---|
+| I1 | **Step-scoped abandon.** `NavSafetyChain` handles ABANDON_TASK with `getUserTaskChain().cancel()`, and `WasteGuard` has a 30 min per-user-task budget; the Director *is* the user task, so either would kill the whole Director for the rest of the session. Add a `StepAbandonable` interface (implemented by `DirectorTask.abandonCurrentStep(reason)`), make NavSafety and WasteGuard act on the current step when it exists, and let `FleetBootstrap` restart a dead Director | Found in review; confirmed in code |
+| I2 | **Registry integrity tests on the full registry**: every domain contributes, unique ids, every `requires` fact has a provider or is a start fact (e.g. trade needs `village:found`, which only T3 provides), every activity is reachable in sampled plans, a coverage simulation over personas x seeds hits every FeatureArea, the real `PlanSpace` log10 is reported and asserted >= 8, budgets and params sane, no activity can be sampled whose factory returns null | Proves the connection between planner and the ~120 activities |
+| I3 | **Chain priority and input-conflict audit**: list every chain and priority; check NavSafety does not hijack during eating, fighting, MLG clutch, death screen, container screens; check key-hold conflicts with `PlayerInteractionFixChain` and `WorldSurvivalChain`; fix by gating, add tests for the pure gating | Prevents odd behavior and fights between systems |
+| I4 | **One camera, one input path**: audit all rotation writes (`InputControls.forceLook`, `LookHelper`, direct `setYaw`), all sprint/jump/sneak toggles; route through the human model unless same-tick aim is required and justified | "Human" must be true everywhere, not just in Baritone |
+| I5 | **Operator surface**: commands `@auto`, `@plan`, `@coverage`, `@persona`, `@fleet` (start/stop/inspect the Director), update `@help`, `usage.md`, overlay shows current plan step, consistent `[Vibrato]` log prefix; move tunables (chat rate, stuck thresholds, human look) into `Settings`/`vibrato_settings.json` | One coherent product, controllable by hand |
+| I6 | **Performance**: `PerfBudget` telemetry (log any bot spending > 20 ms/tick in Vibrato code), audit per-tick allocations and scans in new chains and trackers | PLAN section 5; ten bots |
+| I7 | **Docs and cleanup**: README, FEATURES.md vs reality, dead code, `Playground`, stale references | |
+
+### Variation workstreams (V) - see docs/VARIATION.md
+
+V1 macro scenarios + persona traits + needs/events layer; V2 technique parameters; V3 interaction sets A, B, C.
+
+### Order
+1. T3 finishes the feature set (needed by I2: it provides `village:found`).
+2. I1, I2 first (correctness of the core loop), then I3 + I4, then I5 + I6 + I7.
+3. V1, then V2/V3 in the order of docs/VARIATION.md.
+4. Second in-game smoke test on full `master`, then a ten-minute soak run with the fleet profile.

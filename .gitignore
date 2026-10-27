@@ -110,6 +110,9 @@ gradle-app.setting
 .gradletasknamecache
 
 **/build/
+# Vibrato packages named build (blueprints) are source, not build output
+!src/main/java/dev/vibrato/tasks/build/
+!src/test/java/dev/vibrato/tasks/build/
 
 # Common working directory
 run/
@@ -117,3 +120,6 @@ run/
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 
+
+# Claude Code agent worktrees
+.claude/worktrees/
