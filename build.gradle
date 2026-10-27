@@ -3,6 +3,9 @@ plugins {
     id "maven-publish"
 }
 
+// Builds the patched Baritone submodule and exposes `baritoneDist`
+apply from: "gradle/baritone.gradle"
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
@@ -18,15 +21,11 @@ group = project.maven_group
 repositories {
     mavenCentral()
     maven {
-        name = "gaucho-matrero-repo"
-        url = "https://gaucho-matrero.github.io/maven/"
-    }
-    maven {
         name = "babbaj-repo"
         url = "https://babbaj.github.io/maven/"
     }
     flatDir {
-        dirs "${rootDir}/../baritone/dist"
+        dirs baritoneDist
     }
 }
 
@@ -48,6 +47,13 @@ dependencies {
     modImplementation(include("baritone:baritone-unoptimized-fabric:${project.baritone_version}"))
     // Nested inside the baritone jar, but loom doesn't put nested jars of local deps on the dev runtime classpath
     runtimeOnly("dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {

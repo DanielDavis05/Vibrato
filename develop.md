@@ -31,20 +31,33 @@ If the gradle tab doesn't exist, try `View > Tool Windows > Gradle`
 
 ## Baritone
 
-Vibrato uses a patched baritone (the `baritone.vibrato.VibratoSettings` hooks, originally from
-[the gaucho-matrero fork](https://github.com/gaucho-matrero/baritone)) that gives you more control over how baritone works.
-For Minecraft 1.21.1 that patch lives on the `altoclef-1.21.1` branch of a baritone checkout, based on upstream baritone's `1.21.1` branch.
-The build expects it next to `vibrato` and is bundled into the Vibrato jar:
+Vibrato uses [Baritone](https://github.com/cabaletta/baritone) for pathfinding. It is vendored as the `baritone/`
+git submodule (branch `1.21.1`, kept pristine) and Vibrato's hooks are carried as patches in `patches/baritone/`:
 
-1) Clone baritone into the same directory containing `vibrato` and check out the `altoclef-1.21.1` branch.
-    For example, if you cloned `vibrato` into your desktop, `baritone` should be in your desktop as well.
-2) Within `baritone`, run `./gradlew :fabric:build -Pavailable_loaders=fabric`.
-3) There should now be a `baritone-unoptimized-fabric-<version>.jar` in `baritone/dist`.
-   Make sure `baritone_version` in Vibrato's `gradle.properties` matches `<version>`
-   (the branch is tagged `v1.11.3-altoclef`, which produces `1.11.3-altoclef`).
-4) Build Vibrato as normal. Rebuild baritone whenever you change it.
+* `baritone.vibrato.VibratoSettings` - break/place avoidance, forced walkable/non-walkable blocks, tool overrides,
+  protected items, global heuristics, an interaction pause, flowing-water and lava passes
+* `baritone.vibrato.RotationSmoother` - lets Vibrato's human camera model decide every rotation Baritone applies
+* `RayTraceUtils.fluidHandling`
 
+You do not build Baritone by hand. `gradle/baritone.gradle` runs on every Gradle configure and, when needed,
+initializes the submodule, applies the patches, builds Baritone's fabric jar into `baritone/dist` and records a stamp
+of what it was built from. The first build is slow (it downloads and remaps Minecraft); later ones are instant.
 
+```
+git clone --recurse-submodules <repo>     # or: git submodule update --init baritone
+./gradlew build
+```
+
+To change a hook, edit files inside `baritone/`, then regenerate the patch:
+
+```
+git -C baritone add -N .
+git -C baritone diff > patches/baritone/0001-vibrato-hooks.patch
+git -C baritone reset -q
+```
+
+then reset the submodule (`git -C baritone checkout -- . && git -C baritone clean -fd`) so the next Gradle run applies
+the new patch to a pristine tree. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip all of this.
 
 ## Task Development Guides
 

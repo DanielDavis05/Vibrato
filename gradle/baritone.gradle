@@ -1,0 +1,72 @@
+// Vendored Baritone bootstrap.
+//
+// Baritone lives in the `baritone/` git submodule (cabaletta/baritone, branch 1.21.1) and is kept pristine in git.
+// Vibrato's hooks (VibratoSettings, RotationSmoother, ...) are carried as patches in `patches/baritone/*.patch`.
+// On configure this script makes sure a patched Baritone fabric jar exists in `baritone/dist`:
+//   1. init the submodule if needed
+//   2. apply any patch that is not applied yet (refuses to touch a tree where a patch neither applies nor is applied)
+//   3. run Baritone's own gradle build once, then remember what it was built from in `dist/.vibrato-stamp`
+//
+// Override with -PbaritoneDist=/some/dir to use a prebuilt jar and skip all of this.
+
+import java.security.MessageDigest
+
+def baritoneDir = file("${rootDir}/baritone")
+def patchDir = file("${rootDir}/patches/baritone")
+def overriddenDist = project.findProperty('baritoneDist')
+
+ext.baritoneDist = overriddenDist ? file(overriddenDist.toString()) : new File(baritoneDir, 'dist')
+
+def run = { File dir, boolean capture, List<String> cmd ->
+    def pb = new ProcessBuilder(cmd).directory(dir)
+    if (!capture) {
+        pb.inheritIO()
+    } else {
+        pb.redirectErrorStream(true)
+    }
+    def process = pb.start()
+    def output = capture ? process.inputStream.text : ''
+    int code = process.waitFor()
+    return [code: code, out: output.trim()]
+}
+
+if (!overriddenDist) {
+    def jar = new File(baritoneDist, "baritone-unoptimized-fabric-${project.baritone_version}.jar")
+    def stampFile = new File(baritoneDist, '.vibrato-stamp')
+
+    if (!new File(baritoneDir, 'gradlew').exists()) {
+        logger.lifecycle('[vibrato] initializing the baritone submodule')
+        run(rootDir, false, ['git', 'submodule', 'update', '--init', '--depth', '1', 'baritone'])
+        if (!new File(baritoneDir, 'gradlew').exists()) {
+            throw new GradleException('The baritone submodule is missing. Run: git submodule update --init baritone')
+        }
+    }
+
+    def patches = (patchDir.exists() ? patchDir.listFiles({ f -> f.name.endsWith('.patch') } as FileFilter) : new File[0])
+            .sort { it.name }
+    def head = run(baritoneDir, true, ['git', 'rev-parse', 'HEAD']).out
+    def digest = MessageDigest.getInstance('SHA-1')
+    digest.update(head.bytes)
+    patches.each { digest.update(it.bytes) }
+    def stamp = digest.digest().encodeHex().toString()
+
+    if (!jar.exists() || !stampFile.exists() || stampFile.text.trim() != stamp) {
+        patches.each { patch ->
+            if (run(baritoneDir, true, ['git', 'apply', '--check', '--reverse', patch.absolutePath]).code == 0) {
+                logger.lifecycle("[vibrato] baritone patch already applied: ${patch.name}")
+            } else if (run(baritoneDir, true, ['git', 'apply', '--check', patch.absolutePath]).code == 0) {
+                logger.lifecycle("[vibrato] applying baritone patch: ${patch.name}")
+                run(baritoneDir, false, ['git', 'apply', patch.absolutePath])
+            } else {
+                throw new GradleException("baritone patch ${patch.name} neither applies nor is already applied; " +
+                        "reset the submodule (git -C baritone checkout -- . && git -C baritone clean -fd) or fix the patch")
+            }
+        }
+        logger.lifecycle('[vibrato] building baritone (first build downloads and remaps Minecraft, this takes a while)')
+        def result = run(baritoneDir, false, ['./gradlew', ':fabric:build', '-Pavailable_loaders=fabric', '--console=plain'])
+        if (result.code != 0 || !jar.exists()) {
+            throw new GradleException("baritone build failed (exit ${result.code}); expected ${jar}")
+        }
+        stampFile.text = stamp
+    }
+}
