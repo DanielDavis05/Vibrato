@@ -159,6 +159,12 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                 _checkCollectedMaterials = true;
                 return null;
             }
+            // Resource descendants may veto interruption while finishing a
+            // pickup. Their protected behaviour frame remains until detachment.
+            if (_checkCollectedMaterials && hasChild()) {
+                _progressChecker.reset();
+                return null;
+            }
             int usable = countUsableThrowaways(mod);
             if (_checkCollectedMaterials) {
                 _checkCollectedMaterials = false;

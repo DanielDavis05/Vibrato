@@ -113,6 +113,14 @@ public class PlaceObsidianBucketTask extends Task {
         }
         if (completedBlockChange) _progressChecker.reset();
 
+        // A descendant can veto interruption even after the resource target is
+        // met. Keep yielding until the entire collection child has stopped and
+        // released its protection before counting the newly acquired blocks.
+        if (_checkCollectedMaterials && hasChild()) {
+            _progressChecker.reset();
+            return null;
+        }
+
         int missingFrameBlocks = missingFrameCount(_pos, pos -> WorldHelper.isSolid(mod, pos));
         int usable = PlaceBlockTask.countUsableThrowaways(mod,
                 item -> PlaceBlockTask.isStableCastMaterial(mod, item, _pos));

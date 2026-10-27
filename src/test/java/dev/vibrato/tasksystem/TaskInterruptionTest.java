@@ -109,6 +109,46 @@ class TaskInterruptionTest {
     }
 
     @Test
+    void materialRecountWaitsUntilForcedCollectionChildReleasesProtection() {
+        TestChain chain = new TestChain();
+        ForcedTask pickup = new ForcedTask();
+        boolean[] protection = {false};
+        FakeTask collection = new FakeTask() {
+            @Override protected void onStart(Vibrato mod) { protection[0] = true; }
+            @Override protected void onStop(Vibrato mod, Task interruptTask) {
+                super.onStop(mod, interruptTask);
+                protection[0] = false;
+            }
+        };
+        collection.next = pickup;
+        class MaterialParent extends FakeTask {
+            boolean collected;
+            int recounts;
+            @Override protected Task onTick(Vibrato mod) {
+                if (!collected) return collection;
+                if (hasChild()) return null;
+                assertFalse(protection[0], "recount must follow resource onStop");
+                recounts++;
+                return null;
+            }
+        }
+        MaterialParent parent = new MaterialParent();
+        parent.tick(null, chain);
+        parent.collected = true;
+        parent.tick(null, chain);
+        parent.tick(null, chain);
+        assertTrue(protection[0]);
+        assertEquals(0, parent.recounts);
+        assertEquals(3, pickup.ticks);
+        pickup.force = false;
+        parent.tick(null, chain);
+        assertFalse(protection[0]);
+        assertEquals(0, parent.recounts);
+        parent.tick(null, chain);
+        assertEquals(1, parent.recounts);
+    }
+
+    @Test
     void activeNestedCraftingKeepsGridOwnershipUntilStopped() {
         TestChain chain = new TestChain();
         FakeTask gatherLogs = new FakeTask();
