@@ -57,7 +57,11 @@ public final class ScreenScenarios {
     /** Submit the current settings on an open structure block screen. */
     public static boolean programStructure() {
         Screen screen = MinecraftClient.getInstance().currentScreen;
-        return screen instanceof StructureBlockScreen && press(screen, "gui.done");
+        if (!(screen instanceof StructureBlockScreen)) return false;
+        TextFieldWidget name = firstTextField(screen);
+        if (name == null) return false;
+        name.setText("vibrato:protocol_fixture");
+        return press(screen, "gui.done");
     }
 
     /** Toggle the recipe book of the open player inventory via its vanilla widget. */
