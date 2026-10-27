@@ -19,6 +19,8 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.RaycastContext;
 
 import java.util.Optional;
@@ -32,8 +34,7 @@ public interface LookHelper {
         Optional<Rotation> reachable;
         IPlayerContext ctx = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
         if (side == null) {
-            assert MinecraftClient.getInstance().player != null;
-            reachable = RotationUtils.reachable(ctx.player(), target, ctx.playerController().getBlockReachDistance());
+            reachable = geometricReach(ctx, target);
         } else {
             Vec3i sideVector = side.getVector();
             Vec3d centerOffset = new Vec3d(0.5 + sideVector.getX() * 0.5, 0.5 + sideVector.getY() * 0.5, 0.5 + sideVector.getZ() * 0.5);
@@ -57,6 +58,37 @@ public interface LookHelper {
             }
         }
         return reachable;
+    }
+
+    /**
+     * A block is reachable even when the camera needs several ticks to turn toward it.
+     * Baritone's context overload tests the next smoothed aim, which is appropriate for
+     * executing a movement but makes a poor target selector: it rejects visible blocks
+     * outside the current heading and can leave a task waiting without ever aiming.
+     */
+    private static Optional<Rotation> geometricReach(IPlayerContext ctx, BlockPos target) {
+        double distance = ctx.playerController().getBlockReachDistance();
+        Optional<Rotation> center = RotationUtils.reachableCenter(ctx.player(), target, distance, false);
+        if (center.isPresent()) return center;
+        VoxelShape shape = ctx.world().getBlockState(target).getOutlineShape(ctx.world(), target);
+        if (shape.isEmpty()) shape = VoxelShapes.fullCube();
+        for (Direction direction : Direction.values()) {
+            double x = (shape.getMin(Direction.Axis.X) + shape.getMax(Direction.Axis.X)) / 2;
+            double y = (shape.getMin(Direction.Axis.Y) + shape.getMax(Direction.Axis.Y)) / 2;
+            double z = (shape.getMin(Direction.Axis.Z) + shape.getMax(Direction.Axis.Z)) / 2;
+            switch (direction) {
+                case DOWN -> y = shape.getMin(Direction.Axis.Y);
+                case UP -> y = shape.getMax(Direction.Axis.Y);
+                case NORTH -> z = shape.getMin(Direction.Axis.Z);
+                case SOUTH -> z = shape.getMax(Direction.Axis.Z);
+                case WEST -> x = shape.getMin(Direction.Axis.X);
+                case EAST -> x = shape.getMax(Direction.Axis.X);
+            }
+            Optional<Rotation> face = RotationUtils.reachableOffset(ctx.player(), target,
+                    new Vec3d(target.getX() + x, target.getY() + y, target.getZ() + z), distance, false);
+            if (face.isPresent()) return face;
+        }
+        return Optional.empty();
     }
 
     static Optional<Rotation> getReach(BlockPos target) {
