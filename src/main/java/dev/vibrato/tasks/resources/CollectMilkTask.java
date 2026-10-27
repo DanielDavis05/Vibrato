@@ -87,7 +87,8 @@ public class CollectMilkTask extends ResourceTask {
 
         @Override
         protected Optional<Entity> getEntityTarget(Vibrato mod) {
-            return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), CowEntity.class);
+            return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+                    entity -> entity instanceof CowEntity cow && cow.isAlive() && !cow.isBaby(), CowEntity.class);
         }
 
         @Override

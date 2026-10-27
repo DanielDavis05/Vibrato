@@ -144,7 +144,11 @@ public class MobDefenseChain extends SingleTaskChain {
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod)) {
             _doingFunkyStuff = true;
-            if (_targetEntity == null) {
+            // A passive interaction or livestock target must not suppress
+            // escape from an unrelated hostile at critical health.
+            boolean combatTargetIsHostile = _targetEntity != null
+                    && mod.getEntityTracker().getHostiles().contains(_targetEntity);
+            if (TransitCombatPolicy.shouldEscapeDanger(combatTargetIsHostile)) {
                 _runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE);
                 setTask(_runAwayTask);
                 return 70;

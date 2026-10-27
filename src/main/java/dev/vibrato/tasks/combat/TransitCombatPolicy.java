@@ -7,6 +7,10 @@ public final class TransitCombatPolicy {
 
     private TransitCombatPolicy() {}
 
+    public static boolean shouldEscapeDanger(boolean combatTargetIsHostile) {
+        return !combatTargetIsHostile;
+    }
+
     public static boolean eligible(boolean alive, double distanceSquared, boolean visible) {
         return alive && visible && distanceSquared <= 25;
     }

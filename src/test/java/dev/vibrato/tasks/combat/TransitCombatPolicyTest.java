@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TransitCombatPolicyTest {
+    @Test void passiveInteractionDoesNotPreventEscapeFromHostiles() {
+        assertTrue(TransitCombatPolicy.shouldEscapeDanger(false));
+        assertFalse(TransitCombatPolicy.shouldEscapeDanger(true));
+    }
+
     @Test void requiresNearbyVisibleLiveTarget() {
         assertTrue(TransitCombatPolicy.eligible(true, 25, true));
         assertFalse(TransitCombatPolicy.eligible(true, 25.1, true));
