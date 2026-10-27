@@ -12,6 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.registry.Registries;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -40,21 +41,30 @@ final class NavigationTrace {
                 ? block.getBlockPos() : "none";
         var controller = _mod.getControllerExtras();
         var baritone = _mod.getClientBaritone();
-        var goal = baritone.getCustomGoalProcess().getGoal();
+        var goal = baritone.getPathingBehavior().getGoal();
         String goalDescription = goal == null ? "none" : goal instanceof GoalFollowEntity
                 ? goal.toString() : goal.getClass().getSimpleName();
         String inputs = Arrays.stream(Input.values())
                 .filter(input -> baritone.getInputOverrideHandler().isInputForcedDown(input))
                 .map(Enum::name).collect(Collectors.joining(",", "[", "]"));
         var pathing = baritone.getPathingBehavior();
+        var executor = pathing.getCurrent();
+        String destination = executor == null ? "none" : executor.getPath().getDest().toString();
+        String movement = "none";
+        if (executor != null && executor.getPosition() >= 0 && executor.getPosition() < executor.getPath().movements().size()) {
+            movement = executor.getPath().movements().get(executor.getPosition()).getClass().getSimpleName();
+        }
+        var held = player.getMainHandStack();
         var task = _mod.getUserTaskChain().getCurrentTask();
         String step = task instanceof DirectorTask director ? director.currentStepId() : "none";
         System.out.printf(Locale.ROOT,
-                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s step=%s water=%s submerged=%s air=%d pathing=%s calculating=%s%n",
+                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s step=%s water=%s submerged=%s air=%d pathing=%s calculating=%s dest=%s movement=%s hp=%.1f hunger=%d xp=%d held=%s durability=%d%n",
                 _tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 crosshair, controller.getBreakingBlockPos(), controller.getBreakingBlockProgress(), inputs,
                 goalDescription, chainDescription(), step, player.isTouchingWater(), player.isSubmergedInWater(),
-                player.getAir(), pathing.isPathing(), pathing.getInProgress().isPresent());
+                player.getAir(), pathing.isPathing(), pathing.getInProgress().isPresent(),
+                destination, movement, player.getHealth(), player.getHungerManager().getFoodLevel(), player.experienceLevel,
+                Registries.ITEM.getId(held.getItem()).getPath(), held.isDamageable() ? held.getMaxDamage() - held.getDamage() : 0);
     }
 
     private void onBlockBroken(BlockBrokenEvent event) {
