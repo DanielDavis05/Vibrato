@@ -31,6 +31,8 @@ import net.minecraft.world.RaycastContext;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -57,6 +59,9 @@ public class MLGBucketTask extends Task {
 
     private BlockPos _placedPos;
     private BlockPos _movingTorwards;
+    private final Set<BlockPos> _pendingWaterPositions = new LinkedHashSet<>();
+    private boolean _attemptedWater;
+    private boolean _attemptedOther;
 
     private static boolean isLava(BlockPos pos) {
         return MinecraftClient.getInstance().world.getBlockState(pos).getBlock() == Blocks.LAVA;
@@ -75,7 +80,6 @@ public class MLGBucketTask extends Task {
 
     @Override
     protected void onStart(Vibrato mod) {
-        _placedPos = null;
         // hold shift while falling.
         // Look down at first, might help
         mod.getPlayer().setPitch(90);
@@ -103,14 +107,6 @@ public class MLGBucketTask extends Task {
         // Move torwards our best "clutch" position
         if (bestClutchPos.isPresent()) {
             _movingTorwards = bestClutchPos.get().mutableCopy();
-            if (!_movingTorwards.equals(oldMovingTorwards)) {
-                if (oldMovingTorwards == null)
-                    Debug.logMessage("(NEW clutch target: " + _movingTorwards + ")");
-                else
-                    Debug.logMessage("(changed clutch target: " + _movingTorwards + ")");
-            }
-        } else if (oldMovingTorwards != null) {
-            Debug.logMessage("(LOST clutch position!)");
         }
         if (willLandOn.isPresent()) {
             handleJumpForLand(mod, willLandOn.get());
@@ -147,26 +143,38 @@ public class MLGBucketTask extends Task {
         if (reachable.isPresent()) {
             setDebugState("Performing MLG");
             LookHelper.lookAtInstant(mod, reachable.get());
-            // Try water by default
-            boolean hasClutch = (!mod.getWorld().getDimension().ultrawarm() &&mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET));
-            if (!hasClutch) {
-                // Go through our "clutch" items and see if any fit
-                for (Item tryEquip : _config.clutchItems) {
-                    if (mod.getSlotHandler().forceEquipItem(tryEquip)) {
-                        hasClutch = true;
+            // A slot swap can be asynchronous. Only click after the selected main
+            // hand actually contains the intended item; an offhand item is not
+            // sufficient for this helper's main-hand interaction.
+            Item selected = null;
+            if (!mod.getWorld().getDimension().ultrawarm()
+                    && mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)
+                    && ClutchItemPolicy.mayUse(true, mod.getWorld().getDimension().ultrawarm(),
+                            mod.getPlayer().getMainHandStack().isOf(Items.WATER_BUCKET))) {
+                selected = Items.WATER_BUCKET;
+            }
+            if (selected == null) {
+                for (Item item : _config.clutchItems) {
+                    if (item == Items.WATER_BUCKET && mod.getWorld().getDimension().ultrawarm()) continue;
+                    if (mod.getSlotHandler().forceEquipItem(item)
+                            && ClutchItemPolicy.mayUse(item == Items.WATER_BUCKET, mod.getWorld().getDimension().ultrawarm(),
+                                    mod.getPlayer().getMainHandStack().isOf(item))) {
+                        selected = item;
                         break;
                     }
                 }
             }
-            // Try to capture tall grass as well...
             BlockPos[] toCheckLook = new BlockPos[] {toPlaceOn, toPlaceOn.up(), toPlaceOn.up(2)};
-            if (hasClutch && Arrays.stream(toCheckLook).anyMatch(check -> mod.getClientBaritone().getPlayerContext().isLookingAt(check))) {
-                Debug.logMessage("HIT: " + willLandIn);
-                _placedPos = willLandIn;
+            if (selected != null && Arrays.stream(toCheckLook).anyMatch(check -> mod.getClientBaritone().getPlayerContext().isLookingAt(check))) {
+                if (selected == Items.WATER_BUCKET) {
+                    _attemptedWater = true;
+                    if (_pendingWaterPositions.size() < 16) _pendingWaterPositions.add(willLandIn.toImmutable());
+                } else {
+                    _attemptedOther = true;
+                }
                 mod.getInputControls().tryPress(Input.CLICK_RIGHT);
-                //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, true);
             } else {
-                setDebugState("NOT LOOKING CORRECTLY!");
+                setDebugState("Waiting for clutch item and aim");
             }
         } else {
             setDebugState("Waiting to reach target block...");
@@ -470,10 +478,11 @@ public class MLGBucketTask extends Task {
     }
 
     private boolean hasClutchItem(Vibrato mod) {
-        if (!mod.getWorld().getDimension().ultrawarm() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)) {
+        if (!mod.getWorld().getDimension().ultrawarm() && mod.getItemStorage().hasItemInventoryOnly(Items.WATER_BUCKET)) {
             return true;
         }
-        return _config.clutchItems.stream().anyMatch(item -> mod.getItemStorage().hasItem(item));
+        return _config.clutchItems.stream().anyMatch(item -> (item != Items.WATER_BUCKET || !mod.getWorld().getDimension().ultrawarm())
+                && mod.getItemStorage().hasItemInventoryOnly(item));
     }
 
     @Override
@@ -505,6 +514,27 @@ public class MLGBucketTask extends Task {
         }
         return result;
     }
+
+    public void beginFallEpisode() {
+        _placedPos = null;
+        _pendingWaterPositions.clear();
+        _attemptedWater = false;
+        _attemptedOther = false;
+    }
+
+    /** Confirm a source only after the world reflects it, never from an input request. */
+    public void observeWaterPlacement(Vibrato mod) {
+        for (BlockPos pos : _pendingWaterPositions) {
+            BlockState state = mod.getWorld().getBlockState(pos);
+            if (state.getBlock() == Blocks.WATER && state.getFluidState().isStill()) {
+                _placedPos = pos;
+                break;
+            }
+        }
+    }
+
+    public boolean attemptedWater() { return _attemptedWater; }
+    public boolean attemptedOther() { return _attemptedOther; }
 
     public BlockPos getWaterPlacedPos() {
         return _placedPos;

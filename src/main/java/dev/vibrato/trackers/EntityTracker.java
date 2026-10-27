@@ -215,12 +215,14 @@ public class EntityTracker extends Tracker {
 
     public <T extends Entity> List<T> getTrackedEntities(Class<T> type) {
         ensureUpdated();
-        if (!entityFound(type)) {
-            return Collections.emptyList();
-        }
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            //noinspection unchecked
-            return (List<T>) _entityMap.get(type);
+            List<Entity> entities = _entityMap.get(type);
+            if (entities == null) return Collections.emptyList();
+            // Copy while holding the same lock used by updateState: callers may
+            // iterate after the tracker refreshes on another thread.
+            List<T> snapshot = new ArrayList<>(entities.size());
+            for (Entity entity : entities) snapshot.add(type.cast(entity));
+            return snapshot;
         }
     }
 
@@ -230,7 +232,7 @@ public class EntityTracker extends Tracker {
     public List<Entity> getCloseEntities() {
         ensureUpdated();
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            return _closeEntities;
+            return new ArrayList<>(_closeEntities);
         }
     }
 
@@ -240,14 +242,14 @@ public class EntityTracker extends Tracker {
     public List<CachedProjectile> getProjectiles() {
         ensureUpdated();
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            return _projectiles;
+            return new ArrayList<>(_projectiles);
         }
     }
 
     public List<Entity> getHostiles() {
         ensureUpdated();
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            return _hostiles;
+            return new ArrayList<>(_hostiles);
         }
     }
 

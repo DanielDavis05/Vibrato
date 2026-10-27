@@ -1,6 +1,7 @@
 package dev.vibrato.chains;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.tasks.movement.MLGBucketTask;
 import dev.vibrato.tasksystem.ITaskOverridesGrounded;
@@ -25,6 +26,9 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
     private MLGBucketTask _lastMLG = null;
     private boolean _wasPickingUp = false;
     private boolean _doingChorusFruit = false;
+    private boolean _fallEpisode;
+    private double _fallStartY;
+    private float _fallStartHealth;
 
     public MLGBucketFallChain(TaskRunner runner) {
         super(runner);
@@ -37,12 +41,34 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
 
     @Override
     public float getPriority(Vibrato mod) {
-        if (!Vibrato.inGame()) return Float.NEGATIVE_INFINITY;
+        if (!Vibrato.inGame()) {
+            if (_fallEpisode) {
+                Debug.logInternal("Fall outcome=disconnected startY=%.2f (estimated)", _fallStartY);
+                _fallEpisode = false;
+            }
+            return Float.NEGATIVE_INFINITY;
+        }
 
-        if (isFallingOhNo(mod)) {
+        if (_lastMLG != null) _lastMLG.observeWaterPlacement(mod);
+        if (_fallEpisode && (mod.getPlayer().isDead() || mod.getPlayer().isOnGround()
+                || mod.getPlayer().isTouchingWater() || mod.getPlayer().isSwimming()
+                || mod.getPlayer().isClimbing())) {
+            String outcome = mod.getPlayer().isDead() ? "dead"
+                    : mod.getPlayer().isTouchingWater() || mod.getPlayer().isSwimming() ? "water"
+                    : mod.getPlayer().isClimbing() ? "climbing" : "ground";
+            finishFallEpisode(mod, outcome);
+        }
+
+        if (!mod.getPlayer().isDead() && isFallingOhNo(mod)) {
             _tryCollectWaterTimer.reset();
             setTask(new MLGBucketTask());
             _lastMLG = (MLGBucketTask) _mainTask;
+            if (!_fallEpisode) {
+                _fallEpisode = true;
+                _fallStartY = mod.getPlayer().getY() + mod.getPlayer().fallDistance;
+                _fallStartHealth = mod.getPlayer().getHealth();
+                _lastMLG.beginFallEpisode();
+            }
             return 100;
         } else if (!_tryCollectWaterTimer.elapsed() && mod.getPlayer().getVelocity().y >= -0.5) { // Why -0.5? Cause it's slower than -0.7.
             // We just placed water, try to collect it.
@@ -84,7 +110,7 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
         }
         if (_wasPickingUp) {
             _wasPickingUp = false;
-            _lastMLG = null;
+            if (!_fallEpisode) _lastMLG = null;
         }
         if (mod.getPlayer().hasStatusEffect(StatusEffects.LEVITATION) &&
                 !mod.getPlayer().getItemCooldownManager().isCoolingDown(Items.CHORUS_FRUIT) &&
@@ -101,6 +127,30 @@ public class MLGBucketFallChain extends SingleTaskChain implements ITaskOverride
             mod.getExtraBaritoneSettings().setInteractionPaused(false);
         }
         return Float.NEGATIVE_INFINITY;
+    }
+
+    private void finishFallEpisode(Vibrato mod, String outcome) {
+        double endY = mod.getPlayer().getY();
+        Debug.logInternal("Fall outcome=%s startY=%.2f (estimated) endY=%.2f estimatedHeight=%.2f health=%.1f->%.1f waterAttempted=%s otherAttempted=%s waterObserved=%s",
+                outcome, _fallStartY, endY, Math.max(0, _fallStartY - endY), _fallStartHealth,
+                mod.getPlayer().getHealth(), _lastMLG != null && _lastMLG.attemptedWater(),
+                _lastMLG != null && _lastMLG.attemptedOther(),
+                _lastMLG != null && _lastMLG.getWaterPlacedPos() != null);
+        _fallEpisode = false;
+    }
+
+    @Override
+    protected void onStop(Vibrato mod) {
+        if (_fallEpisode) {
+            if (Vibrato.inGame()) {
+                if (_lastMLG != null) _lastMLG.observeWaterPlacement(mod);
+                finishFallEpisode(mod, mod.getPlayer().isDead() ? "dead" : "stopped");
+            } else {
+                Debug.logInternal("Fall outcome=disconnected startY=%.2f (estimated)", _fallStartY);
+                _fallEpisode = false;
+            }
+        }
+        super.onStop(mod);
     }
 
     @Override
