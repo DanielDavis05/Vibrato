@@ -52,3 +52,24 @@ using `/fill`. Keep these setup commands confined to the disposable world; norma
 
 The unit suite covers repeated three-cell routes, legitimate return paths, vertical motion, productive mining,
 interruption protection and local suggestion ranges. Run `./gradlew test build` against the sibling engine checkout.
+
+## Navigation trace
+
+Add `-Dvibrato.debugNavigation=true` to `gameProps` to log position, aim, block-breaking progress, forced engine inputs,
+current goal and task chain four times per second. Local block breaks are logged with their positions too. This is
+console-only and off by default. Use `-Dvibrato.human=off` for a stock-camera comparison of the same fixture.
+
+## Validated on 2026-10-27
+
+With human aim and navigation safety enabled in the isolated world above:
+
+- A 25-block trip through the water lane finished in 8.959 seconds, including the exit onto dry ground.
+- The vertical goal placed six dirt blocks in 2.809 seconds; after settling the player remained at the requested Y
+  with 58 of the original 64 dirt remaining.
+- Collecting eight cobblestone finished in 7.916 seconds and left the player at the original Y=131, without falling
+  through the platform. Live nearby-block selection avoids the capped tracker cache hiding exposed targets.
+- `@play builder` started autonomous play; `@stop` remained stopped for 77 seconds. Stopping a queued movement command
+  prevented its following `coords` command from running.
+- Local completion and grouped/clickable help were exercised in the running client.
+
+These are controlled regression checks, rather than an exhaustive playthrough of every registered activity.
