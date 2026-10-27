@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.world.GameMode;
+import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.network.packet.s2c.common.*;
@@ -43,6 +44,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     public static final Map<String, Scenario> SCENARIOS = new LinkedHashMap<>();
     static {
         scenario("ui", List.of("system_chat", "set_title_text", "set_subtitle_text", "set_action_bar_text", "set_titles_animation", "clear_titles", "custom_chat_completions", "tab_list", "disguised_chat"), ProtocolFixture::ui);
+        scenario("container", List.of("open_screen", "container_set_content", "container_set_data", "container_close"), ProtocolFixture::container);
         scenario("client_state", List.of("cooldown", "player_abilities", "set_experience", "set_health", "set_carried_item", "set_camera", "set_chunk_cache_center", "set_chunk_cache_radius", "set_simulation_distance", "set_default_spawn_position", "ticking_state", "ticking_step", "award_stats", "player_combat_enter", "player_combat_end", "hurt_animation", "set_entity_motion", "animate", "entity_event", "rotate_head", "teleport_entity", "set_passengers", "set_entity_link", "update_mob_effect", "remove_mob_effect", "damage_event"), ProtocolFixture::clientState);
         scenario("entity_motion", List.of("move_entity_pos", "move_entity_rot", "move_entity_pos_rot", "sound_entity", "explode", "level_event"), ProtocolFixture::entityMotion);
         scenario("unknown_player_removed", List.of("player_info_remove"), p -> p.networkHandler.sendPacket(new PlayerRemoveS2CPacket(List.of(UUID.fromString("00000000-0000-0000-0000-000000000767")))));
@@ -53,7 +55,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
                 "scoreboard objectives remove vprotocol", "scoreboard objectives add vprotocol dummy", "scoreboard objectives setdisplay sidebar vprotocol", "scoreboard players set @s vprotocol 5", "scoreboard players reset @s vprotocol", "team remove vprotocol", "team add vprotocol", "team join vprotocol @s", "team modify vprotocol color blue", "team leave @s", "team remove vprotocol", "bossbar remove vibrato:fixture", "bossbar add vibrato:fixture Fixture", "bossbar set vibrato:fixture players @s", "bossbar set vibrato:fixture value 60", "bossbar remove vibrato:fixture", "scoreboard objectives remove vprotocol"));
         scenario("world", List.of("set_time", "game_event", "change_difficulty", "initialize_border", "set_border_center", "set_border_size", "set_border_lerp_size", "set_border_warning_delay", "set_border_warning_distance", "level_particles", "sound", "stop_sound", "set_default_spawn_position"), ProtocolFixture::world);
         scenario("entities", List.of("add_entity", "add_experience_orb", "set_entity_data", "set_entity_motion", "set_equipment", "update_mob_effect", "update_attributes", "set_passengers", "remove_entities"), p -> commands(p,
-                "kill @e[tag=vprotocol_fixture]", "summon armor_stand ~2 ~ ~ {Tags:[\"vprotocol_fixture\"],CustomName:'\"Fixture\"',CustomNameVisible:1b}", "summon pig ~3 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon command_block_minecart ~4 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon experience_orb ~1 ~1 ~ {Value:3s}", "effect give @e[type=pig,tag=vprotocol_fixture,limit=1,sort=nearest] minecraft:speed 20 0 true", "item replace entity @e[type=armor_stand,tag=vprotocol_fixture,limit=1,sort=nearest] armor.head with minecraft:iron_helmet"));
+                "kill @e[tag=vprotocol_fixture]", "summon armor_stand ~2 ~ ~ {Tags:[\"vprotocol_fixture\"],CustomName:'\"Fixture\"',CustomNameVisible:1b}", "summon pig ~3 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon command_block_minecart ~4 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon villager ~-3 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon horse ~-4 ~1 ~ {Tags:[\"vprotocol_fixture\"],Tame:1b}", "summon experience_orb ~1 ~1 ~ {Value:3s}", "effect give @e[type=pig,tag=vprotocol_fixture,limit=1,sort=nearest] minecraft:speed 20 0 true", "item replace entity @e[type=armor_stand,tag=vprotocol_fixture,limit=1,sort=nearest] armor.head with minecraft:iron_helmet"));
         scenario("cleanup", List.of("remove_entities"), p -> commands(p, "kill @e[tag=vprotocol_fixture]"));
         scenario("blocks", List.of("block_update", "block_entity_data", "section_blocks_update"), p -> commands(p,
                 "fill ~1 ~-1 ~1 ~3 ~-1 ~3 minecraft:iron_block", "setblock ~2 ~ ~ minecraft:command_block", "setblock ~3 ~ ~ minecraft:structure_block", "setblock ~4 ~ ~ minecraft:jigsaw", "setblock ~2 ~ ~2 minecraft:beacon", "setblock ~3 ~ ~2 minecraft:crafter", "setblock ~4 ~ ~2 minecraft:chest", "setblock ~2 ~ ~4 minecraft:oak_sign", "setblock ~3 ~ ~4 minecraft:lectern", "setblock ~4 ~ ~4 minecraft:crafting_table"));
@@ -100,6 +102,14 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     private static void commands(ServerPlayerEntity player, String... commands) {
         ServerCommandSource source = player.getCommandSource().withLevel(4).withSilent();
         for (String command : commands) player.getServer().getCommandManager().executeWithPrefix(source, command);
+    }
+    private static void container(ServerPlayerEntity p) {
+        commands(p, "setblock ~-2 ~ ~ minecraft:furnace");
+        var block = p.getServerWorld().getBlockEntity(p.getBlockPos().add(-2, 0, 0));
+        if (block instanceof NamedScreenHandlerFactory factory && p.openHandledScreen(factory).isPresent()) {
+            p.networkHandler.sendPacket(new ScreenHandlerPropertyUpdateS2CPacket(p.currentScreenHandler.syncId, 0, 0));
+            p.closeHandledScreen();
+        }
     }
     private static void clientState(ServerPlayerEntity p) {
         var n = p.networkHandler;
