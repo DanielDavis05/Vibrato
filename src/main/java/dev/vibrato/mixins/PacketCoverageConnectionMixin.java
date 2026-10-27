@@ -51,10 +51,10 @@ public abstract class PacketCoverageConnectionMixin {
     }
     @Unique private String vibrato$writePhase(Channel channel) {
         EncoderHandler<?> encoder = channel.pipeline().get(EncoderHandler.class);
-        return encoder == null ? vibrato$outboundPhase.name() : ((PacketCoverageEncoderAccessor) encoder).vibrato$getState().id().name();
+        return encoder == null ? null : ((PacketCoverageEncoderAccessor) encoder).vibrato$getState().id().name();
     }
     @Unique private ChannelFuture vibrato$observeWrite(ChannelFuture future, Object value, String phase, PacketCoverage.Context context) {
-        if (context != null && value instanceof Packet<?> packet) {
+        if (context != null && phase != null && value instanceof Packet<?> packet) {
             String direction = packet.getPacketId().side().name();
             String id = packet.getPacketId().id().toString();
             future.addListener(f -> { if (f.isSuccess()) PacketCoverage.success(context, phase, direction, id); });
