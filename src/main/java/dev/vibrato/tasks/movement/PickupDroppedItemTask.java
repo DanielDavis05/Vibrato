@@ -66,7 +66,8 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     @Override
     protected void onStart(Vibrato mod) {
         _progressChecker.reset();
-        _currentDrop = null;
+        if (_currentDrop != null && !isValid(mod, _currentDrop)) _currentDrop = null;
+        resetSearch();
     }
 
     @Override
@@ -97,7 +98,7 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
         if (!_progressChecker.check(mod)) {
             _progressChecker.reset();
-            if (_currentDrop != null && !_currentDrop.getStack().isEmpty()) {
+            if (_currentDrop != null && isValid(mod, _currentDrop)) {
                 // We might want to get a pickaxe first.
                 if (!isGettingPickaxeFirstFlag && mod.getModSettings().shouldCollectPickaxeFirst() && !StorageHelper.miningRequirementMetInventory(mod, MiningRequirement.STONE)) {
                     Debug.logMessage("Failed to pick up drop, will try to collect a stone pickaxe first and try again!");
@@ -157,9 +158,10 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected Optional<ItemEntity> getClosestTo(Vibrato mod, Vec3d pos) {
-        return mod.getEntityTracker().getClosestItemDrop(
-                pos,
-                _itemTargets);
+        // A nearby drop becoming slightly closer during a fall is not a reason
+        // to discard an active pickup path. Progress failures still blacklist it.
+        return PickupTargetPolicy.select(_currentDrop, drop -> isValid(mod, drop),
+                () -> mod.getEntityTracker().getClosestItemDrop(pos, drop -> isValid(mod, drop), _itemTargets));
     }
 
     @Override
@@ -192,7 +194,9 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected boolean isValid(Vibrato mod, ItemEntity obj) {
-        return obj.isAlive() && !_blacklist.contains(obj);
+        return obj.isAlive() && !obj.isRemoved() && !obj.getStack().isEmpty()
+                && !_blacklist.contains(obj) && mod.getEntityTracker().isEntityReachable(obj)
+                && Arrays.stream(_itemTargets).anyMatch(target -> target.matches(obj.getStack().getItem()));
     }
 
 }
