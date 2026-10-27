@@ -64,15 +64,13 @@ public final class TravelActivities {
         registry.register(activity("travel_ride_horse", Set.of(SURFACE), Set.of(),
                 List.of(distance(), direction()), Duration.ofMinutes(10),
                 (mod, v) -> new RideAnimalTask("horse", target(mod, v))));
-        // No activity provides has:saddle yet, so this does not require one: RideAnimalTask fails soft without it.
-        registry.register(activity("travel_ride_pig", Set.of(SURFACE), Set.of(),
+        registry.register(activity("travel_ride_pig", Set.of(SURFACE, Fact.has("saddle")), Set.of(),
                 List.of(distance(), direction()), Duration.ofMinutes(8),
                 (mod, v) -> new RideAnimalTask("pig", target(mod, v))));
         registry.register(activity("travel_minecart_ride", Set.of(SURFACE), Set.of(),
                 List.of(distance(), direction()), Duration.ofMinutes(8),
                 (mod, v) -> new MinecartRideTask(target(mod, v))));
-        // No activity provides has:elytra yet, so this does not require one: ElytraGlideTask fails soft without it.
-        registry.register(activity("travel_elytra_glide", Set.of(SURFACE), Set.of(),
+        registry.register(activity("travel_elytra_glide", Set.of(SURFACE, Fact.has("elytra")), Set.of(),
                 List.of(distance(), direction()), Duration.ofMinutes(6),
                 (mod, v) -> new ElytraGlideTask(target(mod, v))));
         registry.register(activity("travel_portal_to_nether", Set.of(Fact.dimension("overworld")),
@@ -87,7 +85,9 @@ public final class TravelActivities {
         registry.register(activity("travel_find_village", Set.of(SURFACE), Set.of(Fact.of("village:found")),
                 List.of(), Duration.ofMinutes(12), (mod, v) -> new FindVillageTask()));
         for (String structure : STRUCTURES) {
-            registry.register(activity("travel_find_" + structure, Set.of(SURFACE),
+            // The stronghold is only found with an eye of ender, which craft_ender_eye can make.
+            Set<Fact> requires = "stronghold".equals(structure) ? Set.of(SURFACE, Fact.has("ender_eye")) : Set.of(SURFACE);
+            registry.register(activity("travel_find_" + structure, requires,
                     Set.of(Fact.of("structure:" + structure + ":found")), List.of(),
                     Duration.ofMinutes("stronghold".equals(structure) ? 25 : 10),
                     (mod, v) -> new FindStructureTask(structure)));

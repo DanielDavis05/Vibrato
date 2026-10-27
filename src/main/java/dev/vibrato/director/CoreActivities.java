@@ -62,6 +62,7 @@ public final class CoreActivities {
         registerExplore(registry);
         registerRare(registry);
         registerAdvancement(registry);
+        registerCraftedRare(registry);
         registerTransport(registry);
         registerSleep(registry);
     }
@@ -195,6 +196,12 @@ public final class CoreActivities {
                 Set.of(Fact.has("blaze_rod")), 15, () -> TaskCatalogue.getItemTask("blaze_rod", 6));
         fixed(registry, "gather_ender_pearls", FeatureArea.GATHER, Set.of(), Set.of(Fact.has("ender_pearl")), 12,
                 () -> TaskCatalogue.getItemTask("ender_pearl", 12));
+    }
+
+    /** Eyes of ender are crafted from a blaze rod and an ender pearl, both gathered by providers. */
+    private static void registerCraftedRare(ActivityRegistry registry) {
+        fixed(registry, "craft_ender_eye", FeatureArea.CRAFT, Set.of(Fact.has("blaze_rod"), Fact.has("ender_pearl")),
+                Set.of(Fact.has("ender_eye")), 2, () -> TaskCatalogue.getItemTask("ender_eye", 1));
     }
 
     /** Advancement goals the bots pursue: each one provides its advancement fact once it is done. */

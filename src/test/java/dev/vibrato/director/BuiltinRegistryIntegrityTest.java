@@ -30,7 +30,7 @@ class BuiltinRegistryIntegrityTest {
      * Facts that the T3 transport and exploration domain must provide: no village-finding task exists yet, so
      * villager trading stays unschedulable until it does. Remove an entry once a provider is registered.
      */
-    private static final Set<Fact> KNOWN_UNPROVIDED = Set.of(Fact.of("village:found"));
+    private static final Set<Fact> KNOWN_UNPROVIDED = Set.of();
 
     /** Areas whose domain is still thin on master (combat is T6, command is T5). Remove entries as they fill up. */
     private static final Set<FeatureArea> KNOWN_THIN = Set.of(FeatureArea.COMBAT, FeatureArea.COMMAND);
@@ -39,6 +39,15 @@ class BuiltinRegistryIntegrityTest {
 
     private static ActivityRegistry builtRegistry() {
         return assertDoesNotThrow(BuiltinActivities::createRegistry);
+    }
+
+    /** Once a fact gets a provider, it must leave KNOWN_UNPROVIDED, so the list cannot rot. */
+    @Test
+    void knownUnprovidedFactsStillHaveNoProvider() {
+        ActivityRegistry registry = builtRegistry();
+        for (Fact fact : KNOWN_UNPROVIDED) {
+            assertTrue(registry.providersOf(fact).isEmpty(), fact + " is now provided; remove it from KNOWN_UNPROVIDED");
+        }
     }
 
     @Test
