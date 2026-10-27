@@ -16,6 +16,7 @@ import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.network.packet.BrandCustomPayload;
 import net.minecraft.registry.tag.TagPacketSerializer;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
@@ -96,6 +97,8 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         scenario("world", List.of("set_time", "game_event", "change_difficulty", "initialize_border", "set_border_center", "set_border_size", "set_border_lerp_size", "set_border_warning_delay", "set_border_warning_distance", "level_particles", "sound", "stop_sound", "set_default_spawn_position"), ProtocolFixture::world);
         scenario("entities", List.of("add_entity", "add_experience_orb", "set_entity_data", "set_entity_motion", "set_equipment", "update_mob_effect", "update_attributes", "set_passengers", "remove_entities"), p -> commands(p,
                 "kill @e[tag=vprotocol_fixture]", "summon armor_stand ~2 ~ ~ {Tags:[\"vprotocol_fixture\"],CustomName:'\"Fixture\"',CustomNameVisible:1b}", "summon pig ~3 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon command_block_minecart ~4 ~1 ~ {Tags:[\"vprotocol_fixture\"]}", "summon villager ~-3 ~1 ~ {Tags:[\"vprotocol_fixture\"],VillagerData:{profession:\"minecraft:farmer\",level:2,type:\"minecraft:plains\"},Offers:{Recipes:[{buy:{id:\"minecraft:emerald\",count:1},sell:{id:\"minecraft:bread\",count:1},maxUses:999}]}}", "summon horse ~-4 ~1 ~ {Tags:[\"vprotocol_fixture\"],Tame:1b}", "summon experience_orb ~1 ~1 ~ {Value:3s}", "effect give @e[type=pig,tag=vprotocol_fixture,limit=1,sort=nearest] minecraft:speed 20 0 true", "item replace entity @e[type=armor_stand,tag=vprotocol_fixture,limit=1,sort=nearest] armor.head with minecraft:iron_helmet"));
+        scenario("vehicle_mount", List.of("set_passengers"), ProtocolFixture::vehicleMount);
+        scenario("vehicle_correction", List.of("move_vehicle"), ProtocolFixture::vehicleCorrection);
         scenario("watercraft", List.of("add_entity", "move_vehicle", "set_passengers"), p -> commands(p,
                 "fill ~5 ~-2 ~-1 ~8 ~-2 ~2 minecraft:stone", "fill ~5 ~-1 ~-1 ~8 ~-1 ~2 minecraft:water", "summon minecraft:boat ~6 ~ ~1 {Tags:[\"vprotocol_fixture\"]}"));
         scenario("cleanup", List.of("remove_entities"), p -> commands(p, "kill @e[tag=vprotocol_fixture]"));
@@ -145,6 +148,15 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     private static void commands(ServerPlayerEntity player, String... commands) {
         ServerCommandSource source = player.getCommandSource().withLevel(4).withSilent();
         for (String command : commands) player.getServer().getCommandManager().executeWithPrefix(source, command);
+    }
+    private static void vehicleMount(ServerPlayerEntity p) {
+        var boats = p.getServerWorld().getEntitiesByClass(BoatEntity.class, p.getBoundingBox().expand(16), e -> e.getCommandTags().contains("vprotocol_fixture"));
+        if (boats.isEmpty()) throw new IllegalStateException("Run watercraft and allow the boat to spawn before vehicle_mount");
+        if (!p.startRiding(boats.getFirst(), true)) throw new IllegalStateException("Fixture player could not mount the boat");
+    }
+    private static void vehicleCorrection(ServerPlayerEntity p) {
+        if (!p.hasVehicle() || !(p.getRootVehicle() instanceof BoatEntity boat)) throw new IllegalStateException("Fixture player must remain mounted before vehicle_correction");
+        p.networkHandler.sendPacket(new VehicleMoveS2CPacket(boat));
     }
     private static void playSync(ServerPlayerEntity p) {
         p.getServer().getCommandManager().sendCommandTree(p);
