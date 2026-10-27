@@ -6,6 +6,8 @@ Coverage is opt-in (`-Dvibrato.packetCoverage=true`). The observer records succe
 
 The fixture uses ordinary game activity and controlled native Minecraft packets on a dedicated local server. Some scenarios intentionally exercise negative cases: unknown message signatures, a player-session key that is not trusted by the server, login queries, and an unavailable resource pack. An unsigned player-chat scenario is distinct from a chat message authenticated with an account key. These cases do not demonstrate successful account authentication or server acceptance. Fixture commands can alter the test world, change game mode, kill the test player, disconnect, or transfer the connection. Normal autonomous play does not automatically run fixture scenarios.
 
+The interactive runner requires both a loopback address and the dedicated fixture's server brand; ordinary singleplayer worlds are rejected. The fixture preserves inventory during its death/respawn test so later workstation and item scenarios retain their materials. Native sprint transitions and the ground-only movement packet also have explicit protocol scenarios; these diagnostics do not alter normal navigation controls.
+
 ## Run the fixture suite
 
 Use Java 21, Python 3, and an available display for the Minecraft client, such as an already-running Xvfb display. The fixture binds to loopback ports 25576 and, for transfer cases, 25566. The runner creates or reuses disposable worlds under `run-protocol-fixture` and `run-protocol-transfer`, writes offline-mode server settings, and writes `eula=true`; run it only if you accept the Minecraft EULA. These directories persist between runs, so remove or replace them when a fresh world is needed.

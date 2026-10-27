@@ -124,7 +124,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
             handler.sendPacket(new CustomPayloadS2CPacket(new BrandCustomPayload("vibrato-protocol-fixture")));
             server.getPlayerManager().addToOperators(player.getGameProfile());
             player.changeGameMode(GameMode.CREATIVE);
-            commands(player, "fill ~-5 ~-1 ~-5 ~5 ~-1 ~5 minecraft:stone", "fill ~-5 ~ ~-5 ~5 ~3 ~5 minecraft:air",
+            commands(player, "gamerule keepInventory true", "fill ~-5 ~-1 ~-5 ~5 ~-1 ~5 minecraft:stone", "fill ~-5 ~ ~-5 ~5 ~3 ~5 minecraft:air",
                     "give @s minecraft:writable_book 1", "give @s minecraft:iron_ingot 4", "give @s minecraft:book 1",
                     "give @s minecraft:map 1", "give @s minecraft:stick 1", "give @s minecraft:emerald 4", "give @s minecraft:oak_planks 8", "give @s minecraft:stone 16", "experience add @s 5 levels");
         });
