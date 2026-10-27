@@ -232,6 +232,13 @@ public interface LookHelper {
         return mod.getClientBaritone().getPlayerContext().isLookingAt(blockPos);
     }
 
+    /** The rendered crosshair can lag a task's camera turn by a frame. */
+    static boolean isLookingAtNow(Vibrato mod, BlockPos blockPos) {
+        HitResult hit = RayTraceUtils.rayTraceTowards(mod.getPlayer(), getLookRotation(mod.getPlayer()),
+                mod.getClientBaritone().getPlayerContext().playerController().getBlockReachDistance(), false);
+        return hit instanceof BlockHitResult block && block.getBlockPos().equals(blockPos);
+    }
+
     static void lookAt(Vibrato mod, Rotation rotation) {
         HumanLook look = Human.look();
         if (look == null) {

@@ -99,10 +99,10 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
                     mod.getClientBaritone().getPathingBehavior().cancelEverything();
                 }
                 _manualBreaking = true;
-                if (!LookHelper.isLookingAt(mod, _pos)) {
+                if (!LookHelper.isLookingAtNow(mod, _pos)) {
                     LookHelper.lookAt(mod, reach.get());
                 }
-                if (LookHelper.isLookingAt(mod, _pos)) {
+                if (LookHelper.isLookingAt(mod, _pos) && LookHelper.isLookingAtNow(mod, _pos)) {
                     // Tool equip is handled in `PlayerInteractionFixChain`. Oof.
                     mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
                 }
