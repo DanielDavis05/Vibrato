@@ -7,8 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class TimeoutWanderTaskTest {
     @Test
     void distinctExplorePoliciesAreNotTheSameTask() {
-        assertNotEquals(new TimeoutWanderTask(), new TimeoutWanderTask(true));
-        assertNotEquals(new TimeoutWanderTask(10), new TimeoutWanderTask(10, true));
-        assertEquals(new TimeoutWanderTask(10, true), new TimeoutWanderTask(10, true));
+        assertFalse(WanderPolicy.equivalent(64, false, false, 64, false, true));
+        assertFalse(WanderPolicy.equivalent(10, false, false, 10, true, false));
+        assertTrue(WanderPolicy.equivalent(10, true, false, 10, true, false));
+        assertFalse(WanderPolicy.equivalent(10, true, false, 11, true, false));
+        assertTrue(WanderPolicy.equivalent(Float.POSITIVE_INFINITY, true, false,
+                Float.POSITIVE_INFINITY, true, false));
     }
 }

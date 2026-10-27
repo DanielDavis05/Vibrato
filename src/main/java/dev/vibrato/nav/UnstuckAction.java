@@ -15,8 +15,9 @@ public enum UnstuckAction {
     ABANDON_TASK,
     ESCAPE_SURFACE;
 
-    /** Only these actions may cancel the path Baritone is following; the others move the bot around it. */
+    /** Water rescues must take movement control from Baritone before applying their inputs. */
     public boolean cancelsPath() {
-        return this == BACK_OFF_AND_REPATH || this == ABANDON_TASK;
+        return this == BACK_OFF_AND_REPATH || this == ABANDON_TASK
+                || this == SWIM_TO_SURFACE || this == CLIMB_OUT_OF_WATER;
     }
 }

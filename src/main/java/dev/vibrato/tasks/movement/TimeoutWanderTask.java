@@ -202,11 +202,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof TimeoutWanderTask task) {
-            if (task._increaseRange != _increaseRange || task._forceExplore != _forceExplore) return false;
-            if (Float.isInfinite(task._distanceToWander) || Float.isInfinite(_distanceToWander)) {
-                return Float.isInfinite(task._distanceToWander) == Float.isInfinite(_distanceToWander);
-            }
-            return Math.abs(task._distanceToWander - _distanceToWander) < 0.5f;
+            return WanderPolicy.equivalent(_distanceToWander, _increaseRange, _forceExplore,
+                    task._distanceToWander, task._increaseRange, task._forceExplore);
         }
         return false;
     }

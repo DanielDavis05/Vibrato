@@ -26,9 +26,11 @@ class NavInterventionTest {
     }
 
     @Test
-    void onlyBackOffAndAbandonCancelThePath() {
+    void waterRescueAndExplicitRepathCancelThePath() {
         assertTrue(UnstuckAction.BACK_OFF_AND_REPATH.cancelsPath());
         assertTrue(UnstuckAction.ABANDON_TASK.cancelsPath());
+        assertTrue(UnstuckAction.SWIM_TO_SURFACE.cancelsPath());
+        assertTrue(UnstuckAction.CLIMB_OUT_OF_WATER.cancelsPath());
         assertFalse(UnstuckAction.JUMP.cancelsPath());
         assertFalse(UnstuckAction.RECENTER_ON_BLOCK.cancelsPath());
         assertFalse(UnstuckAction.SIDESTEP_LEFT.cancelsPath());
