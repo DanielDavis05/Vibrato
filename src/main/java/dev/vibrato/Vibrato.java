@@ -12,6 +12,7 @@ import dev.vibrato.eventbus.events.ClientRenderEvent;
 import dev.vibrato.eventbus.events.ClientTickEvent;
 import dev.vibrato.eventbus.events.SendChatEvent;
 import dev.vibrato.eventbus.events.TitleScreenEntryEvent;
+import dev.vibrato.fleet.FleetBootstrap;
 import dev.vibrato.fleet.FleetConfig;
 import dev.vibrato.fleet.PerformanceProfile;
 import dev.vibrato.human.Human;
@@ -137,6 +138,7 @@ public class Vibrato implements ModInitializer {
         Debug.logMessage(PerformanceProfile.describe(_fleet));
         Human.install(this, _fleet.seed());
         NavSafety.install(this);
+        FleetBootstrap.install(this);
 
         // Trackers
         _storageTracker = new ItemStorageTracker(this, _trackerManager, container -> _containerSubTracker = container);
