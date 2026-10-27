@@ -9,27 +9,41 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /** Opt-in metadata only. Context is captured when processing/writing begins, then committed on success. */
 public final class PacketCoverage {
     public record Context(long generation, String scenario, String rootTask, String directorStep) {}
     public record Key(String phase, String side, String id, String scenario, String rootTask, String directorStep) {}
     public record Entry(String phase, String side, String id, String scenario, String rootTask, String directorStep, long count) {}
-    public record Snapshot(int protocol, String semantics, List<Entry> packets, List<Entry> wirePackets) {}
+    public record Snapshot(int protocol, String semantics, List<Entry> packets, List<Entry> wirePackets, String captureId) {
+        public Snapshot(int protocol, String semantics, List<Entry> packets, List<Entry> wirePackets) {
+            this(protocol, semantics, packets, wirePackets, null);
+        }
+    }
 
     public static final class Accumulator {
         private long generation;
+        private String captureId = UUID.randomUUID().toString();
         private String scenario = "lifecycle";
         private String rootTask = "none";
+        private String externalRoot;
         private String directorStep = "none";
         private final Map<Key, Long> counts = new HashMap<>();
         private final Map<Key, Long> wireCounts = new HashMap<>();
 
-        public synchronized Context capture() { return new Context(generation, scenario, rootTask, directorStep); }
+        public synchronized Context capture() { return new Context(generation, scenario, externalRoot == null ? rootTask : externalRoot, externalRoot == null ? directorStep : "none"); }
         public synchronized void beginScenario(String label) { scenario = safeLabel(label); }
         public synchronized void endScenario() { scenario = "lifecycle"; }
         public synchronized void task(String root, String step) { rootTask = safeLabel(root); directorStep = safeLabel(step); }
-        public synchronized void reset() { generation++; counts.clear(); wireCounts.clear(); scenario = "lifecycle"; rootTask = "none"; directorStep = "none"; }
+        public synchronized void externalTask(String root) {
+            String label = safeLabel(root);
+            if (!label.equals("none")) externalRoot = label;
+        }
+        public synchronized void endExternalTask(String root) {
+            if (externalRoot != null && externalRoot.equals(root)) externalRoot = null;
+        }
+        public synchronized void reset() { generation++; captureId = UUID.randomUUID().toString(); counts.clear(); wireCounts.clear(); scenario = "lifecycle"; rootTask = "none"; directorStep = "none"; externalRoot = null; }
         public synchronized void success(Context context, String phase, String side, String id) {
             if (context.generation() != generation) return;
             Key key = new Key(phase, side, id, context.scenario(), context.rootTask(), context.directorStep());
@@ -41,7 +55,7 @@ public final class PacketCoverage {
             wireCounts.merge(key, 1L, Long::sum);
         }
         public synchronized Snapshot snapshot() {
-            return new Snapshot(767, "successful client-side packet handling and successful outbound channel writes; wirePackets are separately decoded framing packets", entries(counts), entries(wireCounts));
+            return new Snapshot(767, "successful client-side packet handling and successful outbound channel writes; wirePackets are separately decoded framing packets", entries(counts), entries(wireCounts), captureId);
         }
         private static List<Entry> entries(Map<Key, Long> counts) {
             List<Entry> entries = new ArrayList<>();
@@ -69,6 +83,8 @@ public final class PacketCoverage {
     public static void beginScenario(String label) { if (ENABLED) DATA.beginScenario(label); }
     public static void endScenario() { if (ENABLED) DATA.endScenario(); }
     public static void setTask(String root, String step) { if (ENABLED) DATA.task(root, step); }
+    public static void externalTask(String root) { if (ENABLED) DATA.externalTask(root); }
+    public static void endExternalTask(String root) { if (ENABLED) DATA.endExternalTask(root); }
     public static void reset() { if (ENABLED) DATA.reset(); }
     public static Context capture() { return ENABLED ? DATA.capture() : null; }
     public static void success(Context context, String phase, String side, String id) {

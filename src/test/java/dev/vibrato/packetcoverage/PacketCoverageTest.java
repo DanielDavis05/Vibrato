@@ -45,6 +45,20 @@ class PacketCoverageTest {
         data.wireSuccess(pending, "PLAY", "CLIENTBOUND", "minecraft:bundle_delimiter");
         assertTrue(data.snapshot().wirePackets().isEmpty());
     }
+    @Test void externalTaskSurvivesOrdinaryIdleAndEndsOnlyForItsOwner() {
+        var data = new PacketCoverage.Accumulator();
+        data.task("DirectorTask", "explore");
+        data.externalTask("ProtocolConnectTask");
+        data.task("none", "none");
+        assertEquals("ProtocolConnectTask", data.capture().rootTask());
+        data.endExternalTask("OtherTask");
+        assertEquals("ProtocolConnectTask", data.capture().rootTask());
+        data.endExternalTask("ProtocolConnectTask");
+        assertEquals("none", data.capture().rootTask());
+        data.externalTask("ProtocolConnectTask");
+        data.reset();
+        assertEquals("none", data.capture().rootTask());
+    }
     @Test void rejectsFreeFormLabels() {
         var data = new PacketCoverage.Accumulator();
         data.beginScenario("private text here");

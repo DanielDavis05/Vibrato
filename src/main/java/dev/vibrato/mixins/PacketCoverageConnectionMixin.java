@@ -8,6 +8,7 @@ import net.minecraft.network.NetworkPhase;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.handler.EncoderHandler;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,16 +39,22 @@ public abstract class PacketCoverageConnectionMixin {
 
     @Redirect(method = "sendInternal", at = @At(value = "INVOKE", target = "Lio/netty/channel/Channel;writeAndFlush(Ljava/lang/Object;)Lio/netty/channel/ChannelFuture;"))
     private ChannelFuture vibrato$writeAndFlush(Channel channel, Object packet) {
-        return vibrato$observeWrite(channel.writeAndFlush(packet), packet);
+        String phase = vibrato$writePhase(channel);
+        var context = side == NetworkSide.CLIENTBOUND ? PacketCoverage.capture() : null;
+        return vibrato$observeWrite(channel.writeAndFlush(packet), packet, phase, context);
     }
     @Redirect(method = "sendInternal", at = @At(value = "INVOKE", target = "Lio/netty/channel/Channel;write(Ljava/lang/Object;)Lio/netty/channel/ChannelFuture;"))
     private ChannelFuture vibrato$write(Channel channel, Object packet) {
-        return vibrato$observeWrite(channel.write(packet), packet);
+        String phase = vibrato$writePhase(channel);
+        var context = side == NetworkSide.CLIENTBOUND ? PacketCoverage.capture() : null;
+        return vibrato$observeWrite(channel.write(packet), packet, phase, context);
     }
-    @Unique private ChannelFuture vibrato$observeWrite(ChannelFuture future, Object value) {
-        if (side == NetworkSide.CLIENTBOUND && value instanceof Packet<?> packet && PacketCoverage.enabled()) {
-            var context = PacketCoverage.capture();
-            String phase = vibrato$outboundPhase.name();
+    @Unique private String vibrato$writePhase(Channel channel) {
+        EncoderHandler<?> encoder = channel.pipeline().get(EncoderHandler.class);
+        return encoder == null ? vibrato$outboundPhase.name() : ((PacketCoverageEncoderAccessor) encoder).vibrato$getState().id().name();
+    }
+    @Unique private ChannelFuture vibrato$observeWrite(ChannelFuture future, Object value, String phase, PacketCoverage.Context context) {
+        if (context != null && value instanceof Packet<?> packet) {
             String direction = packet.getPacketId().side().name();
             String id = packet.getPacketId().id().toString();
             future.addListener(f -> { if (f.isSuccess()) PacketCoverage.success(context, phase, direction, id); });
