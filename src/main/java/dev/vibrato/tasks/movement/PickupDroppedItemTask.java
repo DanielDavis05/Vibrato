@@ -65,7 +65,8 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected void onStart(Vibrato mod) {
-
+        _progressChecker.reset();
+        _currentDrop = null;
     }
 
     @Override
