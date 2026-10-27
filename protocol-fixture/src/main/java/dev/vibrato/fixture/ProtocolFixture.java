@@ -4,10 +4,21 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.world.GameMode;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.network.packet.s2c.common.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.item.Items;
+import net.minecraft.component.type.MapIdComponent;
+import net.minecraft.network.message.MessageSignatureData;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.util.profiler.log.DebugSampleType;
+import net.minecraft.recipe.book.RecipeBookOptions;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.server.command.ServerCommandSource;
@@ -25,7 +36,10 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     public record Scenario(List<String> expectedIds, Consumer<ServerPlayerEntity> action) {}
     public static final Map<String, Scenario> SCENARIOS = new LinkedHashMap<>();
     static {
-        scenario("ui", List.of("system_chat", "set_title_text", "set_subtitle_text", "set_action_bar_text", "set_titles_animation", "clear_titles", "custom_chat_completions", "tab_list"), ProtocolFixture::ui);
+        scenario("ui", List.of("system_chat", "set_title_text", "set_subtitle_text", "set_action_bar_text", "set_titles_animation", "clear_titles", "custom_chat_completions", "tab_list", "disguised_chat"), ProtocolFixture::ui);
+        scenario("client_state", List.of("cooldown", "player_abilities", "set_experience", "set_health", "set_carried_item", "set_camera", "set_chunk_cache_center", "set_chunk_cache_radius", "set_simulation_distance", "set_default_spawn_position", "ticking_state", "ticking_step", "award_stats", "player_combat_enter", "player_combat_end", "hurt_animation", "set_entity_motion", "animate", "entity_event", "rotate_head", "teleport_entity", "set_passengers", "set_entity_link", "update_mob_effect", "remove_mob_effect", "damage_event"), ProtocolFixture::clientState);
+        scenario("registry_state", List.of("update_recipes", "recipe", "update_advancements", "select_advancements_tab", "server_data", "server_links", "debug_sample", "map_item_data", "chunks_biomes"), ProtocolFixture::registryState);
+        scenario("unknown_deleted_signature", List.of("delete_chat"), p -> p.networkHandler.sendPacket(new RemoveMessageS2CPacket(new MessageSignatureData.Indexed(new MessageSignatureData(new byte[256])))));
         scenario("common", List.of("ping", "store_cookie", "cookie_request", "resource_pack_pop", "custom_report_details"), ProtocolFixture::common);
         scenario("scoreboard", List.of("set_objective", "set_display_objective", "set_score", "reset_score", "set_player_team", "boss_event"), p -> commands(p,
                 "scoreboard objectives remove vprotocol", "scoreboard objectives add vprotocol dummy", "scoreboard objectives setdisplay sidebar vprotocol", "scoreboard players set @s vprotocol 5", "scoreboard players reset @s vprotocol", "team remove vprotocol", "team add vprotocol", "team join vprotocol @s", "team modify vprotocol color blue", "team leave @s", "team remove vprotocol", "bossbar remove vibrato:fixture", "bossbar add vibrato:fixture Fixture", "bossbar set vibrato:fixture players @s", "bossbar set vibrato:fixture value 60", "bossbar remove vibrato:fixture", "scoreboard objectives remove vprotocol"));
@@ -36,7 +50,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         scenario("blocks", List.of("block_update", "block_entity_data", "section_blocks_update"), p -> commands(p,
                 "fill ~1 ~-1 ~1 ~3 ~-1 ~3 minecraft:iron_block", "setblock ~2 ~ ~ minecraft:command_block", "setblock ~3 ~ ~ minecraft:structure_block", "setblock ~4 ~ ~ minecraft:jigsaw", "setblock ~2 ~ ~2 minecraft:beacon", "setblock ~3 ~ ~2 minecraft:crafter", "setblock ~4 ~ ~2 minecraft:chest", "setblock ~2 ~ ~4 minecraft:oak_sign", "setblock ~3 ~ ~4 minecraft:lectern", "setblock ~4 ~ ~4 minecraft:crafting_table"));
         scenario("inventory", List.of("container_set_content", "container_set_slot", "set_experience", "set_health", "update_attributes"), p -> commands(p,
-                "give @s minecraft:writable_book 1", "give @s minecraft:iron_ingot 4", "give @s minecraft:book 1", "give @s minecraft:map 1", "give @s minecraft:filled_map 1", "experience add @s 1 points", "effect give @s minecraft:speed 5 0 true", "effect clear @s minecraft:speed"));
+                "give @s minecraft:writable_book 1", "give @s minecraft:iron_ingot 4", "give @s minecraft:book 1", "give @s minecraft:map 1", "give @s minecraft:filled_map 1", "recipe take @s minecraft:crafting_table", "recipe give @s minecraft:crafting_table", "experience add @s 1 points", "effect give @s minecraft:speed 5 0 true", "effect clear @s minecraft:speed"));
     }
     private static void scenario(String name, List<String> ids, Consumer<ServerPlayerEntity> action) {
         SCENARIOS.put(name, new Scenario(ids.stream().map(id -> "minecraft:" + id).toList(), action));
@@ -45,10 +59,18 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             if (!(server instanceof MinecraftDedicatedServer dedicated)) throw new IllegalStateException("Fixture requires a dedicated server");
             var settings = dedicated.getProperties();
-            if (!"127.0.0.1".equals(settings.serverIp) || settings.serverPort != 25576 || settings.onlineMode
+            if (!"127.0.0.1".equals(settings.serverIp) || settings.serverPort != Integer.getInteger("vibrato.fixture.port", 25576) || settings.onlineMode
                     || settings.enableQuery || settings.enableRcon) {
-                throw new IllegalStateException("Fixture requires server-ip=127.0.0.1, server-port=25576, online-mode=false, enable-query=false and enable-rcon=false");
+                throw new IllegalStateException("Fixture requires server-ip=127.0.0.1, server-port matching vibrato.fixture.port (default 25576), online-mode=false, enable-query=false and enable-rcon=false");
             }
+        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity player = handler.player;
+            server.getPlayerManager().addToOperators(player.getGameProfile());
+            player.changeGameMode(GameMode.CREATIVE);
+            commands(player, "fill ~-5 ~-1 ~-5 ~5 ~-1 ~5 minecraft:stone", "fill ~-5 ~ ~-5 ~5 ~3 ~5 minecraft:air",
+                    "give @s minecraft:writable_book 1", "give @s minecraft:iron_ingot 4", "give @s minecraft:book 1",
+                    "give @s minecraft:map 1", "give @s minecraft:stick 1");
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(literal("vprotocol")
                 .requires(source -> source.hasPermissionLevel(2))
@@ -71,6 +93,49 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         ServerCommandSource source = player.getCommandSource().withLevel(4).withSilent();
         for (String command : commands) player.getServer().getCommandManager().executeWithPrefix(source, command);
     }
+    private static void clientState(ServerPlayerEntity p) {
+        var n = p.networkHandler;
+        var chunk = p.getChunkPos();
+        n.sendPacket(new CooldownUpdateS2CPacket(Items.STICK, 1));
+        n.sendPacket(new PlayerAbilitiesS2CPacket(p.getAbilities()));
+        n.sendPacket(new ExperienceBarUpdateS2CPacket(p.experienceProgress, p.totalExperience, p.experienceLevel));
+        n.sendPacket(new HealthUpdateS2CPacket(p.getHealth(), p.getHungerManager().getFoodLevel(), p.getHungerManager().getSaturationLevel()));
+        n.sendPacket(new UpdateSelectedSlotS2CPacket(p.getInventory().selectedSlot));
+        n.sendPacket(new SetCameraEntityS2CPacket(p));
+        n.sendPacket(new ChunkRenderDistanceCenterS2CPacket(chunk.x, chunk.z));
+        n.sendPacket(new ChunkLoadDistanceS2CPacket(10));
+        n.sendPacket(new SimulationDistanceS2CPacket(10));
+        n.sendPacket(new PlayerSpawnPositionS2CPacket(p.getBlockPos(), p.getYaw()));
+        n.sendPacket(new UpdateTickRateS2CPacket(20.0f, false));
+        n.sendPacket(new TickStepS2CPacket(0));
+        n.sendPacket(new StatisticsS2CPacket(new Object2IntOpenHashMap<>()));
+        n.sendPacket(EnterCombatS2CPacket.INSTANCE);
+        n.sendPacket(new EndCombatS2CPacket(1));
+        n.sendPacket(new DamageTiltS2CPacket(p));
+        n.sendPacket(new EntityVelocityUpdateS2CPacket(p));
+        n.sendPacket(new EntityAnimationS2CPacket(p, 0));
+        n.sendPacket(new EntityStatusS2CPacket(p, (byte) 0));
+        n.sendPacket(new EntitySetHeadYawS2CPacket(p, (byte) 0));
+        n.sendPacket(new EntityPositionS2CPacket(p));
+        n.sendPacket(new EntityPassengersSetS2CPacket(p));
+        n.sendPacket(new EntityAttachS2CPacket(p, null));
+        n.sendPacket(new EntityDamageS2CPacket(p, p.getDamageSources().generic()));
+        n.sendPacket(new EntityStatusEffectS2CPacket(p.getId(), new StatusEffectInstance(StatusEffects.SPEED, 20), false));
+        n.sendPacket(new RemoveEntityStatusEffectS2CPacket(p.getId(), StatusEffects.SPEED));
+    }
+    private static void registryState(ServerPlayerEntity p) {
+        var n = p.networkHandler;
+        n.sendPacket(new SynchronizeRecipesS2CPacket(p.getServer().getRecipeManager().values()));
+        n.sendPacket(new ChangeUnlockedRecipesS2CPacket(ChangeUnlockedRecipesS2CPacket.Action.ADD, List.of(), List.of(), new RecipeBookOptions()));
+        n.sendPacket(new AdvancementUpdateS2CPacket(false, List.of(), java.util.Set.of(), Map.of()));
+        n.sendPacket(new SelectAdvancementTabS2CPacket(null));
+        n.sendPacket(new ServerMetadataS2CPacket(Text.literal("Protocol fixture"), Optional.empty()));
+        n.sendPacket(new ServerLinksS2CPacket(p.getServer().getServerLinks().getLinks()));
+        n.sendPacket(new DebugSampleS2CPacket(new long[] {1, 1, 1, 1}, DebugSampleType.TICK_TIME));
+        n.sendPacket(new MapUpdateS2CPacket(new MapIdComponent(0), (byte) 0, false, Optional.empty(), Optional.empty()));
+        var chunk = p.getServerWorld().getWorldChunk(p.getBlockPos());
+        n.sendPacket(new ChunkBiomeDataS2CPacket(List.of(new ChunkBiomeDataS2CPacket.Serialized(chunk))));
+    }
     private static void common(ServerPlayerEntity p) {
         var n = p.networkHandler;
         var cookie = Identifier.of("vibrato", "fixture");
@@ -83,6 +148,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
     private static void ui(ServerPlayerEntity p) {
         var n = p.networkHandler;
         n.sendPacket(new GameMessageS2CPacket(Text.literal("Vibrato protocol fixture"), false));
+        n.sendPacket(new ProfilelessChatMessageS2CPacket(Text.literal("Fixture chat"), MessageType.params(MessageType.SAY_COMMAND, p)));
         n.sendPacket(new TitleFadeS2CPacket(5, 20, 5));
         n.sendPacket(new TitleS2CPacket(Text.literal("Fixture")));
         n.sendPacket(new SubtitleS2CPacket(Text.literal("Protocol 767")));
