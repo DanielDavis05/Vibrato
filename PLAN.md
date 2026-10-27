@@ -188,3 +188,30 @@ Findings carried over from the paused agents:
 Open items for the lead: run a single-bot smoke test in the game (needs the user's go-ahead because it opens a
 window); decide whether to build a headless test stand (Docker, software GL, offline server) so agents can verify
 in-game behavior without touching the user's display.
+
+## 10. Final pass: make it one system (planned 2026-10-27)
+
+Starts when T4, T6 and the first smoke test report; T3 (boats and exploration) is the last feature workstream.
+At most 3 agents at a time. Each item is an agent assignment; the lead reviews, merges and verifies.
+
+### Integration workstreams (I)
+
+| ID | What | Why it matters |
+|---|---|---|
+| I1 | **Step-scoped abandon.** `NavSafetyChain` handles ABANDON_TASK with `getUserTaskChain().cancel()`, and `WasteGuard` has a 30 min per-user-task budget; the Director *is* the user task, so either would kill the whole Director for the rest of the session. Add a `StepAbandonable` interface (implemented by `DirectorTask.abandonCurrentStep(reason)`), make NavSafety and WasteGuard act on the current step when it exists, and let `FleetBootstrap` restart a dead Director | Found in review; confirmed in code |
+| I2 | **Registry integrity tests on the full registry**: every domain contributes, unique ids, every `requires` fact has a provider or is a start fact (e.g. trade needs `village:found`, which only T3 provides), every activity is reachable in sampled plans, a coverage simulation over personas x seeds hits every FeatureArea, the real `PlanSpace` log10 is reported and asserted >= 8, budgets and params sane, no activity can be sampled whose factory returns null | Proves the connection between planner and the ~120 activities |
+| I3 | **Chain priority and input-conflict audit**: list every chain and priority; check NavSafety does not hijack during eating, fighting, MLG clutch, death screen, container screens; check key-hold conflicts with `PlayerInteractionFixChain` and `WorldSurvivalChain`; fix by gating, add tests for the pure gating | Prevents odd behavior and fights between systems |
+| I4 | **One camera, one input path**: audit all rotation writes (`InputControls.forceLook`, `LookHelper`, direct `setYaw`), all sprint/jump/sneak toggles; route through the human model unless same-tick aim is required and justified | "Human" must be true everywhere, not just in Baritone |
+| I5 | **Operator surface**: commands `@auto`, `@plan`, `@coverage`, `@persona`, `@fleet` (start/stop/inspect the Director), update `@help`, `usage.md`, overlay shows current plan step, consistent `[Vibrato]` log prefix; move tunables (chat rate, stuck thresholds, human look) into `Settings`/`vibrato_settings.json` | One coherent product, controllable by hand |
+| I6 | **Performance**: `PerfBudget` telemetry (log any bot spending > 20 ms/tick in Vibrato code), audit per-tick allocations and scans in new chains and trackers | PLAN section 5; ten bots |
+| I7 | **Docs and cleanup**: README, FEATURES.md vs reality, dead code, `Playground`, stale references | |
+
+### Variation workstreams (V) - see docs/VARIATION.md
+
+V1 macro scenarios + persona traits + needs/events layer; V2 technique parameters; V3 interaction sets A, B, C.
+
+### Order
+1. T3 finishes the feature set (needed by I2: it provides `village:found`).
+2. I1, I2 first (correctness of the core loop), then I3 + I4, then I5 + I6 + I7.
+3. V1, then V2/V3 in the order of docs/VARIATION.md.
+4. Second in-game smoke test on full `master`, then a ten-minute soak run with the fleet profile.
