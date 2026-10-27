@@ -6,10 +6,13 @@ import dev.vibrato.tasks.movement.IdleTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.WorldHelper;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import dev.vibrato.util.time.TimerGame;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -76,8 +79,8 @@ public class DirectorTask extends Task implements StepAbandonable {
         // Restarts after an interrupt keep the plan position; only the first start loads state.
         if (_coverage == null) {
             _coverage = _coverageFile == null ? new CoverageTracker() : CoverageTracker.load(_coverageFile);
-            _facts = startingFacts();
-            startNewPlan();
+            _facts = observedFacts(mod);
+            startNewPlan(mod);
         }
         if (_stepTimer != null) {
             _stepTimer.reset();
@@ -175,9 +178,29 @@ public class DirectorTask extends Task implements StepAbandonable {
         return _currentStep == null ? "idle" : _currentStep.signature();
     }
 
-    private Set<Fact> startingFacts() {
-        Set<Fact> facts = new HashSet<>();
-        facts.add(Fact.dimension(WorldHelper.getCurrentDimension().name().toLowerCase(Locale.ROOT)));
+    /** Facts the bot can read off the world right now. */
+    private static Set<Fact> observedFacts(Vibrato mod) {
+        String dimension = WorldHelper.getCurrentDimension().name().toLowerCase(Locale.ROOT);
+        boolean sky = mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        List<String> held = new ArrayList<>();
+        var inventory = mod.getPlayer().getInventory();
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (!stack.isEmpty()) {
+                held.add(Registries.ITEM.getId(stack.getItem()).getPath());
+            }
+        }
+        return WorldFacts.compose(dimension, sky, held);
+    }
+
+    /** Re-reads what the world shows, and keeps the facts that cannot be observed (spawn set, food stocked, ...). */
+    private Set<Fact> factsAtPlanBoundary(Vibrato mod) {
+        Set<Fact> facts = observedFacts(mod);
+        for (Fact fact : _facts) {
+            if (!WorldFacts.isObservable(fact)) {
+                facts.add(fact);
+            }
+        }
         return facts;
     }
 
@@ -214,7 +237,7 @@ public class DirectorTask extends Task implements StepAbandonable {
         }
         for (int skipped = 0; skipped < MAX_SKIPS_PER_TICK; skipped++) {
             if (_stepIndex >= _plan.steps().size()) {
-                finishPlan();
+                finishPlan(mod);
                 if (_plan.steps().isEmpty()) {
                     return null;
                 }
@@ -238,22 +261,41 @@ public class DirectorTask extends Task implements StepAbandonable {
         return null;
     }
 
-    private void finishPlan() {
+    private void finishPlan(Vibrato mod) {
         _coverage.tickPlan();
         saveCoverage();
         _planSeed = new SplittableRandom(_planSeed).nextLong();
-        startNewPlan();
+        _facts = factsAtPlanBoundary(mod);
+        startNewPlan(mod);
     }
 
-    private void startNewPlan() {
+    private void startNewPlan(Vibrato mod) {
         _stepIndex = 0;
         try {
-            _plan = _sampler.sample(_planSeed, _planLength, _persona, _facts, _coverage);
+            Plan plan = _sampler.sample(_planSeed, _planLength, _persona, _facts, _coverage);
+            if (_facts.contains(WorldFacts.UNDERGROUND) && !WorldFacts.hasPickaxe(_facts)) {
+                plan = escapeFirst(plan);
+            }
+            _plan = plan;
         } catch (IllegalStateException e) {
             Debug.logInternal("Director could not plan from " + _facts + ": " + e.getMessage());
-            _facts = startingFacts();
+            _facts = observedFacts(mod);
             _plan = new Plan(List.of());
         }
+    }
+
+    /** Underground without a pickaxe, the plan must start by getting to the surface. */
+    private Plan escapeFirst(Plan plan) {
+        Activity escape = _registry.get("escape_underground");
+        if (escape == null || (!plan.steps().isEmpty() && plan.steps().get(0).activity() == escape)) {
+            return plan;
+        }
+        return plan.prepend(new PlannedStep(escape, ParamValues.EMPTY));
+    }
+
+    /** True while the running step is the given activity. */
+    public boolean currentStepIs(String id) {
+        return _currentStep != null && _currentStep.activity().id().equals(id);
     }
 
     private void saveCoverage() {

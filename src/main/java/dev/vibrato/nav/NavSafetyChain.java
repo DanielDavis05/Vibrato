@@ -7,6 +7,7 @@ import dev.vibrato.control.InputControls;
 import dev.vibrato.director.DirectorTask;
 import dev.vibrato.director.StepAbandonable;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
+import dev.vibrato.util.Dimension;
 import dev.vibrato.tasks.construction.PlaceBlockNearbyTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskChain;
@@ -17,6 +18,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -37,6 +39,7 @@ public class NavSafetyChain extends TaskChain {
     private static final int CLIMB_MAX_TICKS = 60;
     private static final int SWIM_MAX_TICKS = 100;
     private static final int DELEGATE_MAX_TICKS = 200;
+    private static final int ESCAPE_MAX_TICKS = 8 * 60 * 20;
     private static final double RECENTER_DONE_DISTANCE = 0.1;
     private static final double RECENTER_DEAD_ZONE = 0.02;
     private static final double RECENTER_SNEAK_DISTANCE = 0.5;
@@ -129,6 +132,9 @@ public class NavSafetyChain extends TaskChain {
                 }
                 _ladder.markFired(_tick);
                 startAction(mod, action, state.name(), state == StuckState.LOW_AIR ? PRIORITY_AIR : PRIORITY_ACTION);
+            } else if (!directorEscaping(task) && shouldEscapeUnderground(mod)
+                    && _rateLimit.tryAcquire(_tick)) {
+                startAction(mod, UnstuckAction.ESCAPE_SURFACE, "underground", PRIORITY_ACTION);
             }
         }
 
@@ -269,7 +275,8 @@ public class NavSafetyChain extends TaskChain {
             case RECENTER_ON_BLOCK -> recenter(mod);
             case SWIM_TO_SURFACE -> swimUp(mod);
             case CLIMB_OUT_OF_WATER -> climbOut(mod);
-            case BREAK_BLOCKING_BLOCK, PLACE_STEP_BLOCK, DIG_UP, DIG_DOWN -> tickDelegate(mod);
+            case BREAK_BLOCKING_BLOCK, PLACE_STEP_BLOCK, DIG_UP, DIG_DOWN -> tickDelegate(mod, DELEGATE_MAX_TICKS);
+            case ESCAPE_SURFACE -> tickDelegate(mod, ESCAPE_MAX_TICKS);
             case ABANDON_TASK -> {
                 Debug.logWarning("Abandoning " + _actionReason);
                 if (mod.getUserTaskChain().getCurrentTask() instanceof StepAbandonable steps) {
@@ -325,8 +332,8 @@ public class NavSafetyChain extends TaskChain {
         return false;
     }
 
-    private boolean tickDelegate(Vibrato mod) {
-        if (_delegate == null || _actionTicks >= DELEGATE_MAX_TICKS) return true;
+    private boolean tickDelegate(Vibrato mod, int maxTicks) {
+        if (_delegate == null || _actionTicks >= maxTicks) return true;
         _delegate.tick(mod, this);
         return _delegate.isFinished(mod) || _delegate.stopped();
     }
@@ -346,6 +353,7 @@ public class NavSafetyChain extends TaskChain {
                 BlockPos step = front.down();
                 yield new PlaceBlockNearbyTask(pos -> pos.equals(step), Blocks.DIRT, Blocks.COBBLESTONE);
             }
+            case ESCAPE_SURFACE -> new EscapeUndergroundTask();
             default -> null;
         };
     }
@@ -380,6 +388,22 @@ public class NavSafetyChain extends TaskChain {
         return new MotionSample(_tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 player.isOnGround(), player.isTouchingWater(), player.isSubmergedInWater(),
                 player.horizontalCollision, wantsToMove, player.getAir(), productive);
+    }
+
+    /** Underground in the overworld, with no way out on its own: the escape rung handles it. */
+    private boolean shouldEscapeUnderground(Vibrato mod) {
+        if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
+            return false;
+        }
+        boolean underground = !mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        boolean hasPickaxe = mod.getItemStorage().hasItem(Items.WOODEN_PICKAXE, Items.STONE_PICKAXE,
+                Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
+        return EscapeTrigger.shouldEscape(underground, hasPickaxe, _waste.ticksSinceProgress(_tick));
+    }
+
+    /** The Director already runs its own escape step; do not run a second one on top. */
+    private static boolean directorEscaping(Task task) {
+        return task instanceof DirectorTask director && director.currentStepIs("escape_underground");
     }
 
     private static boolean isBreakingBlock() {

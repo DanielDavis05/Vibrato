@@ -2,6 +2,7 @@ package dev.vibrato.director;
 
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Vibrato;
+import dev.vibrato.nav.EscapeUndergroundTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.container.StoreInAnyContainerTask;
@@ -188,6 +189,9 @@ public final class CoreActivities {
     }
 
     private static void registerExplore(ActivityRegistry registry) {
+        fixed(registry, "escape_underground", FeatureArea.EXPLORE, Set.of(), Set.of(WorldFacts.SURFACE), 8,
+                EscapeUndergroundTask::new);
+
         registry.register(new CoreActivity("explore_offset", FeatureArea.EXPLORE, Set.of(), Set.of(), List.of(
                 ParamSpec.ints("dx", -400, 400),
                 ParamSpec.ints("dz", -400, 400)),

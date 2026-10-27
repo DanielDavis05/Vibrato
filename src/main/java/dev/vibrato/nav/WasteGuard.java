@@ -33,6 +33,10 @@ public final class WasteGuard {
         _lastProgressTick = tick;
     }
 
+    public long ticksSinceProgress(long tick) {
+        return tick - _lastProgressTick;
+    }
+
     public boolean isWasting(long tick) {
         return tick - _lastProgressTick >= _noProgressTicks || tick - _startTick > _budgetTicks;
     }

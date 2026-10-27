@@ -33,5 +33,6 @@ class NavInterventionTest {
         assertFalse(UnstuckAction.RECENTER_ON_BLOCK.cancelsPath());
         assertFalse(UnstuckAction.SIDESTEP_LEFT.cancelsPath());
         assertFalse(UnstuckAction.SIDESTEP_RIGHT.cancelsPath());
+        assertTrue(UnstuckAction.ESCAPE_SURFACE.cancelsPath());
     }
 }
