@@ -8,6 +8,11 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_HOME = Path.home() / '.vibrato-tests'
 TASK = re.compile(r'Task START: (.*)')
 
+def run_label(value):
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,79}', value):
+        raise argparse.ArgumentTypeError('label must be a short name without directory separators')
+    return value
+
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -180,7 +185,7 @@ def run(args):
             (path / 'options.txt').write_text('onboardAccessibility:false\nrenderDistance:5\nsimulationDistance:5\nmaxFps:30\nenableVsync:false\nsoundCategory_master:0.0\npauseOnLostFocus:false\n')
             script = path / 'campaign-script.txt'
             script.write_text('0 @gamer\n0 wait-idle ' + str(args.budget) + '\n0 exit\n')
-            seed = seeds[i % len(seeds)]
+            seed = seeds[(args.seed_offset + i) % len(seeds)]
             bot = f'Campaign{i+1:02d}'
             jvm = ['-Xmx1536M', f'-Dvibrato.botId={bot}', f'-Dvibrato.seed={seed}',
                    f'-Dvibrato.world=world-{i+1:02d}', f'-Dvibrato.worldSeed={seed}',
@@ -266,14 +271,16 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--install', required=True, help='fleet install root with minecraft/ and mods/')
     p.add_argument('--campaign', required=True, choices=['round0'])
-    p.add_argument('--label', required=True, choices=['single', 'single-verified', 'single-v2', 'single-final', 'four', 'four-v2', 'four-final', 'six', 'six-v2', 'six-final'])
+    p.add_argument('--label', required=True, type=run_label)
+    p.add_argument('--seed-offset', type=int, default=0, help='start position in the fixed seed list')
     p.add_argument('--count', type=int, required=True, choices=[1, 4, 6])
     p.add_argument('--budget', type=int, default=60)
     p.add_argument('--startup-timeout', type=int, default=180)
     p.add_argument('--stagger', type=float, default=5)
     p.add_argument('--display', default=':100')
     args = p.parse_args()
-    if args.budget < 10 or args.stagger < 0: p.error('budget must be >=10 and stagger >=0')
+    if args.budget < 10 or args.stagger < 0 or args.seed_offset < 0:
+        p.error('budget must be >=10; stagger and seed offset must be >=0')
     def stop_signal(_signal, _frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, stop_signal)

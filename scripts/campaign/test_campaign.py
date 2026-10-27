@@ -1,8 +1,14 @@
 import unittest
-from supervisor import Evidence, classify
+from supervisor import Evidence, classify, run_label
+import argparse
 from redact import redact
 
 class CampaignTest(unittest.TestCase):
+    def test_fresh_labels_cannot_escape_the_campaign_directory(self):
+        self.assertEqual('six-steady-2', run_label('six-steady-2'))
+        for value in ('../save', '/tmp/save', '..', 'a/b', ''):
+            with self.assertRaises(argparse.ArgumentTypeError): run_label(value)
+
     def test_precedence_never_hides_death_or_crash(self):
         self.assertEqual('fail:death', classify(death=True, overloaded=True))
         self.assertEqual('fail:crash', classify(crash=True, overloaded=True))
