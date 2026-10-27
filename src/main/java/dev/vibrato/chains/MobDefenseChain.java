@@ -142,14 +142,15 @@ public class MobDefenseChain extends SingleTaskChain {
         }
 
         // Dodge all mobs cause we boutta die son
-        if (isInDanger(mod)) {
+        boolean rangedDanger = hasVisibleRangedDanger(mod);
+        if (rangedDanger || isInDanger(mod)) {
             _doingFunkyStuff = true;
             // A passive interaction or livestock target must not suppress
             // escape from an unrelated hostile at critical health.
             boolean combatTargetIsHostile = _targetEntity != null
                     && mod.getEntityTracker().getHostiles().contains(_targetEntity);
-            if (TransitCombatPolicy.shouldEscapeDanger(combatTargetIsHostile)) {
-                _runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE);
+            if (rangedDanger || TransitCombatPolicy.shouldEscapeDanger(combatTargetIsHostile)) {
+                _runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
                 setTask(_runAwayTask);
                 return 70;
             }
@@ -367,6 +368,20 @@ public class MobDefenseChain extends SingleTaskChain {
         return Optional.empty();
     }
 
+    private boolean hasVisibleRangedDanger(Vibrato mod) {
+        if (!isVulnurable(mod)) return false;
+        ClientPlayerEntity player = mod.getPlayer();
+        for (Entity entity : mod.getEntityTracker().getHostiles()) {
+            if (!(entity instanceof SkeletonEntity)) continue;
+            double distanceSquared = entity.squaredDistanceTo(player);
+            boolean visible = distanceSquared <= 144 && LookHelper.cleanLineOfSight(player,
+                    entity.getPos().add(0, entity.getHeight() / 2, 0), 12);
+            if (TransitCombatPolicy.rangedThreat(entity.isAlive(), EntityHelper.isAngryAtPlayer(mod, entity),
+                    mod.getBehaviour().shouldExcludeFromForcefield(entity), distanceSquared, visible)) return true;
+        }
+        return false;
+    }
+
     private boolean isInDanger(Vibrato mod) {
 
         if (isVulnurable(mod)) {
@@ -375,7 +390,6 @@ public class MobDefenseChain extends SingleTaskChain {
                 ClientPlayerEntity player = mod.getPlayer();
                 List<Entity> hostiles = mod.getEntityTracker().getHostiles();
                 for (Entity entity : hostiles) {
-                    // Ignore skeletons
                     if (entity instanceof SkeletonEntity) continue;
                     if (entity.isInRange(player, SAFE_KEEP_DISTANCE) && !mod.getBehaviour().shouldExcludeFromForcefield(entity) && EntityHelper.isAngryAtPlayer(mod, entity)) {
                         return true;

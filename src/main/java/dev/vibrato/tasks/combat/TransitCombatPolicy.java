@@ -11,6 +11,11 @@ public final class TransitCombatPolicy {
         return !combatTargetIsHostile;
     }
 
+    public static boolean rangedThreat(boolean alive, boolean angry, boolean excluded,
+                                       double distanceSquared, boolean clearLineOfSight) {
+        return alive && angry && !excluded && distanceSquared <= 144 && clearLineOfSight;
+    }
+
     public static boolean eligible(boolean alive, double distanceSquared, boolean visible) {
         return alive && visible && distanceSquared <= 25;
     }

@@ -37,7 +37,8 @@ public class RunAwayFromHostilesTask extends CustomBaritoneGoalTask {
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof RunAwayFromHostilesTask task) {
-            return Math.abs(task._distanceToRun - _distanceToRun) < 1;
+            return task._includeSkeletons == _includeSkeletons
+                    && Math.abs(task._distanceToRun - _distanceToRun) < 1;
         }
         return false;
     }

@@ -9,6 +9,15 @@ class TransitCombatPolicyTest {
         assertFalse(TransitCombatPolicy.shouldEscapeDanger(true));
     }
 
+    @Test void visibleAngryRangedThreatWithinTwelveBlocksRequiresEscape() {
+        assertTrue(TransitCombatPolicy.rangedThreat(true, true, false, 144, true));
+        assertFalse(TransitCombatPolicy.rangedThreat(true, true, false, 144.1, true));
+        assertFalse(TransitCombatPolicy.rangedThreat(true, true, false, 25, false));
+        assertFalse(TransitCombatPolicy.rangedThreat(true, false, false, 25, true));
+        assertFalse(TransitCombatPolicy.rangedThreat(false, true, false, 25, true));
+        assertFalse(TransitCombatPolicy.rangedThreat(true, true, true, 25, true));
+    }
+
     @Test void requiresNearbyVisibleLiveTarget() {
         assertTrue(TransitCombatPolicy.eligible(true, 25, true));
         assertFalse(TransitCombatPolicy.eligible(true, 25.1, true));
