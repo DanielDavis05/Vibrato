@@ -359,7 +359,7 @@ public class NavSafetyChain extends TaskChain {
         if (WorldHelper.getCurrentDimension() != Dimension.OVERWORLD) {
             return false;
         }
-        boolean underground = !mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        boolean underground = !SurfaceAccess.isAtSurface(mod);
         boolean hasPickaxe = mod.getItemStorage().hasItem(Items.WOODEN_PICKAXE, Items.STONE_PICKAXE,
                 Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE);
         return EscapeTrigger.shouldEscape(underground, hasPickaxe, _waste.ticksSinceProgress(_tick));

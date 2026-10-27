@@ -2,6 +2,7 @@ package dev.vibrato.director;
 
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
+import dev.vibrato.nav.SurfaceAccess;
 import dev.vibrato.tasks.movement.IdleTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
@@ -184,7 +185,7 @@ public class DirectorTask extends Task implements StepAbandonable {
     /** Facts the bot can read off the world right now. */
     private static Set<Fact> observedFacts(Vibrato mod) {
         String dimension = WorldHelper.getCurrentDimension().name().toLowerCase(Locale.ROOT);
-        boolean sky = mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        boolean atSurface = !"overworld".equals(dimension) || SurfaceAccess.isAtSurface(mod);
         List<String> held = new ArrayList<>();
         var inventory = mod.getPlayer().getInventory();
         for (int i = 0; i < inventory.size(); i++) {
@@ -193,7 +194,7 @@ public class DirectorTask extends Task implements StepAbandonable {
                 held.add(Registries.ITEM.getId(stack.getItem()).getPath());
             }
         }
-        return WorldFacts.compose(dimension, sky, held);
+        return WorldFacts.compose(dimension, atSurface, held);
     }
 
     /** Re-reads what the world shows, and keeps the facts that cannot be observed (spawn set, food stocked, ...). */

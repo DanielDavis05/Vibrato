@@ -14,13 +14,12 @@ import net.minecraft.block.FallingBlock;
 import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Gets the bot from underground to open sky. The rungs run in order and each is time-boxed and logged:
+ * Gets the bot from underground to the surface. The rungs run in order and each is time-boxed and logged:
  * craft a wooden pickaxe if there is none, walk to the surface through whatever Baritone can path, then dig straight up
  * through the blocks above the head when {@link SurfaceProbe} says it is safe.
  */
@@ -88,7 +87,7 @@ public class EscapeUndergroundTask extends Task {
 
     @Override
     public boolean isFinished(Vibrato mod) {
-        return mod.getWorld().isSkyVisible(mod.getPlayer().getBlockPos());
+        return SurfaceAccess.isAtSurface(mod);
     }
 
     @Override
@@ -160,9 +159,7 @@ public class EscapeUndergroundTask extends Task {
     }
 
     private static BlockPos surfaceTarget(Vibrato mod) {
-        BlockPos feet = mod.getPlayer().getBlockPos();
-        int top = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING, feet.getX(), feet.getZ());
-        return new BlockPos(feet.getX(), top, feet.getZ());
+        return SurfaceAccess.target(mod);
     }
 
     private static boolean hasPickaxe(Vibrato mod) {

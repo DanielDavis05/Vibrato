@@ -29,14 +29,14 @@ public final class WorldFacts {
 
     /**
      * @param dimension  {@code overworld}, {@code nether} or {@code end}
-     * @param skyVisible whether the bot's block has open sky above it
+     * @param atSurface  whether the bot is at the surface, including under tree cover
      * @param heldItems  item ids in the inventory
      */
-    public static Set<Fact> compose(String dimension, boolean skyVisible, Collection<String> heldItems) {
+    public static Set<Fact> compose(String dimension, boolean atSurface, Collection<String> heldItems) {
         Set<Fact> facts = new HashSet<>();
         facts.add(Fact.dimension(dimension));
         if ("overworld".equals(dimension)) {
-            facts.add(skyVisible ? SURFACE : UNDERGROUND);
+            facts.add(atSurface ? SURFACE : UNDERGROUND);
         }
         for (String item : heldItems) {
             if (PICKAXES.contains(item) || RARE_ITEMS.contains(item)) {
