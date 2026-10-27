@@ -48,16 +48,9 @@ git clone --recurse-submodules <repo>     # or: git submodule update --init bari
 ./gradlew build
 ```
 
-To change a hook, edit files inside `baritone/`, then regenerate the patch:
+The numbered patches are applied in order. The bootstrap composes them against submodule `HEAD` in a temporary Git index, then checks the combined result against the working tree. It applies the stack only when the tree is compatible; overlapping edits are left untouched and reported for manual resolution. Non-overlapping tracked source edits are included in the build stamp and trigger a rebuild.
 
-```
-git -C baritone add -N .
-git -C baritone diff > patches/baritone/0001-vibrato-hooks.patch
-git -C baritone reset -q
-```
-
-then reset the submodule (`git -C baritone checkout -- . && git -C baritone clean -fd`) so the next Gradle run applies
-the new patch to a pristine tree. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip all of this.
+When changing a hook, update the ordered patch stack so each patch applies after its predecessors. Preserve any local edits before resolving a conflicting stack. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip the bootstrap.
 
 ## Task Development Guides
 

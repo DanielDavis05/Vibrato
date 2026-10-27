@@ -4,12 +4,13 @@
 // Vibrato's hooks (VibratoSettings, RotationSmoother, ...) are carried as patches in `patches/baritone/*.patch`.
 // On configure this script makes sure a patched Baritone fabric jar exists in `baritone/dist`:
 //   1. init the submodule if needed
-//   2. apply any patch that is not applied yet (refuses to touch a tree where a patch neither applies nor is applied)
+//   2. validate the patch stack against HEAD and apply it only to a compatible tree
 //   3. run Baritone's own gradle build once, then remember what it was built from in `dist/.vibrato-stamp`
 //
 // Override with -PbaritoneDist=/some/dir to use a prebuilt jar and skip all of this.
 
 import java.security.MessageDigest
+import java.nio.file.Files
 
 def baritoneDir = file("${rootDir}/baritone")
 def patchDir = file("${rootDir}/patches/baritone")
@@ -17,8 +18,9 @@ def overriddenDist = project.findProperty('baritoneDist')
 
 ext.baritoneDist = overriddenDist ? file(overriddenDist.toString()) : new File(baritoneDir, 'dist')
 
-def run = { File dir, boolean capture, List<String> cmd ->
+def run = { File dir, boolean capture, List<String> cmd, Map<String, String> environment = [:] ->
     def pb = new ProcessBuilder(cmd).directory(dir)
+    pb.environment().putAll(environment)
     if (!capture) {
         pb.inheritIO()
     } else {
@@ -44,29 +46,67 @@ if (!overriddenDist) {
 
     def patches = (patchDir.exists() ? patchDir.listFiles({ f -> f.name.endsWith('.patch') } as FileFilter) : new File[0])
             .sort { it.name }
-    def head = run(baritoneDir, true, ['git', 'rev-parse', 'HEAD']).out
-    def digest = MessageDigest.getInstance('SHA-1')
-    digest.update(head.bytes)
-    patches.each { digest.update(it.bytes) }
-    def stamp = digest.digest().encodeHex().toString()
+    def headResult = run(baritoneDir, true, ['git', 'rev-parse', 'HEAD'])
+    if (headResult.code != 0) {
+        throw new GradleException("Cannot read Baritone HEAD: ${headResult.out}")
+    }
 
-    if (!jar.exists() || !stampFile.exists() || stampFile.text.trim() != stamp) {
+    // Compose the ordered stack against HEAD in an isolated index. Checking patches
+    // individually fails when a later patch modifies a file introduced by an earlier one.
+    def tempDir = Files.createTempDirectory('vibrato-baritone-patches-').toFile()
+    try {
+        def tempIndex = new File(tempDir, 'index')
+        def aggregate = new File(tempDir, 'stack.patch')
+        def tempEnv = ['GIT_INDEX_FILE': tempIndex.absolutePath]
+        def readTree = run(baritoneDir, true, ['git', 'read-tree', headResult.out], tempEnv)
+        if (readTree.code != 0) throw new GradleException("Cannot prepare temporary Baritone index: ${readTree.out}")
         patches.each { patch ->
-            if (run(baritoneDir, true, ['git', 'apply', '--check', '--reverse', patch.absolutePath]).code == 0) {
-                logger.lifecycle("[vibrato] baritone patch already applied: ${patch.name}")
-            } else if (run(baritoneDir, true, ['git', 'apply', '--check', patch.absolutePath]).code == 0) {
-                logger.lifecycle("[vibrato] applying baritone patch: ${patch.name}")
-                run(baritoneDir, false, ['git', 'apply', patch.absolutePath])
-            } else {
-                throw new GradleException("baritone patch ${patch.name} neither applies nor is already applied; " +
-                        "reset the submodule (git -C baritone checkout -- . && git -C baritone clean -fd) or fix the patch")
+            def applied = run(baritoneDir, true, ['git', 'apply', '--cached', patch.absolutePath], tempEnv)
+            if (applied.code != 0) {
+                throw new GradleException("Cannot compose Baritone patch ${patch.name} against HEAD and preceding patches: ${applied.out}")
             }
         }
-        logger.lifecycle('[vibrato] building baritone (first build downloads and remaps Minecraft, this takes a while)')
-        def result = run(baritoneDir, false, ['./gradlew', ':fabric:build', '-Pavailable_loaders=fabric', '--console=plain'])
-        if (result.code != 0 || !jar.exists()) {
-            throw new GradleException("baritone build failed (exit ${result.code}); expected ${jar}")
+        def diffBuilder = new ProcessBuilder(['git', 'diff', '--cached', '--binary', headResult.out, '--']).directory(baritoneDir)
+        diffBuilder.environment().putAll(tempEnv)
+        diffBuilder.redirectOutput(aggregate)
+        diffBuilder.redirectError(ProcessBuilder.Redirect.INHERIT)
+        def diffProcess = diffBuilder.start()
+        if (diffProcess.waitFor() != 0) throw new GradleException('Cannot produce the combined Baritone patch')
+
+        if (aggregate.length() != 0) {
+            def reverse = run(baritoneDir, true, ['git', 'apply', '--check', '--reverse', aggregate.absolutePath])
+            if (reverse.code != 0) {
+                def forward = run(baritoneDir, true, ['git', 'apply', '--check', aggregate.absolutePath])
+                if (forward.code != 0) {
+                    throw new GradleException("Baritone patch stack does not match the working tree. " +
+                            "Preserve your edits, then resolve changes overlapping patches/baritone before retrying. " +
+                            "Reverse check: ${reverse.out}; forward check: ${forward.out}")
+                }
+                logger.lifecycle('[vibrato] applying combined Baritone patch stack')
+                def apply = run(baritoneDir, true, ['git', 'apply', aggregate.absolutePath])
+                if (apply.code != 0) throw new GradleException("Could not apply Baritone patch stack: ${apply.out}")
+            }
         }
-        stampFile.text = stamp
+
+        // Include the actual tracked working-tree contents, including non-overlapping
+        // local edits, so changing Baritone source invalidates a previously built jar.
+        def trackedDiff = run(baritoneDir, true, ['git', 'diff', '--binary', headResult.out, '--'])
+        if (trackedDiff.code != 0) throw new GradleException("Cannot inspect Baritone working tree: ${trackedDiff.out}")
+        def digest = MessageDigest.getInstance('SHA-1')
+        digest.update(headResult.out.bytes)
+        patches.each { digest.update(it.bytes) }
+        digest.update(trackedDiff.out.bytes)
+        def stamp = digest.digest().encodeHex().toString()
+
+        if (!jar.exists() || !stampFile.exists() || stampFile.text.trim() != stamp) {
+            logger.lifecycle('[vibrato] building baritone (first build downloads and remaps Minecraft, this takes a while)')
+            def result = run(baritoneDir, false, ['./gradlew', ':fabric:build', '-Pavailable_loaders=fabric', '--console=plain'])
+            if (result.code != 0 || !jar.exists()) {
+                throw new GradleException("baritone build failed (exit ${result.code}); expected ${jar}")
+            }
+            stampFile.text = stamp
+        }
+    } finally {
+        tempDir.deleteDir()
     }
 }
