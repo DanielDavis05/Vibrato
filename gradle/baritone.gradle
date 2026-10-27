@@ -77,7 +77,8 @@ if (!dependencyJar.isFile()) {
 }
 def artifactHash = MessageDigest.getInstance('SHA-256').digest(dependencyJar.bytes).encodeHex().toString().substring(0, 12)
 ext.baritoneArtifactVersion = "${project.baritone_version}-${artifactHash}"
-ext.baritoneArtifactDir = layout.buildDirectory.dir('baritone-dependency').get().asFile
+// Keep the staged dependency outside build/ so :clean cannot remove it during a build.
+ext.baritoneArtifactDir = new File(rootDir, '.gradle/vibrato/baritone-dependency')
 baritoneArtifactDir.mkdirs()
 def artifactJar = new File(baritoneArtifactDir, "baritone-unoptimized-fabric-${baritoneArtifactVersion}.jar")
 if (!artifactJar.isFile()) {
