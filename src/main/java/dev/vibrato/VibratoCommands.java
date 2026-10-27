@@ -31,6 +31,7 @@ public class VibratoCommands {
                 new FoodCommand(),
                 new ReloadSettingsCommand(),
                 new GamerCommand(),
+                new NetherCommand(),
                 new PunkCommand(),
                 new SetGammaCommand(),
                 new ListCommand(),

@@ -99,7 +99,10 @@ public abstract class TaskChain {
         _cachedTaskChain.add(task);
     }
 
-    void recordStart(Task task) { _startedThisTick.add(task); }
+    void recordStart(Task task) {
+        _startedThisTick.add(task);
+        dev.vibrato.eventbus.EventBus.publish(new dev.vibrato.eventbus.events.TaskStartedEvent(task));
+    }
 
     /** Clear when a chain is interrupted or a genuine external progress event occurs. */
     public final void resetChurnGuard() { _churn.clear(); }

@@ -6,6 +6,19 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.eventbus.EventBus;
 import dev.vibrato.eventbus.events.ClientTickEvent;
 import dev.vibrato.eventbus.events.TaskFinishedEvent;
+import dev.vibrato.eventbus.events.TaskStartedEvent;
+import dev.vibrato.eventbus.events.BlockBrokenEvent;
+import dev.vibrato.eventbus.events.BlockPlaceEvent;
+import dev.vibrato.director.DirectorTask;
+import net.minecraft.client.util.ScreenshotRecorder;
+import net.minecraft.client.gui.screen.CreditsScreen;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import java.util.ArrayDeque;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.IOException;
@@ -37,6 +50,10 @@ public final class ScriptRunner {
     private double x, z, movingDistance;
     private long movingTicks, samples, pathStationaryTicks, forwardReleases, sprintRestarts;
     private boolean written;
+    private long taskStartCount, taskCompletedCount, blocksBrokenCount, blockChangesNearPlayerCount, pillarAttempts;
+    private boolean lastGrounded;
+    private long lastScreenshotNanos;
+    private final ArrayDeque<Map<String, Object>> recentStarts = new ArrayDeque<>();
 
     private ScriptRunner(Vibrato mod, List<ScriptPlan.Step> steps, Path result) {
         this.mod = mod;
@@ -53,6 +70,14 @@ public final class ScriptRunner {
             ScriptRunner runner = new ScriptRunner(mod, ScriptPlan.parse(Files.readAllLines(Path.of(file))), result);
             EventBus.subscribe(ClientTickEvent.class, event -> runner.tick());
             EventBus.subscribe(TaskFinishedEvent.class, runner::taskFinished);
+            EventBus.subscribe(TaskStartedEvent.class, runner::taskStarted);
+            EventBus.subscribe(BlockBrokenEvent.class, event -> {
+                if (event.player == client.player) runner.blocksBrokenCount++;
+            });
+            EventBus.subscribe(BlockPlaceEvent.class, event -> {
+                if (client.player != null && event.blockPos.isWithinDistance(client.player.getPos(), 6))
+                    runner.blockChangesNearPlayerCount++;
+            });
             Runtime.getRuntime().addShutdownHook(new Thread(() -> runner.finish("shutdown"), "vibrato-script-result"));
             Debug.logMessage("Script loaded: " + file);
         } catch (IOException | IllegalArgumentException e) {
@@ -93,6 +118,40 @@ public final class ScriptRunner {
                 heartbeat.put("serverTps", serverTicks < 0 || previousServerTicks < 0 || serverTicks < previousServerTicks
                         ? null : (serverTicks - previousServerTicks) * 1e9 / (now - heartbeatNanos));
                 previousServerTicks = serverTicks;
+                var rootTask = activeTasks.isEmpty() ? null : activeTasks.getFirst();
+                heartbeat.put("rootTask", rootTask == null ? null : rootTask.toString());
+                heartbeat.put("rootClass", rootTask == null ? null : rootTask.getClass().getSimpleName());
+                heartbeat.put("rootStep", rootTask instanceof DirectorTask director ? director.currentStepId() : null);
+                heartbeat.put("taskStartCount", taskStartCount);
+                heartbeat.put("taskOutcomeCount", taskOutcomes.size());
+                heartbeat.put("taskCompletedCount", taskCompletedCount);
+                heartbeat.put("recentTaskStarts", List.copyOf(recentStarts));
+                heartbeat.put("taskFailure", rootTask == null ? null : rootTask.failureReason());
+                heartbeat.put("blocksBrokenCount", blocksBrokenCount);
+                heartbeat.put("blockChangesNearPlayerCount", blockChangesNearPlayerCount);
+                heartbeat.put("pillarAttempts", pillarAttempts);
+                heartbeat.put("movement", currentMovement());
+                heartbeat.put("onGround", client.player.isOnGround());
+                heartbeat.put("pathing", mod.getClientBaritone().getPathingBehavior().isPathing());
+                heartbeat.put("experienceLevel", client.player.experienceLevel);
+                heartbeat.put("experienceProgress", client.player.experienceProgress);
+                heartbeat.put("hunger", client.player.getHungerManager().getFoodLevel());
+                heartbeat.put("chunk", List.of(client.player.getBlockX() >> 4, client.player.getBlockZ() >> 4));
+                Map<String, Integer> inventory = new TreeMap<>();
+                for (int slot = 0; slot < client.player.getInventory().size(); slot++) {
+                    var stack = client.player.getInventory().getStack(slot);
+                    if (!stack.isEmpty()) inventory.merge(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
+                }
+                heartbeat.put("inventory", inventory);
+                var blocks = new TreeSet<String>();
+                if (client.crosshairTarget instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK)
+                    blocks.add(Registries.BLOCK.getId(client.world.getBlockState(hit.getBlockPos()).getBlock()).toString());
+                var mobs = new TreeSet<String>();
+                for (var entity : client.world.getEntities())
+                    if (entity instanceof MobEntity && entity.squaredDistanceTo(client.player) <= 32 * 32)
+                        mobs.add(Registries.ENTITY_TYPE.getId(entity.getType()).toString());
+                heartbeat.put("observations", Map.of("items", inventory.keySet(), "blocks", blocks, "mobs", mobs));
+                heartbeat.put("observationSemantics", Map.of("items", "inventory_present", "blocks", "crosshair_target", "mobs", "loaded_nearby"));
                 try { writeAtomic(client.runDirectory.toPath().resolve("campaign-heartbeat.json"), heartbeat); }
                 catch (IOException error) { Debug.logInternal("Campaign heartbeat write failed: " + error.getMessage()); }
                 heartbeatNanos = now;
@@ -104,6 +163,13 @@ public final class ScriptRunner {
         boolean path = mod.getClientBaritone().getPathingBehavior().isPathing()
                 || mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
         sample(client, path);
+        if (Boolean.getBoolean("vibrato.screenshots") && (lastScreenshotNanos == 0 || now - lastScreenshotNanos > 15_000_000_000L)) {
+            lastScreenshotNanos = now;
+            ScreenshotRecorder.saveScreenshot(client.runDirectory, "live.png", client.getFramebuffer(), message -> {
+                try { writeAtomic(client.runDirectory.toPath().resolve("screenshot-ready.json"), Map.of("wall", System.currentTimeMillis() / 1000.0)); }
+                catch (IOException ignored) { }
+            });
+        }
         if (lastTimelineNanos == 0 || now - lastTimelineNanos >= 1_000_000_000L) {
             lastTimelineNanos = now;
             Map<String, Object> point = new LinkedHashMap<>();
@@ -125,6 +191,7 @@ public final class ScriptRunner {
         ScriptPlan.Step step = action.step();
         Map<String, Object> outcome = new LinkedHashMap<>();
         outcome.put("action", step.text());
+        outcome.put("seconds", elapsed());
         outcome.put("status", action.timedOut() ? "timeout" : "dispatched");
         commands.add(outcome);
         try {
@@ -133,7 +200,7 @@ public final class ScriptRunner {
                     String prefix = Vibrato.getCommandExecutor().getCommandPrefix();
                     if (prefix.isEmpty()) throw new IllegalStateException("client command prefix is empty");
                     Vibrato.getCommandExecutor().execute(prefix + step.text().substring(1),
-                            () -> outcome.put("status", "completed"), error -> {
+                            () -> { outcome.put("status", "completed"); outcome.put("completedSeconds", elapsed()); }, error -> {
                                 outcome.put("status", "error"); outcome.put("error", error.getMessage());
                             });
                 }
@@ -153,6 +220,23 @@ public final class ScriptRunner {
 
     private double elapsed() { return startNanos == 0 ? 0 : (System.nanoTime() - startNanos) / 1e9; }
 
+    private String currentMovement() {
+        var executor = mod.getClientBaritone().getPathingBehavior().getCurrent();
+        if (executor == null || executor.getPosition() < 0 || executor.getPosition() >= executor.getPath().movements().size()) return null;
+        return executor.getPath().movements().get(executor.getPosition()).getClass().getSimpleName();
+    }
+
+    private void taskStarted(TaskStartedEvent event) {
+        taskStartCount++;
+        Map<String, Object> start = new LinkedHashMap<>();
+        start.put("seconds", elapsed());
+        start.put("identity", System.identityHashCode(event.task()));
+        start.put("task", event.task().toString());
+        start.put("taskClass", event.task().getClass().getSimpleName());
+        if (recentStarts.size() >= 50) recentStarts.removeFirst();
+        recentStarts.addLast(start);
+    }
+
     private void taskFinished(TaskFinishedEvent event) {
         Map<String, Object> outcome = new LinkedHashMap<>();
         outcome.put("seconds", elapsed());
@@ -162,10 +246,14 @@ public final class ScriptRunner {
         outcome.put("status", failure != null ? "failed" : event.cancelled ? "cancelled" : "completed");
         outcome.put("failureReason", failure);
         taskOutcomes.add(outcome);
+        if ("completed".equals(outcome.get("status"))) taskCompletedCount++;
     }
 
     private void sample(MinecraftClient client, boolean path) {
         var player = client.player;
+        if (haveSample && lastGrounded && !player.isOnGround() && player.getVelocity().y > 0.1
+                && "MovementPillar".equals(currentMovement())) pillarAttempts++;
+        lastGrounded = player.isOnGround();
         boolean nextForward = player.input.movementForward > 0;
         boolean nextSprint = player.isSprinting();
         if (haveSample) {
@@ -192,8 +280,13 @@ public final class ScriptRunner {
         metrics.put("pathStationaryTicks", pathStationaryTicks);
         metrics.put("stuckFirings", null);
         metrics.put("taskRestarts", null);
-        try { writeAtomic(result, Map.of("status", status, "commands", commands, "metrics", metrics,
-                "taskOutcomes", taskOutcomes, "timeline", timeline)); }
+        MinecraftClient client = MinecraftClient.getInstance();
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("status", status); report.put("commands", commands); report.put("metrics", metrics);
+        report.put("taskOutcomes", taskOutcomes); report.put("timeline", timeline);
+        report.put("finalDimension", client.world == null ? null : client.world.getRegistryKey().getValue().toString());
+        report.put("creditsVisible", client.currentScreen instanceof CreditsScreen);
+        try { writeAtomic(result, report); }
         catch (IOException e) { Debug.logError("Cannot write script result: " + e); }
     }
 

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "vibrato_conductor_telemetry",
+  "version": "0.1.0",
+  "name": "Vibrato Conductor Telemetry",
+  "description": "Read-only dedicated-server tick telemetry; no gameplay or game-rule changes.",
+  "authors": ["Codex"],
+  "environment": "server",
+  "entrypoints": {"main": ["dev.vibrato.conductor.ServerTelemetry"]},
+  "depends": {"fabricloader": ">=0.16.0", "fabric-api": "*", "minecraft": "~1.21.1", "java": ">=21"}
+}

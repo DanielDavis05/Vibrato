@@ -9,3 +9,5 @@ pluginManagement {
 }
 
 include 'protocol-fixture'
+
+include 'conductor-telemetry'
