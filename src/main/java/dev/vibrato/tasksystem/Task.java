@@ -31,7 +31,22 @@ public abstract class Task {
         if (_first) {
             Debug.logInternal("Task START: " + this);
             _active = true;
-            onStart(mod);
+            try {
+                onStart(mod);
+            } catch (RuntimeException | Error failure) {
+                // onStop is only valid after a completed onStart. Resource owners
+                // must roll back their own partially acquired state before throwing.
+                _active = false;
+                _stopped = true;
+                if (_sub != null && !_sub.stopped()) {
+                    try {
+                        _sub.stop(mod);
+                    } catch (RuntimeException | Error cleanupFailure) {
+                        failure.addSuppressed(cleanupFailure);
+                    }
+                }
+                throw failure;
+            }
             _first = false;
             _stopped = false;
         }

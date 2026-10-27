@@ -227,6 +227,15 @@ public class BotBehaviour {
         _states.push(customState);
     }
 
+    /** Snapshot used to unwind state acquired by an unsuccessful task start. */
+    public int stackDepth() {
+        return _states.size();
+    }
+
+    public void restoreStackDepth(int depth) {
+        while (_states.size() > depth) pop();
+    }
+
     public State pop() {
         if (_states.isEmpty()) {
             Debug.logError("State stack is empty. This shouldn't be happening.");

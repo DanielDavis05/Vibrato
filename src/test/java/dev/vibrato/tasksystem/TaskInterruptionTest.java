@@ -29,6 +29,15 @@ class TaskInterruptionTest {
         @Override protected String toDebugString() { return "fake"; }
     }
 
+    private static final class FailingStartTask extends FakeTask {
+        boolean fail = true;
+        int starts;
+        @Override protected void onStart(Vibrato mod) {
+            starts++;
+            if (fail) throw new IllegalStateException("start failed");
+        }
+    }
+
     private static final class ForcedTask extends FakeTask implements ITaskCanForce {
         boolean force = true;
         Task lastCandidate;
@@ -83,6 +92,43 @@ class TaskInterruptionTest {
         assertEquals(2, protectedChild.ticks);
         assertEquals(1, protectedChild.stops);
         assertEquals(1, wrapper.stops);
+    }
+
+    @Test
+    void failedStartDoesNotCallStopForAnUninitializedTaskAndCanRestart() {
+        TestChain chain = new TestChain();
+        FailingStartTask task = new FailingStartTask();
+        assertThrows(IllegalStateException.class, () -> task.tick(null, chain));
+        assertFalse(task.isActive());
+        task.stop(null);
+        assertEquals(0, task.stops);
+        task.fail = false;
+        task.tick(null, chain);
+        task.stop(null);
+        task.stop(null);
+        assertEquals(2, task.starts);
+        assertEquals(1, task.stops);
+    }
+
+    @Test
+    void failedRestartReleasesPreviouslyInterruptedProtectedChild() {
+        TestChain chain = new TestChain();
+        FailingStartTask parent = new FailingStartTask();
+        ForcedTask child = new ForcedTask();
+        parent.fail = false;
+        parent.next = child;
+        parent.tick(null, chain);
+        parent.interrupt(null, null);
+        assertEquals(1, child.stops);
+        parent.fail = true;
+        assertThrows(IllegalStateException.class, () -> parent.tick(null, chain));
+        assertFalse(child.isActive());
+        assertEquals(1, child.stops);
+        parent.fail = false;
+        parent.tick(null, chain);
+        assertEquals(2, child.ticks);
+        parent.stop(null);
+        assertEquals(2, child.stops);
     }
 
     @Test

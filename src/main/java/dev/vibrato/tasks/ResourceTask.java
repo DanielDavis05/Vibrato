@@ -75,12 +75,29 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
 
     @Override
     protected void onStart(Vibrato mod) {
-        mod.getBehaviour().push();
-        mod.getBehaviour().addProtectedItems(ItemTarget.getMatches(_itemTargets));//removeThrowawayItems(_itemTargets);
-        if (_mineIfPresent != null) {
-            mod.getBlockTracker().trackBlock(_mineIfPresent);
+        int initialDepth = mod.getBehaviour().stackDepth();
+        boolean trackingStarted = false;
+        try {
+            mod.getBehaviour().push();
+            mod.getBehaviour().addProtectedItems(ItemTarget.getMatches(_itemTargets));
+            if (_mineIfPresent != null) {
+                mod.getBlockTracker().trackBlock(_mineIfPresent);
+                trackingStarted = true;
+            }
+            onResourceStart(mod);
+        } catch (RuntimeException | Error failure) {
+            try {
+                if (trackingStarted) mod.getBlockTracker().stopTracking(_mineIfPresent);
+            } catch (RuntimeException | Error cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            try {
+                mod.getBehaviour().restoreStackDepth(initialDepth);
+            } catch (RuntimeException | Error cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            throw failure;
         }
-        onResourceStart(mod);
     }
 
     @Override
