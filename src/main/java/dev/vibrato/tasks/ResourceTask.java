@@ -178,7 +178,7 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         }
 
         // We may just mine if a block is found.
-        if (_mineIfPresent != null) {
+        if (_mineIfPresent != null && shouldUseMineIfPresent()) {
             ArrayList<Block> satisfiedReqs = new ArrayList<>(Arrays.asList(_mineIfPresent));
             satisfiedReqs.removeIf(block -> !StorageHelper.miningRequirementMet(mod, MiningRequirement.getMinimumRequirementForBlock(block)));
             if (!satisfiedReqs.isEmpty()) {
@@ -214,6 +214,15 @@ public abstract class ResourceTask extends Task implements ITaskCanForce {
         }
 
         return onResourceTick(mod);
+    }
+
+    /** Direct mining tasks already search their targets and must keep their prerequisites. */
+    protected boolean shouldUseMineIfPresent() {
+        return useMineIfPresent(this instanceof MineAndCollectTask);
+    }
+
+    static boolean useMineIfPresent(boolean alreadyMines) {
+        return !alreadyMines;
     }
 
     @Override
