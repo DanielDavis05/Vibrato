@@ -47,7 +47,7 @@ public final class ProtocolScenarioTask extends Task {
             client.setScreen(null);
             // Native sneak input dismounts before a new fixture action, so prior boat steering
             // cannot change the packet variants produced by later walking scenarios.
-            if (client.player.hasVehicle()) client.options.sneakKey.setPressed(true);
+            if (client.player.hasVehicle() && !action.equals("vehicle_correction")) client.options.sneakKey.setPressed(true);
             if (server) {
                 client.getNetworkHandler().sendChatCommand("vprotocol run " + action);
                 dispatched = true;

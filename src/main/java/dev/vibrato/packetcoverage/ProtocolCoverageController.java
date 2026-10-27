@@ -86,10 +86,12 @@ public final class ProtocolCoverageController {
     }
     public static void requireLocalFixture() {
         var client = MinecraftClient.getInstance();
-        if (client.isInSingleplayer()) return;
         var server = client.getCurrentServerEntry();
-        if (server == null) throw new IllegalStateException("Join an isolated local fixture before running protocol actions");
+        if (client.isInSingleplayer() || server == null)
+            throw new IllegalStateException("Join the dedicated local protocol fixture before running protocol actions");
         requireLoopback(server.address);
+        if (client.getNetworkHandler() == null || !"vibrato-protocol-fixture".equals(client.getNetworkHandler().getBrand()))
+            throw new IllegalStateException("This server has not identified itself as the protocol fixture");
     }
     private static void write() {
         try { ProtocolReports.write(); }
