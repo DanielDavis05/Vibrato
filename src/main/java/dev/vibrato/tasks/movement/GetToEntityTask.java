@@ -28,6 +28,7 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected void onStart(Vibrato mod) {
         mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+        _progress.reset();
         _wanderTask.resetWander();
     }
 
