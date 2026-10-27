@@ -19,7 +19,8 @@ public class CollectCobblestoneTask extends ResourceTask {
 
     @Override
     protected boolean shouldAvoidPickingUp(Vibrato mod) {
-        return false;
+        // The mining child arbitrates both mining and picking up the requested drops.
+        return true;
     }
 
     @Override
@@ -29,7 +30,7 @@ public class CollectCobblestoneTask extends ResourceTask {
 
     @Override
     protected Task onResourceTick(Vibrato mod) {
-        return new MineAndCollectTask(Items.COBBLESTONE, 1, new Block[]{Blocks.STONE, Blocks.COBBLESTONE}, MiningRequirement.WOOD);
+        return new MineAndCollectTask(Items.COBBLESTONE, _count, new Block[]{Blocks.STONE, Blocks.COBBLESTONE}, MiningRequirement.WOOD);
     }
 
     @Override

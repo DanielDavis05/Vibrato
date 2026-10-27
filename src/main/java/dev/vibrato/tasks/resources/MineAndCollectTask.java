@@ -272,6 +272,7 @@ public class MineAndCollectTask extends ResourceTask {
                 return false;
             }
             if (obj instanceof ItemEntity drop) {
+                if (!drop.isAlive() || !mod.getEntityTracker().isEntityReachable(drop)) return false;
                 Item item = drop.getStack().getItem();
                 for (ItemTarget target : _targets) {
                     if (target.matches(item)) return true;
