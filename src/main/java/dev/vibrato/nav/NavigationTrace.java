@@ -58,13 +58,14 @@ final class NavigationTrace {
         var task = _mod.getUserTaskChain().getCurrentTask();
         String step = task instanceof DirectorTask director ? director.currentStepId() : "none";
         System.out.printf(Locale.ROOT,
-                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s step=%s water=%s submerged=%s air=%d pathing=%s calculating=%s dest=%s movement=%s hp=%.1f hunger=%d xp=%d held=%s durability=%d%n",
+                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s step=%s water=%s submerged=%s air=%d pathing=%s calculating=%s dest=%s movement=%s hp=%.1f hunger=%d xp=%d held=%s durability=%d sprinting=%s grounded=%s velocity=(%.3f,%.3f,%.3f)%n",
                 _tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 crosshair, controller.getBreakingBlockPos(), controller.getBreakingBlockProgress(), inputs,
                 goalDescription, chainDescription(), step, player.isTouchingWater(), player.isSubmergedInWater(),
                 player.getAir(), pathing.isPathing(), pathing.getInProgress().isPresent(),
                 destination, movement, player.getHealth(), player.getHungerManager().getFoodLevel(), player.experienceLevel,
-                Registries.ITEM.getId(held.getItem()).getPath(), held.isDamageable() ? held.getMaxDamage() - held.getDamage() : 0);
+                Registries.ITEM.getId(held.getItem()).getPath(), held.isDamageable() ? held.getMaxDamage() - held.getDamage() : 0,
+                player.isSprinting(), player.isOnGround(), player.getVelocity().x, player.getVelocity().y, player.getVelocity().z);
     }
 
     private void onBlockBroken(BlockBrokenEvent event) {
