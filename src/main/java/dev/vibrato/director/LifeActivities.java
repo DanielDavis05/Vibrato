@@ -19,7 +19,7 @@ import dev.vibrato.tasks.life.UnsupportedLifeTask;
 import dev.vibrato.tasks.misc.PlaceBedAndSetSpawnTask;
 import dev.vibrato.tasks.resources.CollectEggsTask;
 import dev.vibrato.tasks.resources.CollectMilkTask;
-import dev.vibrato.tasks.resources.CollectWoolTask;
+import dev.vibrato.tasks.resources.ShearWoolActivityTask;
 import dev.vibrato.tasksystem.Task;
 
 import java.time.Duration;
@@ -119,7 +119,7 @@ public final class LifeActivities {
         add(registry, "shear_sheep", FeatureArea.GATHER, facts("loc:surface"), facts("has:wool"),
                 List.of(ParamSpec.ints("count", 1, 6)),
                 values -> Duration.ofMinutes(6),
-                (mod, values) -> new CollectWoolTask(values.getInt("count")));
+                (mod, values) -> new ShearWoolActivityTask(values.getInt("count")));
 
         add(registry, "collect_milk", FeatureArea.GATHER, facts("loc:surface"), facts(),
                 List.of(ParamSpec.ints("count", 1, 6)),
