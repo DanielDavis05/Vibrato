@@ -18,6 +18,11 @@ public final class NavGate {
         return lastBreakTick != NEVER && tick - lastBreakTick <= BREAK_GRACE_TICKS;
     }
 
+    /** Planning ahead is not a pause when a current path is still executing. */
+    public static boolean waitingForPath(boolean pathing, boolean calculationInProgress) {
+        return !pathing && calculationInProgress;
+    }
+
     /** The inputs are what the navigation chain can observe about the rest of the bot this tick. */
     public static boolean suppressed(boolean mobDefenseActive, boolean foodActive, boolean mlgActive,
                                      boolean deathMenuOpen, boolean containerOpen, boolean standingStill) {

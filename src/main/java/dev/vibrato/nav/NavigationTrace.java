@@ -3,6 +3,7 @@ package dev.vibrato.nav;
 import baritone.api.utils.input.Input;
 import dev.vibrato.Vibrato;
 import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.director.DirectorTask;
 import dev.vibrato.eventbus.events.BlockBrokenEvent;
 import dev.vibrato.eventbus.events.ClientTickEvent;
 import dev.vibrato.tasksystem.TaskChain;
@@ -45,11 +46,15 @@ final class NavigationTrace {
         String inputs = Arrays.stream(Input.values())
                 .filter(input -> baritone.getInputOverrideHandler().isInputForcedDown(input))
                 .map(Enum::name).collect(Collectors.joining(",", "[", "]"));
+        var pathing = baritone.getPathingBehavior();
+        var task = _mod.getUserTaskChain().getCurrentTask();
+        String step = task instanceof DirectorTask director ? director.currentStepId() : "none";
         System.out.printf(Locale.ROOT,
-                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s%n",
+                "[NavTrace] tick=%d pos=(%.3f,%.3f,%.3f) yaw=%.2f pitch=%.2f crosshair=%s breaking=%s progress=%.3f forced=%s goal=%s chain=%s step=%s water=%s submerged=%s air=%d pathing=%s calculating=%s%n",
                 _tick, player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch(),
                 crosshair, controller.getBreakingBlockPos(), controller.getBreakingBlockProgress(), inputs,
-                goalDescription, chainDescription());
+                goalDescription, chainDescription(), step, player.isTouchingWater(), player.isSubmergedInWater(),
+                player.getAir(), pathing.isPathing(), pathing.getInProgress().isPresent());
     }
 
     private void onBlockBroken(BlockBrokenEvent event) {

@@ -11,6 +11,12 @@ public final class PerStepCap {
         _cap = cap;
     }
 
+    /** Starts a fresh allowance when the top-level task changes, even if its serial is reused. */
+    public void reset() {
+        _serial = Integer.MIN_VALUE;
+        _uses = 0;
+    }
+
     /** @return true and counts the use if this step still has uses left */
     public boolean tryUse(int stepSerial) {
         if (stepSerial != _serial) {

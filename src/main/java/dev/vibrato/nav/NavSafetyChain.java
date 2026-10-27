@@ -57,10 +57,7 @@ public class NavSafetyChain extends TaskChain {
     private Task _watchedTask;
     private int _watchedSerial;
     private long _lastBreakTick = NavGate.NEVER;
-    private boolean _anchored;
-    private double _anchorX;
-    private double _anchorY;
-    private double _anchorZ;
+    private final MotionProgress _progress = new MotionProgress(PROGRESS_DISTANCE);
 
     private UnstuckAction _action;
     private float _actionPriority;
@@ -91,12 +88,15 @@ public class NavSafetyChain extends TaskChain {
             _waste.start(_tick);
             _ladder.onProgress();
             _detector.reset();
+            _backOffCap.reset();
+            _progress.reset();
         }
 
         // A path still being calculated is not movement yet, but standing still for it is not stuck either.
-        boolean calculating = mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
-        boolean wantsToMove = mod.getUserTaskChain().isActive()
-                && mod.getClientBaritone().getPathingBehavior().isPathing() && !calculating;
+        boolean pathing = mod.getClientBaritone().getPathingBehavior().isPathing();
+        boolean calculating = NavGate.waitingForPath(pathing,
+                mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent());
+        boolean wantsToMove = mod.getUserTaskChain().isActive() && pathing;
         // Breaking, placing, an open container and a path being calculated are all work: never stuck, always progress.
         if (isBreakingBlock()) {
             _lastBreakTick = _tick;
@@ -112,7 +112,7 @@ public class NavSafetyChain extends TaskChain {
         if (!wantsToMove) {
             _detector.reset();
         }
-        trackProgress(sample, wantsToMove);
+        trackProgress(sample, wantsToMove && _action == null);
         boolean suppressed = NavGate.suppressed(
                 !mod.getMobDefenseChain().getTasks().isEmpty(),
                 !mod.getFoodChain().getTasks().isEmpty(),
@@ -161,7 +161,7 @@ public class NavSafetyChain extends TaskChain {
         finishAction(mod);
         _detector.reset();
         _ladder.onProgress();
-        _anchored = false;
+        _progress.reset();
         _watchedTask = null;
     }
 
@@ -176,15 +176,12 @@ public class NavSafetyChain extends TaskChain {
     }
 
     private void trackProgress(MotionSample sample, boolean wantsToMove) {
-        // Idle time is never waste, and moving a few blocks from the anchor counts as progress.
-        if (!_anchored || !wantsToMove || Math.sqrt(Math.pow(sample.x() - _anchorX, 2) + Math.pow(sample.y() - _anchorY, 2)
-                + Math.pow(sample.z() - _anchorZ, 2)) >= PROGRESS_DISTANCE) {
-            _anchored = true;
-            _anchorX = sample.x();
-            _anchorY = sample.y();
-            _anchorZ = sample.z();
-            _ladder.onProgress();
+        MotionProgress.Result progress = _progress.observe(sample.x(), sample.y(), sample.z(), wantsToMove);
+        if (progress != MotionProgress.Result.NONE) {
             _waste.onProgress(_tick);
+        }
+        if (progress == MotionProgress.Result.MOVED) {
+            _ladder.onProgress();
         }
     }
 
@@ -322,7 +319,7 @@ public class NavSafetyChain extends TaskChain {
         };
     }
 
-    /** The nearest dry, solid block with air or water above it that a bot could climb onto. */
+    /** The nearest solid bank with dry standing space within one step of the swimmer. */
     private static BlockPos findBank(Vibrato mod) {
         BlockPos origin = mod.getPlayer().getBlockPos();
         BlockPos best = null;
@@ -331,9 +328,12 @@ public class NavSafetyChain extends TaskChain {
             for (int dz = -BANK_RADIUS; dz <= BANK_RADIUS; dz++) {
                 int distance = dx * dx + dz * dz;
                 if (distance == 0 || distance >= bestDistance) continue;
-                for (int dy = -2; dy <= 1; dy++) {
+                for (int dy = -2; dy <= 0; dy++) {
                     BlockPos pos = origin.add(dx, dy, dz);
-                    if (WorldHelper.isSolid(mod, pos) && !WorldHelper.isSolid(mod, pos.up()) && !WorldHelper.isSolid(mod, pos.up(2))) {
+                    if (BankCandidate.usable(dy, WorldHelper.isSolid(mod, pos),
+                            !WorldHelper.isSolid(mod, pos.up()), !WorldHelper.isSolid(mod, pos.up(2)),
+                            mod.getWorld().getFluidState(pos.up()).isEmpty(),
+                            mod.getWorld().getFluidState(pos.up(2)).isEmpty())) {
                         best = pos;
                         bestDistance = distance;
                     }
