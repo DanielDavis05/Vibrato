@@ -4,6 +4,8 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.helpers.StorageHelper;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.AbstractFireBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -63,7 +65,7 @@ public final class SearchOpportunityController {
         if (MinecraftClient.getInstance().currentScreen != null || !StorageHelper.getItemStackInCursorSlot().isEmpty()
                 || !player.isOnGround() || player.isTouchingWater() || player.isInLava() || player.isOnFire()
                 || player.getHealth() < player.getMaxHealth() * 0.75
-                || player.getVelocity().horizontalLengthSquared() > 0.02
+                || player.getVelocity().horizontalLengthSquared() > 0.09
                 || (task == null && mod.getControllerExtras().isBreakingBlock())
                 || mod.getClientBaritone().getBuilderProcess().isActive()) return false;
         if (mod.getEntityTracker().getHostiles().stream().anyMatch(entity -> entity.isAlive() && entity.isInRange(player, 10))) return false;
@@ -71,7 +73,11 @@ public final class SearchOpportunityController {
         for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) {
             BlockPos below = feet.add(x, -1, z);
             BlockPos standing = feet.add(x, 0, z);
-            if (!mod.getWorld().getBlockState(below).isSolidBlock(mod.getWorld(), below)
+            var floor = mod.getWorld().getBlockState(below);
+            var atFeet = mod.getWorld().getBlockState(standing);
+            if (!floor.isSolidBlock(mod.getWorld(), below) || floor.isOf(Blocks.MAGMA_BLOCK)
+                    || atFeet.getBlock() instanceof AbstractFireBlock || atFeet.isOf(Blocks.CACTUS)
+                    || atFeet.isOf(Blocks.SWEET_BERRY_BUSH)
                     || !mod.getWorld().getFluidState(standing).isEmpty()
                     || !mod.getWorld().getFluidState(standing.up()).isEmpty()) return false;
         }
