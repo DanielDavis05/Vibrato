@@ -4,6 +4,9 @@ Written from `run/logs/latest.log` and `debug.log` of the 12:16-12:21 session in
 (`run/screenshots/2026-10-27_12.18.53.png`). That session ran a build from before the commits now at the head of `master`
 (`f7f9e60` .. `1286e70`), so some of this may already be changed. Nothing here was reproduced; it is a reading of the logs.
 
+A second run (15:52-15:56) got further and then looped placing the obsidian cast at the lava lake; both runs and the fix plan are in
+`docs/NETHER_FIX_PLAN.md`.
+
 ## Summary
 
 The bot was given `Going to dimension: NETHER` with an empty inventory, spent about 3 minutes working down the dependency chain,

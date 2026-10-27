@@ -1,0 +1,224 @@
+# Run B, 2026-10-27 15:52-15:56 (newer build)
+# Source: client latest.log. Condensed: task starts, chat lines, blacklist/failure/stuck lines only. Pathfinder stats, inventory refreshes,
+# slot clicks and repeated 'Done building' are dropped; identical consecutive lines are folded (xN). Player names, paths and ids redacted.
+
+15:53:04 CHAT [Vibrato] User Task Set: <Going to dimension: NETHER (default version)> 
+15:53:04 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:53:04 VIBRATO: Task START: <Construct Nether Portal> 
+15:53:04 VIBRATO: Task START: <Mine And Collect: [[raw_iron] x 7]> 
+15:53:04 VIBRATO: Task START: <Wander for 64.0 blocks> 
+15:53:04 VIBRATO: Task START: <Destroy block at 41, 45, -10> 
+15:53:23 VIBRATO: Task START: <Destroy block at 42, 45, -11> 
+15:53:24 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> 
+15:53:24 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+15:53:24 VIBRATO: Task START: <Wander for 64.0 blocks> 
+15:53:24 VIBRATO: Task START: <Destroy block at 42, 68, -14> 
+15:53:25 Mismatch in destroy block pos: BlockPos{x=42, y=45, z=-11} BlockPos{x=42, y=47, z=-10}   (x6)
+15:53:26 Mismatch in destroy block pos: BlockPos{x=42, y=45, z=-11} BlockPos{x=42, y=48, z=-11}   (x2)
+15:53:44 Mismatch in destroy block pos: BlockPos{x=38, y=63, z=-18} BlockPos{x=36, y=62, z=-18}   (x4)
+15:53:51 VIBRATO: Task START: <Place [Block{minecraft:crafting_table}] nearby> 
+15:53:51 VIBRATO: Task START: <Place structure{Block{minecraft:crafting_table}} at 42, 68, -13> 
+15:53:52 VIBRATO: Task START: <Place [Block{minecraft:furnace}] nearby> 
+15:53:52 VIBRATO: Task START: <Place structure{Block{minecraft:furnace}} at 40, 68, -14> 
+15:53:52 [CHAT] [Baritone] Missing materials for at least:
+15:53:52 [CHAT] [Baritone] 1x Block{minecraft:furnace}[facing=west,lit=false]
+15:53:52 [CHAT] [Baritone] Unable to do it. Pausing. resume to resume, cancel to cancel
+15:54:31 CHAT [Vibrato] Cursor stack is held for too long, will move back to inventory.
+15:54:33 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft flint_and_steel}, _item=minecraft:flint_and_steel x 1}}> 
+15:54:33 VIBRATO: Task START: <Collect 1 flint: [[flint] x 1]> 
+15:54:33 VIBRATO: Task START: <Mine And Collect: [[gravel] x 1]> 
+15:54:33 VIBRATO: Task START: <Destroy block at 82, -34, 53> 
+15:54:34 Path goes for 59.69087032369355 blocks
+15:54:40 VIBRATO: Task START: <Destroy block at 49, 52, 6> 
+15:54:42 Mismatch in destroy block pos: BlockPos{x=42, y=68, z=-14} BlockPos{x=49, y=66, z=3}   (x8)
+15:54:43 Mismatch in destroy block pos: BlockPos{x=48, y=63, z=5} BlockPos{x=49, y=65, z=7}
+15:54:44 VIBRATO: Task START: <Epic gaemer moment> 
+15:54:44 CHAT [Vibrato] (NEW clutch target: Mutable{x=49, y=60, z=6})
+15:54:44 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:54:44 VIBRATO: Task START: <Construct Nether Portal> Getting flint & steel
+15:54:44 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft flint_and_steel}, _item=minecraft:flint_and_steel x 1}}> Getting flint x 1
+15:54:44 VIBRATO: Task START: <Collect 1 flint: [[flint] x 1]> 
+15:54:44 VIBRATO: Task START: <Destroy block at 49, 52, 6> 
+15:54:44 VIBRATO: Task START: <Epic gaemer moment> No clutch item
+15:54:44 CHAT [Vibrato] (NEW clutch target: Mutable{x=49, y=56, z=6})
+15:54:44 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:54:44 VIBRATO: Task START: <Construct Nether Portal> Getting flint & steel
+15:54:44 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft flint_and_steel}, _item=minecraft:flint_and_steel x 1}}> Getting flint x 1
+15:54:44 VIBRATO: Task START: <Collect 1 flint: [[flint] x 1]> 
+15:54:44 VIBRATO: Task START: <Destroy block at 49, 52, 6> Getting to block...
+15:54:45 VIBRATO: Task START: <Epic gaemer moment> No clutch item
+15:54:45 CHAT [Vibrato] (NEW clutch target: Mutable{x=49, y=52, z=6})
+15:54:45 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:54:45 VIBRATO: Task START: <Construct Nether Portal> Getting flint & steel
+15:54:45 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft flint_and_steel}, _item=minecraft:flint_and_steel x 1}}> Getting flint x 1
+15:54:45 VIBRATO: Task START: <Collect 1 flint: [[flint] x 1]> 
+15:54:45 VIBRATO: Task START: <Destroy block at 49, 52, 6> Getting to block...
+15:54:45 VIBRATO: Task START: <Destroy block at 48, 52, 6> 
+15:54:45 VIBRATO: Task START: <Destroy block at 50, 52, 6> 
+15:54:46 VIBRATO: Task START: <Destroy block at 49, 52, 5> 
+15:54:46 VIBRATO: Task START: <Destroy block at 49, 51, 6> 
+15:54:46 VIBRATO: Task START: <Destroy block at 48, 51, 6> 
+15:54:47 VIBRATO: Task START: <Destroy block at 50, 51, 6> 
+15:54:47 VIBRATO: Task START: <Destroy block at 49, 51, 5> 
+15:54:48 VIBRATO: Task START: <Destroy block at 48, 51, 5> 
+15:54:49 VIBRATO: Task START: <Collect 1 water buckets: [[water_bucket] x 1]> 
+15:54:49 VIBRATO: Task START: <Destroy block at 49, 50, 6> 
+15:54:49 CHAT [Vibrato] (Searching for lava lake with portalable spot nearby...)
+15:54:49 CHAT [Vibrato] Found with depth 1
+15:54:49 CHAT [Vibrato] Found with depth 35
+15:54:49 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> 
+15:54:49 VIBRATO: Task START: <Destroy block at 66, -21, 16> 
+15:54:50 Path goes for 70.88723439378913 blocks
+15:54:50 Path goes for 72.11795892841117 blocks
+15:54:51 Path goes for 71.37226352022192 blocks
+15:54:52 Path goes for 49.48737212663449 blocks
+15:55:04 VIBRATO: Task START: <Epic gaemer moment> No clutch item
+15:55:04 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=39, z=9})
+15:55:04 CHAT [Vibrato] HIT: BlockPos{x=57, y=40, z=9}
+15:55:04 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:04 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:04 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:04 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:05 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:05 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=34, z=9})
+15:55:05 CHAT [Vibrato] HIT: BlockPos{x=57, y=35, z=9}
+15:55:05 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:05 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:05 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:05 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:06 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:06 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=29, z=9})
+15:55:06 CHAT [Vibrato] HIT: BlockPos{x=57, y=30, z=9}
+15:55:07 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:07 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:07 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:07 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:08 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:08 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=24, z=9})
+15:55:08 CHAT [Vibrato] HIT: BlockPos{x=57, y=25, z=9}
+15:55:08 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:08 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:08 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:08 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:09 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:09 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=19, z=9})
+15:55:09 CHAT [Vibrato] HIT: BlockPos{x=57, y=20, z=9}
+15:55:09 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:09 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:09 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:09 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:10 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:10 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=15, z=9})
+15:55:10 CHAT [Vibrato] HIT: BlockPos{x=57, y=16, z=9}
+15:55:10 CHAT [Vibrato] (changed clutch target: Mutable{x=57, y=16, z=9})
+15:55:10 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:10 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:10 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:10 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:10 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:10 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:10 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:10 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:10 VIBRATO: Task START: <Epic gaemer moment> No clutch item
+15:55:10 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=11, z=9})
+15:55:10 CHAT [Vibrato] HIT: BlockPos{x=57, y=12, z=9}
+15:55:11 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:11 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:11 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:11 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:12 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:12 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=5, z=9})
+15:55:12 CHAT [Vibrato] HIT: BlockPos{x=57, y=7, z=10}
+15:55:12 VIBRATO: Task START: <Collect 1 water buckets: [[water_bucket] x 1]> 
+15:55:12 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:12 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:12 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:12 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:12 VIBRATO: Task START: <Epic gaemer moment> 
+15:55:12 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=1, z=9})
+15:55:12 CHAT [Vibrato] HIT: BlockPos{x=57, y=2, z=9}
+15:55:12 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:12 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:12 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:12 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:13 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:13 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:13 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:13 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:13 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:13 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=-3, z=9})
+15:55:13 CHAT [Vibrato] HIT: BlockPos{x=57, y=-2, z=9}
+15:55:13 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:13 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:13 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:13 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:15 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:15 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=-9, z=9})
+15:55:15 CHAT [Vibrato] HIT: BlockPos{x=57, y=-8, z=9}
+15:55:15 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:15 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:15 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:15 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:17 CHAT [Vibrato] Unstuck JUMP (STATIONARY_WITH_INTENT)
+15:55:17 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:17 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:17 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:17 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:18 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:18 CHAT [Vibrato] (NEW clutch target: Mutable{x=57, y=-18, z=9})
+15:55:18 CHAT [Vibrato] HIT: BlockPos{x=57, y=-17, z=9}
+15:55:18 CHAT [Vibrato] (changed clutch target: Mutable{x=57, y=-17, z=9})
+15:55:18 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:18 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:18 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:18 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:19 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:19 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:19 VIBRATO: Task START: <Collect 1 lava buckets: [[lava_bucket] x 1]> Trying to collect...
+15:55:19 VIBRATO: Task START: <Destroy block at 66, -21, 16> Getting to block...
+15:55:22 VIBRATO: Task START: <Destroy block at 64, -55, 16> 
+15:55:24 VIBRATO: Task START: <Epic gaemer moment> No clutch item
+15:55:24 CHAT [Vibrato] (NEW clutch target: Mutable{x=62, y=-27, z=14})
+15:55:24 CHAT [Vibrato] HIT: BlockPos{x=62, y=-26, z=14}
+15:55:24 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:24 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:24 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:25 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:25 CHAT [Vibrato] (NEW clutch target: Mutable{x=62, y=-33, z=14})
+15:55:25 CHAT [Vibrato] HIT: BlockPos{x=62, y=-32, z=14}
+15:55:25 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:25 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:25 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:27 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:27 CHAT [Vibrato] (NEW clutch target: Mutable{x=62, y=-39, z=14})
+15:55:27 CHAT [Vibrato] HIT: BlockPos{x=62, y=-38, z=14}
+15:55:27 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:27 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:27 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:37 CHAT [Vibrato] Unstuck JUMP (STATIONARY_WITH_INTENT)
+15:55:37 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:37 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:37 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:41 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:41 CHAT [Vibrato] (NEW clutch target: Mutable{x=64, y=-50, z=16})
+15:55:41 CHAT [Vibrato] HIT: BlockPos{x=64, y=-49, z=16}
+15:55:41 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:41 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:41 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:52 VIBRATO: Task START: <Epic gaemer moment> Performing MLG
+15:55:52 CHAT [Vibrato] (NEW clutch target: Mutable{x=64, y=-55, z=16})
+15:55:52 CHAT [Vibrato] HIT: BlockPos{x=64, y=-54, z=16}
+15:55:52 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+15:55:52 VIBRATO: Task START: <Construct Nether Portal> Collecting lava
+15:55:52 VIBRATO: Task START: <Destroy block at 64, -55, 16> Getting to block...
+15:55:52 VIBRATO: Task START: <Running away from [BlockPos{x=64, y=-55, z=16}]> 
+15:55:53 VIBRATO: Task START: <Place structure{} at 64, -56, 16> 
+15:55:54 VIBRATO: Task START: <Getting to block BlockPos{x=63, y=-54, z=16}> 
+         ... the two lines above repeat 52 times in total until 15:56:35 ...
+15:56:41 CHAT [Vibrato] Failed to place, wandering timeout.
+15:56:41 VIBRATO: Task START: <Wander for 3.0 blocks> 
+15:56:42 Path goes for 67.60917097554147 blocks
+15:56:42 Path goes for 78.28793010419933 blocks
+15:56:48 CHAT [Vibrato] Stopped
+15:56:48 VIBRATO: User task cancelled after 3 minutes and 44.052.
+15:56:48 CHAT [Vibrato] Stopped the current task. Director autostart is paused until @play or reconnect.

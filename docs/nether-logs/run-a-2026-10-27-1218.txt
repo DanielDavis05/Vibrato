@@ -1,0 +1,126 @@
+# Run A, 2026-10-27 12:18-12:21 (older build)
+# Source: rotated client log. Condensed: task starts, chat lines, blacklist/failure/stuck lines only. Pathfinder stats, inventory refreshes,
+# slot clicks and repeated 'Done building' are dropped; identical consecutive lines are folded (xN). Player names, paths and ids redacted.
+
+12:18:38 CHAT [Vibrato] User Task Set: <Going to dimension: NETHER (default version)> 
+12:18:38 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:18:38 VIBRATO: Task START: <Construct Nether Portal> 
+12:18:38 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> 
+12:18:38 VIBRATO: Task START: <Mine And Collect: [[raw_iron] x 6]> 
+12:18:38 VIBRATO: Task START: <Wander for 64.0 blocks> 
+12:18:39 VIBRATO: Task START: <Destroy block at 2, 7, 3> 
+12:18:49 VIBRATO: Task START: <Destroy block at 3, 7, 4> 
+12:18:53 CHAT Saved screenshot as 2026-10-27_12.18.53.png
+12:18:54 VIBRATO: Task START: <Destroy block at 3, 3, 8> 
+12:18:55 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:18:55 VIBRATO: Blacklist RESET: BlockPos{x=3, y=3, z=8}
+12:18:55 VIBRATO: Blacklist: BlockPos{x=3, y=3, z=8}: Try 1 / 2
+12:18:55 VIBRATO: Task START: <Destroy block at 3, 2, 8> 
+12:19:01 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:01 VIBRATO: Blacklist RESET: BlockPos{x=3, y=2, z=8}
+12:19:01 VIBRATO: Blacklist: BlockPos{x=3, y=2, z=8}: Try 1 / 2
+12:19:01 VIBRATO: Task START: <Destroy block at 4, 2, 8> 
+12:19:12 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:12 VIBRATO: Blacklist RESET: BlockPos{x=4, y=2, z=8}
+12:19:12 VIBRATO: Blacklist: BlockPos{x=4, y=2, z=8}: Try 1 / 2
+12:19:12 VIBRATO: Task START: <Destroy block at 3, 2, 9> 
+12:19:14 VIBRATO: Task START: <Collect Fuel: x3.0> 
+12:19:14 VIBRATO: Task START: <Mine And Collect: [[coal] x 1]> 
+12:19:14 VIBRATO: Task START: <Wander for 64.0 blocks> 
+12:19:14 VIBRATO: Task START: <Destroy block at 2, 9, 6> 
+12:19:16 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:16 VIBRATO: Blacklist RESET: BlockPos{x=2, y=9, z=6}
+12:19:16 VIBRATO: Blacklist: BlockPos{x=2, y=9, z=6}: Try 1 / 2
+12:19:16 VIBRATO: Task START: <Destroy block at 2, 9, 5> 
+12:19:21 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> 
+12:19:21 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:19:21 VIBRATO: Task START: <Wander for 64.0 blocks> 
+12:19:21 VIBRATO: Task START: <Destroy block at -4, 63, 0> 
+12:19:22 Path goes for 32.14031735997639 blocks
+12:19:31 CHAT [Vibrato] Unstuck JUMP (STATIONARY_WITH_INTENT)
+12:19:31 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:19:31 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:19:31 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:19:31 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:19:31 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:19:31 VIBRATO: Task START: <Destroy block at -4, 63, 0> Getting to block...
+12:19:37 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=63, z=0}
+12:19:37 VIBRATO: Blacklist: BlockPos{x=-4, y=63, z=0}: Try 1 / 4
+12:19:37 VIBRATO: Task START: <Wander for 5.0 blocks> 
+12:19:37 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:37 VIBRATO: Blacklist: BlockPos{x=-4, y=63, z=0}: Try 2 / 2
+12:19:37 VIBRATO: Task START: <Destroy block at -4, 64, 0> 
+12:19:43 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=64, z=0}
+12:19:43 VIBRATO: Blacklist: BlockPos{x=-4, y=64, z=0}: Try 1 / 4
+12:19:43 VIBRATO: Task START: <Wander for 5.0 blocks> 
+12:19:43 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:43 VIBRATO: Blacklist: BlockPos{x=-4, y=64, z=0}: Try 2 / 2
+12:19:43 VIBRATO: Task START: <Destroy block at -4, 65, 0> 
+12:19:49 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=65, z=0}
+12:19:49 VIBRATO: Blacklist: BlockPos{x=-4, y=65, z=0}: Try 1 / 4
+12:19:49 VIBRATO: Task START: <Wander for 5.0 blocks> 
+12:19:49 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:19:49 VIBRATO: Blacklist: BlockPos{x=-4, y=65, z=0}: Try 2 / 2
+12:19:49 VIBRATO: Task START: <Destroy block at -4, 66, 0> 
+12:19:51 CHAT [Vibrato] Unstuck BACK_OFF_AND_REPATH (OSCILLATING)
+12:19:51 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:19:51 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:19:51 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:19:51 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:19:51 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:19:51 VIBRATO: Task START: <Destroy block at -4, 66, 0> Getting to block...
+12:19:52 Path goes for 36.27671429443411 blocks
+12:20:04 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:20:04 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=66, z=0}
+12:20:04 VIBRATO: Blacklist: BlockPos{x=-4, y=66, z=0}: Try 1 / 2
+12:20:04 VIBRATO: Task START: <Destroy block at -4, 67, 0> 
+12:20:11 CHAT [Vibrato] Unstuck SIDESTEP_LEFT (OSCILLATING)
+12:20:11 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:20:11 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:20:11 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:20:11 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:20:11 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:20:11 VIBRATO: Task START: <Destroy block at -4, 67, 0> Getting to block...
+12:20:11 Path goes for 35.35533905932738 blocks
+12:20:13 Path goes for 37.134889255254286 blocks
+12:20:31 CHAT [Vibrato] Unstuck SIDESTEP_RIGHT (OSCILLATING)
+12:20:31 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:20:31 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:20:31 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:20:31 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:20:31 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:20:31 VIBRATO: Task START: <Destroy block at -4, 67, 0> Getting to block...
+12:20:37 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=67, z=0}
+12:20:37 VIBRATO: Blacklist: BlockPos{x=-4, y=67, z=0}: Try 1 / 4
+12:20:37 VIBRATO: Task START: <Wander for 5.0 blocks> 
+12:20:37 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:20:37 VIBRATO: Blacklist: BlockPos{x=-4, y=67, z=0}: Try 2 / 2
+12:20:37 VIBRATO: Task START: <Destroy block at -4, 68, 0> 
+12:20:49 CHAT [Vibrato] Failed to mine block. Suggesting it may be unreachable.
+12:20:49 VIBRATO: Blacklist RESET: BlockPos{x=-4, y=68, z=0}
+12:20:49 VIBRATO: Blacklist: BlockPos{x=-4, y=68, z=0}: Try 1 / 2
+12:20:49 VIBRATO: Task START: <Destroy block at 3, 63, -10> 
+12:20:51 CHAT [Vibrato] Unstuck PLACE_STEP_BLOCK (OSCILLATING)
+12:20:51 VIBRATO: Task START: <Place [Block{minecraft:dirt}, Block{minecraft:cobblestone}] nearby> 
+12:20:51 VIBRATO: Task START: <Place structure{Block{minecraft:dirt},Block{minecraft:cobblestone}} at 1, 4, 0> 
+12:20:51 VIBRATO: Failed to find throwaway block
+12:21:01 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:21:01 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:21:01 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:21:01 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:21:01 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:21:01 VIBRATO: Task START: <Destroy block at 3, 63, -10> Getting to block...
+12:21:01 Path goes for 15.524174696260024 blocks
+12:21:11 CHAT [Vibrato] Unstuck BACK_OFF_AND_REPATH (OSCILLATING)
+12:21:11 VIBRATO: Task START: <Going to dimension: NETHER (default version)> 
+12:21:11 VIBRATO: Task START: <Construct Nether Portal> Getting buckets
+12:21:11 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft bucket}, _item=minecraft:bucket x 2}}> Getting iron_ingot x 6
+12:21:11 VIBRATO: Task START: <Collect Recipe Resources: {RecipeTarget{_recipe=CraftingRecipe{craft crafting_table}, _item=minecraft:crafting_table x 1}}> Getting planks x 4
+12:21:11 VIBRATO: Task START: <Mine And Collect: [[acacia_log,birch_log,dark_oak_log,oak_log,jungle_log,spruce_log,acacia_wood,birch_wood,dark_oak_wood,oak_wood,jungle_wood,spruce_wood,stripped_acacia
+12:21:11 VIBRATO: Task START: <Destroy block at 3, 63, -10> Getting to block...
+12:21:12 Path goes for 15.524174696260024 blocks
+12:21:31 CHAT [Vibrato] Unstuck ABANDON_TASK (OSCILLATING)
+12:21:31 VIBRATO: WARNING: Abandoning OSCILLATING
+12:21:31 CHAT [Vibrato] Abandoning OSCILLATING
+12:21:31 CHAT [Vibrato] Stopped
+12:21:31 VIBRATO: User task cancelled after 2 minutes and 52.214.
