@@ -1,28 +1,30 @@
 package dev.vibrato.director;
 
+import dev.vibrato.Debug;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.life.BreedAnimalsTask;
+import dev.vibrato.tasks.life.BreedingFood;
 import dev.vibrato.tasks.life.CookFoodTask;
+import dev.vibrato.tasks.life.CookableFoods;
+import dev.vibrato.tasks.life.CropGrowth;
 import dev.vibrato.tasks.life.FarmCropsTask;
 import dev.vibrato.tasks.life.FishingTask;
 import dev.vibrato.tasks.life.GainXpLevelsTask;
 import dev.vibrato.tasks.life.HarvestAndReplantTask;
+import dev.vibrato.tasks.life.HarvestableCrops;
 import dev.vibrato.tasks.life.NightShelterTask;
 import dev.vibrato.tasks.life.SleepInBedTask;
+import dev.vibrato.tasks.life.UnsupportedLifeTask;
 import dev.vibrato.tasks.misc.PlaceBedAndSetSpawnTask;
 import dev.vibrato.tasks.resources.CollectEggsTask;
 import dev.vibrato.tasks.resources.CollectMilkTask;
 import dev.vibrato.tasks.resources.CollectWoolTask;
 import dev.vibrato.tasksystem.Task;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -30,14 +32,6 @@ import java.util.stream.Collectors;
 
 /** Owned by workstream T2 (see PLAN.md). Register this domain's activities here. */
 public final class LifeActivities {
-
-    private static final Map<String, Item> CROPS = Map.of(
-            "wheat", Items.WHEAT, "carrot", Items.CARROT, "potato", Items.POTATO, "beetroot", Items.BEETROOT);
-    private static final Map<String, EntityType<?>> ANIMALS = Map.of(
-            "cow", EntityType.COW, "sheep", EntityType.SHEEP, "pig", EntityType.PIG, "chicken", EntityType.CHICKEN);
-    private static final Map<String, Item> RAW_FOODS = Map.of(
-            "beef", Items.BEEF, "porkchop", Items.PORKCHOP, "mutton", Items.MUTTON,
-            "chicken", Items.CHICKEN, "cod", Items.COD, "potato", Items.POTATO);
 
     private LifeActivities() {}
 
@@ -63,14 +57,15 @@ public final class LifeActivities {
                 (mod, values) -> TaskCatalogue.getItemTask("bed", 1));
 
         add(registry, "farm_crop", FeatureArea.FARM, facts(), facts("farm:built"),
-                List.of(ParamSpec.choice("crop", CROPS.keySet().toArray(String[]::new)), ParamSpec.ints("rows", 2, 8)),
+                List.of(ParamSpec.choice("crop", CropGrowth.itemIds().toArray(String[]::new)), ParamSpec.ints("rows", 2, 8)),
                 values -> Duration.ofMinutes(20),
-                (mod, values) -> new FarmCropsTask(CROPS.get(values.getString("crop")), values.getInt("rows")));
+                (mod, values) -> new FarmCropsTask(
+                        CropGrowth.forItemId(values.getString("crop")).orElseThrow(), values.getInt("rows")));
 
         add(registry, "breed_animals", FeatureArea.FARM, facts(), facts(),
-                List.of(ParamSpec.choice("animal", ANIMALS.keySet().toArray(String[]::new)), ParamSpec.ints("pairs", 1, 3)),
+                List.of(ParamSpec.choice("animal", BreedingFood.animals().toArray(String[]::new)), ParamSpec.ints("pairs", 1, 3)),
                 values -> Duration.ofMinutes(10),
-                (mod, values) -> new BreedAnimalsTask(ANIMALS.get(values.getString("animal")), values.getInt("pairs")));
+                (mod, values) -> new BreedAnimalsTask(values.getString("animal"), values.getInt("pairs")));
 
         add(registry, "fish", FeatureArea.GATHER, facts(), facts("food:stocked"),
                 List.of(ParamSpec.ints("count", 2, 16)),
@@ -78,9 +73,9 @@ public final class LifeActivities {
                 (mod, values) -> new FishingTask(values.getInt("count")));
 
         add(registry, "cook_food", FeatureArea.CRAFT, facts(), facts("food:stocked"),
-                List.of(ParamSpec.choice("raw", RAW_FOODS.keySet().toArray(String[]::new)), ParamSpec.ints("count", 4, 32)),
+                List.of(ParamSpec.choice("raw", CookableFoods.rawIds().toArray(String[]::new)), ParamSpec.ints("count", 4, 32)),
                 values -> Duration.ofMinutes(Math.min(20, 4 + values.getInt("count") / 4)),
-                (mod, values) -> new CookFoodTask(RAW_FOODS.get(values.getString("raw")), values.getInt("count")));
+                (mod, values) -> new CookFoodTask(values.getString("raw"), values.getInt("count")));
 
         add(registry, "gain_xp_levels", FeatureArea.LEVEL, facts(), facts(),
                 List.of(ParamSpec.ints("target", 5, 35)),
@@ -105,17 +100,17 @@ public final class LifeActivities {
         add(registry, "harvest_sugar_cane", FeatureArea.FARM, facts(), facts(),
                 List.of(ParamSpec.ints("count", 8, 48)),
                 values -> Duration.ofMinutes(10),
-                (mod, values) -> new HarvestAndReplantTask(Items.SUGAR_CANE, values.getInt("count")));
+                (mod, values) -> new HarvestAndReplantTask(HarvestableCrops.SUGAR_CANE, values.getInt("count")));
 
         add(registry, "harvest_pumpkin", FeatureArea.FARM, facts(), facts(),
                 List.of(ParamSpec.ints("count", 4, 24)),
                 values -> Duration.ofMinutes(10),
-                (mod, values) -> new HarvestAndReplantTask(Items.PUMPKIN, values.getInt("count")));
+                (mod, values) -> new HarvestAndReplantTask(HarvestableCrops.PUMPKIN, values.getInt("count")));
 
         add(registry, "harvest_melon", FeatureArea.FARM, facts(), facts(),
                 List.of(ParamSpec.ints("count", 8, 48)),
                 values -> Duration.ofMinutes(10),
-                (mod, values) -> new HarvestAndReplantTask(Items.MELON_SLICE, values.getInt("count")));
+                (mod, values) -> new HarvestAndReplantTask(HarvestableCrops.MELON_SLICE, values.getInt("count")));
 
         add(registry, "shear_sheep", FeatureArea.GATHER, facts(), facts(),
                 List.of(ParamSpec.ints("count", 1, 6)),
@@ -147,9 +142,15 @@ public final class LifeActivities {
                                 Function<ParamValues, Duration> timeLimit,
                                 BiFunction<Vibrato, ParamValues, Task> factory) implements Activity {
 
+        /** Never throws into the director: unsupported parameters yield a task that finishes at once. */
         @Override
         public Task create(Vibrato mod, ParamValues values) {
-            return factory.apply(mod, values);
+            try {
+                return factory.apply(mod, values);
+            } catch (IllegalArgumentException e) {
+                Debug.logWarning("Life activity " + id + " cannot run with " + values + ": " + e.getMessage());
+                return new UnsupportedLifeTask(id + " " + values);
+            }
         }
 
         @Override

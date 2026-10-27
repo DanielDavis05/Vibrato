@@ -19,6 +19,11 @@ public final class BreedingFood {
 
     private BreedingFood() {}
 
+    /** Animals the breed activity offers, in a stable order. */
+    public static List<String> animals() {
+        return FOODS.keySet().stream().sorted().toList();
+    }
+
     public static boolean canBreed(String animal) {
         return FOODS.containsKey(animal);
     }
