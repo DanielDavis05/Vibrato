@@ -66,7 +66,8 @@ def main():
 
     samples = {feat: [] for _, feat in TRAITS}
     for window in windows:
-        feats = window_features(window, args.window, edge_ref=edge_ref)
+        # The human-only fit uses the mouse channel: physical mouse turns and path-free reaction are valid here.
+        feats = window_features(window, args.window, edge_ref=edge_ref, channel="mouse")
         for feat in samples:
             if not math.isnan(feats[feat]):
                 samples[feat].append(feats[feat])

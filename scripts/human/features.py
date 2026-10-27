@@ -4,6 +4,13 @@
 A trace is JSON Lines: a header line, then mouse, key and tick events in time order. Features are computed per
 window of trace time. A feature the window cannot define is NaN; callers drop or impute it.
 
+Two channels (README.md explains why):
+  'tick' (default) uses only what a server sees: per-tick yaw, position, velocity, ground flag, edge, and key events.
+         Turn and camera features come from per-tick yaw deltas. Mouse events and path nodes (nextX/nextY/nextZ) are
+         ignored, because a server never sees either.
+  'mouse' uses the physical mouse deltas for turns and reaction, and path nodes where present. fit.py uses it for the
+         human-only fit, where that richer data is valid.
+
 Key events with "carry": true are synthetic: split_windows() re-states keys that were already down when a window
 starts, so holds and hesitations are measured correctly. Edge counts ignore them.
 
@@ -12,9 +19,9 @@ or screen switch, and after a gap of more than 500 ms without mouse events, delt
 are the same kind of artifact.
 
 Ticks may carry "edge": blocks along the movement heading to the first gap or drop within 6 blocks, absent when there
-is none. When any tick has it, jump timing and jump misses come from edges. Otherwise they come from path nodes
-(nextX/nextY/nextZ). Human traces have no path, so the lateral features come from heading wander when no tick has a
-path node.
+is none. Edge features (jump timing and jump misses) use only meaningful ticks: a tick is moving when its horizontal
+speed is above MOVE_SPEED_BPT, and an edge reading counts only on a moving, grounded tick. A key event counts only when
+the latest tick at or before it is moving. Stationary time (crafting in place) therefore does not dilute these features.
 """
 
 import bisect
@@ -26,10 +33,17 @@ TICK_MS = 50.0
 FRAME_MS = 1000.0 / 144.0
 MOVE_KEYS = ("forward", "back", "left", "right")
 HOLD_KEYS = MOVE_KEYS + ("jump",)
+CHANNELS = ("tick", "mouse")
+DEFAULT_CHANNEL = "tick"
 MIN_WINDOW_TICKS = 10   # windows with fewer tick events (about half a second) are skipped
-MIN_TURN_PX = 8.0       # mouse bursts smaller than this are jitter, not turns
-BURST_GAP_MS = 100.0    # mouse events further apart than this start a new burst
-SUBMOVE_MERGE_MS = 25.0 # active samples this close together belong to one submovement
+MIN_MOVING_S = 3.0      # a window needs this much movement (tick time with speed above MOVE_SPEED_BPT) to count
+MAX_TICK_GAP_MS = 200.0 # a gap between ticks longer than this is not counted as movement time
+MIN_TURN_PX = 8.0       # mouse channel: bursts smaller than this are jitter, not turns
+BURST_GAP_MS = 100.0    # mouse channel: mouse events further apart than this start a new burst
+SUBMOVE_MERGE_MS = 25.0 # mouse channel: active samples this close together belong to one submovement
+TICK_MIN_TURN_DEG = 1.0 # tick channel: a yaw move summing to less than this is jitter, not a turn
+TICK_BURST_GAP_MS = 150.0 # tick channel: yaw changes further apart than this start a new turn
+TICK_MERGE_MS = 70.0    # tick channel: yaw changes this close together belong to one submovement (ticks are ~34 ms)
 LEDGE_RANGE = 3.0       # blocks, horizontal distance at which an upcoming ledge is first seen
 LEDGE_DY = 0.5          # the next node must be this much higher to count as a ledge
 JUMP_WINDOW_TICKS = 6   # a jump press this close (in ticks) to a ledge counts for it
@@ -40,13 +54,15 @@ MOUSE_HUGE_PX = 50.0    # a first sample after a silence this large is treated a
 EDGE_NEAR = 1.5         # blocks, an approach to an edge counts from this distance
 FALL_DY = 1.0           # blocks, a drop this large within FALL_TICKS after an approach is a fall
 FALL_TICKS = 20         # ticks after an approach in which a fall or jump press is looked for
-MIN_SPEED_BPT = 0.1     # blocks per tick, slower than this is not moving
+MOVE_SPEED_BPT = 0.05   # blocks per tick: horizontal speed above this is moving (edge, key and tick-channel lateral)
+MOUSE_LATERAL_SPEED_BPT = 0.1  # mouse channel: heading wander keeps its original threshold
 HEADING_HALF_TICKS = 10 # the heading reference is a centred 1 s moving average (10 ticks each side)
 HEADING_MIN_TICKS = 10  # fewer neighbours than this and the tick has no heading reference
 
 NAN = float("nan")
 
-# Fixed order. fit.py and discriminate.py refer to features by name.
+# Fixed order. fit.py and discriminate.py refer to features by name. Every window_features() result has all of these
+# keys; a feature the channel does not define is NaN.
 FEATURE_NAMES = (
     "mouse_rate_hz", "dx_nonint_frac", "turn_count", "turn_peak_norm", "submove_count_mean",
     "correction_count_mean", "primary_fraction_mean", "overshoot_mean",
@@ -56,6 +72,19 @@ FEATURE_NAMES = (
     "lateral_sd", "lateral_theta", "reaction_median_ticks", "hesitation_per_min",
     "look_ahead_blocks",
 )
+
+# The features discriminate.py uses: everything the tick channel defines.
+TICK_FEATURE_NAMES = (
+    "turn_count", "turn_peak_norm", "submove_count_mean", "correction_count_mean", "primary_fraction_mean",
+    "overshoot_mean", "hold_median_ticks", "hold_logsd", "hold_cv", "short_hold_frac",
+    "strafe_taps_per_s", "jump_per_s", "jump_interval_cv",
+    "jump_offset_mean_ticks", "jump_offset_sd_ticks", "jump_miss_frac",
+    "lateral_sd", "lateral_theta",
+)
+
+# Features that read 'mouse' events directly or need path nodes. They have no tick-channel definition, so
+# discriminate.py refuses them.
+MOUSE_ONLY_FEATURES = ("mouse_rate_hz", "dx_nonint_frac", "reaction_median_ticks")
 
 
 def read_trace(path):
@@ -123,23 +152,45 @@ def window_is_usable(events):
     return sum(1 for e in events if e["t"] == "tick") >= MIN_WINDOW_TICKS
 
 
-def window_features(events, seconds=10.0, edge_ref=None):
+def moving_seconds(events):
+    """Seconds of movement in a window: tick time (to the next tick, capped) on ticks that are moving."""
+    ticks = [e for e in events if e["t"] == "tick"]
+    total = 0.0
+    for a, b in zip(ticks, ticks[1:]):
+        if _moving(a):
+            total += min(b["ms"] - a["ms"], MAX_TICK_GAP_MS)
+    return total / 1000.0
+
+
+def window_features(events, seconds=10.0, edge_ref=None, channel=DEFAULT_CHANNEL):
     """Feature dict for one window. Keys are FEATURE_NAMES.
 
+    channel is 'tick' (server-visible: yaw deltas, no mouse, no path) or 'mouse' (see the module docstring).
     edge_ref is the best-case ticks-to-edge for edge-based jump timing (fit.py passes the median over all traces).
     None means the median of this window's own sample.
     """
+    if channel not in CHANNELS:
+        raise ValueError(f"unknown channel {channel!r}; expected one of {CHANNELS}")
+    mouse_ch = channel == "mouse"
     ticks = [e for e in events if e["t"] == "tick"]
-    mouse = [e for e in events if e["t"] == "mouse"]
+    mouse = [e for e in events if e["t"] == "mouse"] if mouse_ch else []
     keys = [e for e in events if e["t"] == "key"]
     downs = [e for e in keys if e["down"] and not e.get("carry")]
-    jumps = sorted(e["ms"] for e in downs if e["key"] == "jump")
+    tick_ms = [t["ms"] for t in ticks]
+    presses = sorted(e["ms"] for e in downs if e["key"] == "jump")
+    jumps = [m for m in presses if _tick_moving_at(ticks, tick_ms, m)]
 
-    f = {}
-    f["mouse_rate_hz"] = len(mouse) / seconds
-    f["dx_nonint_frac"] = _frac(lambda d: abs(d - round(d)) > 1e-6, [m["dx"] for m in mouse])
+    f = {name: NAN for name in FEATURE_NAMES}
 
-    turns = [s for s in (_turn_stats(b) for b in _bursts(mouse)) if s is not None]
+    # Turns: the mouse channel reads mouse deltas; the tick channel reads per-tick yaw deltas, the same signal a server
+    # sees. Both go through the same turn statistics, with thresholds in the unit of each.
+    if mouse_ch:
+        f["mouse_rate_hz"] = len(mouse) / seconds
+        f["dx_nonint_frac"] = _frac(lambda d: abs(d - round(d)) > 1e-6, [m["dx"] for m in mouse])
+        turns = _turns(mouse, BURST_GAP_MS, MIN_TURN_PX, SUBMOVE_MERGE_MS, FRAME_MS)
+    else:
+        turns = _turns(_yaw_samples(ticks), TICK_BURST_GAP_MS, TICK_MIN_TURN_DEG, TICK_MERGE_MS, _tick_dt(ticks))
+
     f["turn_count"] = float(len(turns))
     f["turn_peak_norm"] = _median([t["norm"] for t in turns])
     f["submove_count_mean"] = _mean([t["subs"] for t in turns])
@@ -147,13 +198,16 @@ def window_features(events, seconds=10.0, edge_ref=None):
     f["primary_fraction_mean"] = _mean([t["primary"] for t in turns])
     f["overshoot_mean"] = _mean([t["overshoot"] for t in turns])
 
-    holds = [(e - s) / TICK_MS for k, s, e in _holds(keys) if k in HOLD_KEYS]
+    # Key features count only events on moving ticks.
+    holds = [(e - s) / TICK_MS for k, s, e in _holds(keys)
+             if k in HOLD_KEYS and _tick_moving_at(ticks, tick_ms, s)]
     f["hold_median_ticks"] = _median([max(h, 0.5) for h in holds])
     f["hold_logsd"] = _sd([math.log(max(h, 0.5)) for h in holds])
     f["hold_cv"] = _cv(holds)
     f["short_hold_frac"] = _frac(lambda h: h <= 2.0, holds)
 
-    f["strafe_taps_per_s"] = sum(1 for e in downs if e["key"] in ("left", "right")) / seconds
+    f["strafe_taps_per_s"] = sum(1 for e in downs if e["key"] in ("left", "right")
+                                 and _tick_moving_at(ticks, tick_ms, e["ms"])) / seconds
     f["jump_per_s"] = len(jumps) / seconds
     f["jump_interval_cv"] = _cv([b - a for a, b in zip(jumps, jumps[1:])])
 
@@ -165,27 +219,34 @@ def window_features(events, seconds=10.0, edge_ref=None):
         offs = [x - ref for x in ttes]
         f["jump_offset_mean_ticks"] = _mean(offs)
         f["jump_offset_sd_ticks"] = _sd(offs)
-        f["jump_miss_frac"] = _edge_miss_frac(events, jumps)
-    else:
+        f["jump_miss_frac"] = _edge_miss_frac(events, presses)
+    elif mouse_ch:
         ledges = _ledges(ticks)
-        offsets, misses = _jump_offsets(ledges, jumps)
+        offsets, misses = _jump_offsets(ledges, presses)
         f["jump_offset_mean_ticks"] = _mean(offsets)
         f["jump_offset_sd_ticks"] = _sd(offsets)
         f["jump_miss_frac"] = misses / len(ledges) if ledges else NAN
+    # else: the tick channel has no edge reading in this window, so jump timing stays NaN (no path fallback).
 
-    if any("nextX" in t for t in ticks):
+    if mouse_ch and any("nextX" in t for t in ticks):
         f["lateral_sd"], f["lateral_theta"] = _lateral(ticks)
+    elif mouse_ch:
+        f["lateral_sd"], f["lateral_theta"] = _heading_wander(events, forward_gate=True,
+                                                              min_speed=MOUSE_LATERAL_SPEED_BPT)
     else:
-        f["lateral_sd"], f["lateral_theta"] = _heading_wander(events)
-    acts = sorted([m["ms"] for m in mouse] + [e["ms"] for e in downs])
-    f["reaction_median_ticks"] = _reaction_ticks(ticks, acts)
-    f["hesitation_per_min"] = _hesitations(events, seconds)
-    f["look_ahead_blocks"] = _look_ahead(ticks)
+        f["lateral_sd"], f["lateral_theta"] = _heading_wander(events, forward_gate=False,
+                                                              min_speed=MOVE_SPEED_BPT)
+
+    if mouse_ch:
+        acts = sorted([m["ms"] for m in mouse] + [e["ms"] for e in downs])
+        f["reaction_median_ticks"] = _reaction_ticks(ticks, acts)
+        f["hesitation_per_min"] = _hesitations(events, seconds)
+        f["look_ahead_blocks"] = _look_ahead(ticks)
     return f
 
 
-def vector(feats):
-    return [feats[name] for name in FEATURE_NAMES]
+def vector(feats, names=FEATURE_NAMES):
+    return [feats[name] for name in names]
 
 
 # Helpers
@@ -217,9 +278,48 @@ def _wrap(deg):
     return (deg + 180.0) % 360.0 - 180.0
 
 
-def _bursts(mouse, gap_ms=BURST_GAP_MS):
+def _moving(t):
+    """A tick is moving when its horizontal speed is above MOVE_SPEED_BPT."""
+    return _speed(t) > MOVE_SPEED_BPT
+
+
+def _tick_moving_at(ticks, tick_ms, ms):
+    """Whether the latest tick at or before ms is moving. A ms before the window's first tick uses that tick."""
+    if not ticks:
+        return False
+    i = max(0, bisect.bisect_right(tick_ms, ms) - 1)
+    return _moving(ticks[i])
+
+
+def _tick_dt(ticks):
+    """Median spacing of the window's ticks in ms (the recorder writes about every 34 ms), TICK_MS if unknown."""
+    gaps = [b["ms"] - a["ms"] for a, b in zip(ticks, ticks[1:]) if b["ms"] > a["ms"]]
+    return statistics.median(gaps) if gaps else TICK_MS
+
+
+def _yaw_samples(ticks):
+    """Per-tick yaw changes as mouse-like samples {ms, dx}, dx in degrees. Ticks with no yaw change are skipped."""
+    out = []
+    for a, b in zip(ticks, ticks[1:]):
+        d = _wrap(b["yaw"] - a["yaw"])
+        if abs(d) > 1e-6:
+            out.append({"ms": b["ms"], "dx": d})
+    return out
+
+
+def _turns(samples, gap_ms, min_amp, merge_ms, first_dt):
+    """Turn statistics for every burst of samples that is large enough to be a turn."""
+    out = []
+    for burst in _bursts(samples, gap_ms):
+        s = _turn_stats(burst, min_amp, merge_ms, first_dt)
+        if s is not None:
+            out.append(s)
+    return out
+
+
+def _bursts(samples, gap_ms):
     bursts, cur = [], []
-    for e in mouse:
+    for e in samples:
         if cur and e["ms"] - cur[-1]["ms"] > gap_ms:
             bursts.append(cur)
             cur = []
@@ -229,33 +329,34 @@ def _bursts(mouse, gap_ms=BURST_GAP_MS):
     return bursts
 
 
-def _turn_stats(burst):
+def _turn_stats(burst, min_amp, merge_ms, first_dt):
     """Shape of one camera move, or None if it is too small to be a turn.
 
+    burst holds samples {ms, dx}: mouse pixels on the mouse channel, yaw degrees on the tick channel.
     norm: peak speed * duration / amplitude (1.875 for a minimum-jerk bell).
     subs: submovements (runs of speed above 15% of peak). primary: share of the move in the first submovement.
     overshoot: how far the cumulative move passes its final value, as a share of the amplitude.
     """
     total = sum(e["dx"] for e in burst)
     amp = abs(total)
-    if amp < MIN_TURN_PX or len(burst) < 3:
+    if amp < min_amp or len(burst) < 3:
         return None
     sign = 1.0 if total > 0 else -1.0
     raw = []
     for i, e in enumerate(burst):
-        dt = e["ms"] - burst[i - 1]["ms"] if i else FRAME_MS
+        dt = e["ms"] - burst[i - 1]["ms"] if i else first_dt
         raw.append(abs(e["dx"]) / max(dt, 1.0))
     smooth = []
     for i in range(len(raw)):
         part = raw[max(0, i - 1):i + 2]
         smooth.append(sum(part) / len(part))
     peak = max(smooth)
-    dur = max(burst[-1]["ms"] - burst[0]["ms"] + FRAME_MS, 10.0)
+    dur = max(burst[-1]["ms"] - burst[0]["ms"] + first_dt, 10.0)
     runs = []
     for i, s in enumerate(smooth):
         if s <= 0.15 * peak:
             continue
-        if runs and burst[i]["ms"] - burst[runs[-1][1]]["ms"] <= SUBMOVE_MERGE_MS:
+        if runs and burst[i]["ms"] - burst[runs[-1][1]]["ms"] <= merge_ms:
             runs[-1][1] = i
         else:
             runs.append([i, i])
@@ -325,7 +426,7 @@ def _lateral(ticks):
     Returns (lateral sigma per tick in blocks, reversion per tick), the HumanProfile units. The rms is taken about zero, not about each
     segment's mean, because segments are short (about one correlation time) and per-segment means and
     autocorrelations are strongly biased. Only the middle 70% of each segment is used, so corners do not count
-    as wander.
+    as wander. Mouse channel only: the tick channel never sees path nodes.
     """
     segments, vals = [], []
     frm = to = None
@@ -402,10 +503,16 @@ def _speed(t):
     return math.hypot(t["vx"], t["vz"])
 
 
-def jump_edge_ticks(events):
-    """Ticks-to-edge for each grounded, moving jump press that has an edge reading (edge / horizontal speed).
+def _edge_tick(t):
+    """A tick that can carry an edge reading: onGround, moving, and an edge present."""
+    return "edge" in t and bool(t.get("ground")) and _moving(t)
 
-    The reading comes from the nearest tick at or before the press. Presses with no edge in that tick are skipped.
+
+def jump_edge_ticks(events):
+    """Ticks-to-edge for each jump press that has an edge reading (edge / horizontal speed).
+
+    The reading comes from the nearest tick at or before the press. Presses whose tick is not an edge tick (see
+    _edge_tick) are skipped.
     """
     ticks = [e for e in events if e["t"] == "tick"]
     tick_ms = [t["ms"] for t in ticks]
@@ -415,10 +522,9 @@ def jump_edge_ticks(events):
         if i < 0:
             continue
         t = ticks[i]
-        speed = _speed(t)
-        if "edge" not in t or not t.get("ground") or speed <= MIN_SPEED_BPT:
+        if not _edge_tick(t):
             continue
-        out.append(t["edge"] / speed)
+        out.append(t["edge"] / _speed(t))
     return out
 
 
@@ -427,46 +533,45 @@ def _jump_presses(events):
                   and not e.get("carry"))
 
 
-def _edge_miss_frac(events, jumps=None):
+def _edge_miss_frac(events, presses):
     """PROXY for jumpMissChance: share of edge approaches that end in a fall with no jump press.
 
-    An approach starts on the first tick of a run where the edge is under EDGE_NEAR blocks, the player is grounded,
-    moving and holding forward. It is counted only if FALL_TICKS further ticks are in the window. It is a miss if
-    some tick in those FALL_TICKS is more than FALL_DY below the approach and no jump press falls in the span.
+    An approach starts on the first tick of a run of edge ticks (see _edge_tick) whose edge is under EDGE_NEAR blocks.
+    It is counted only if FALL_TICKS further ticks are in the window. It is a miss if some tick in those FALL_TICKS is
+    more than FALL_DY below the approach and no jump press (presses, sorted ms) falls in the span.
     """
-    seq = _forward_states(events)
-    presses = _jump_presses(events) if jumps is None else jumps
+    ticks = [e for e in events if e["t"] == "tick"]
     approaches = misses = 0
     prev = False
-    for i, (t, fwd) in enumerate(seq):
-        cond = (fwd and bool(t.get("ground")) and "edge" in t and t["edge"] < EDGE_NEAR
-                and _speed(t) > MIN_SPEED_BPT)
+    for i, t in enumerate(ticks):
+        cond = _edge_tick(t) and t["edge"] < EDGE_NEAR
         start = cond and not prev
         prev = cond
-        if not start or i + FALL_TICKS >= len(seq):
+        if not start or i + FALL_TICKS >= len(ticks):
             continue
         approaches += 1
         y0 = t["y"]
-        end_ms = seq[i + FALL_TICKS][0]["ms"]
-        fell = any(seq[j][0]["y"] < y0 - FALL_DY for j in range(i + 1, i + FALL_TICKS + 1))
+        end_ms = ticks[i + FALL_TICKS]["ms"]
+        fell = any(ticks[j]["y"] < y0 - FALL_DY for j in range(i + 1, i + FALL_TICKS + 1))
         pressed = any(t["ms"] <= p <= end_ms for p in presses)
         if fell and not pressed:
             misses += 1
     return misses / approaches if approaches else NAN
 
 
-def _heading_wander(events):
+def _heading_wander(events, forward_gate, min_speed):
     """PROXY for lateral wander on pathless traces: heading error of the velocity, as an OU process.
 
-    Runs are ticks with forward held and speed above MIN_SPEED_BPT. For each tick, the reference heading is the
-    velocity summed over the HEADING_HALF_TICKS ticks each side (a centred 1 s moving average, the tick excluded).
-    The angle between the tick's velocity and that reference is the heading error. Its rms is the stationary sd in
-    radians. Taking the rms of error times speed gives the per-tick lateral step, which is the lateralSigma unit.
-    Returns (lateral sigma per tick in blocks, reversion per tick).
+    Runs are moving ticks: speed above min_speed, and forward held when forward_gate is set (the mouse channel keeps
+    that gate; the tick channel drops it, because the bot's recording has no forward key events). For each tick, the
+    reference heading is the velocity summed over the HEADING_HALF_TICKS ticks each side (a centred 1 s moving average,
+    the tick excluded). The angle between the tick's velocity and that reference is the heading error. Its rms is the
+    stationary sd in radians. Taking the rms of error times speed gives the per-tick lateral step, which is the
+    lateralSigma unit. Returns (lateral sigma per tick in blocks, reversion per tick).
     """
     runs, cur = [], []
     for t, fwd in _forward_states(events):
-        if fwd and _speed(t) > MIN_SPEED_BPT:
+        if (fwd or not forward_gate) and _speed(t) > min_speed:
             cur.append(t)
         elif cur:
             runs.append(cur)
@@ -494,7 +599,7 @@ def _heading_wander(events):
 
 
 def _reaction_ticks(ticks, acts):
-    """Ticks from a path-node change to the next camera or key activity (median over changes)."""
+    """Ticks from a path-node change to the next camera or key activity (median over changes). Mouse channel only."""
     starts, last = [], None
     for t in ticks:
         node = (t.get("nextX"), t.get("nextZ"))
@@ -510,7 +615,7 @@ def _reaction_ticks(ticks, acts):
 
 
 def _hesitations(events, seconds):
-    """Runs of 2 to 6 ticks with no movement key down while pathing, per minute."""
+    """Runs of 2 to 6 ticks with no movement key down while pathing, per minute. Mouse channel only."""
     down, run, count = set(), 0, 0
     for e in events:
         if e["t"] == "key":
@@ -529,7 +634,7 @@ def _hesitations(events, seconds):
 
 
 def _look_ahead(ticks):
-    """Proxy: median distance to the next path node over ticks where the camera is steady."""
+    """Proxy: median distance to the next path node over ticks where the camera is steady. Mouse channel only."""
     dists = []
     for prev, t in zip(ticks, ticks[1:]):
         if "nextX" not in t or abs(_wrap(t["yaw"] - prev["yaw"])) >= 0.5:

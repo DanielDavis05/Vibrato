@@ -55,6 +55,37 @@ if vec(dirty) != vec(clean):
 print("mouse outlier ignored: events and features unchanged")
 EOF
 
+# discriminate uses the tick channel. Mouse events are a recording artifact (the bot's camera is driven by code, so its
+# mouse stream is near empty), so no feature discriminate reads may depend on them. Check that: no discriminate
+# feature reads mouse events, mouse-only features are NaN on the tick channel, and removing every mouse event from a
+# trace leaves its tick-channel features unchanged. Then mouse-rich human and mouse-less bot traces cannot separate
+# through a mouse feature.
+"${PY[@]}" - "$HERE" "$TMP/traces/synth00-human.jsonl" "$TMP/traces/synth00-bot.jsonl" <<'EOF'
+import math, sys
+sys.path.insert(0, sys.argv[1])
+import features as F
+
+if set(F.TICK_FEATURE_NAMES) & set(F.MOUSE_ONLY_FEATURES):
+    sys.exit("discriminate feature list contains a mouse-reading feature")
+
+def tick_vectors(evs):
+    out = []
+    for _, w in F.split_windows(evs, 10.0):
+        if F.window_is_usable(w):
+            feats = F.window_features(w, channel="tick")
+            if any(not math.isnan(feats[n]) for n in F.MOUSE_ONLY_FEATURES):
+                sys.exit("a mouse-only feature is defined on the tick channel")
+            out.append([repr(x) for x in F.vector(feats, F.TICK_FEATURE_NAMES)])
+    return out
+
+for path in sys.argv[2:]:
+    _, evs = F.read_trace(path)
+    stripped = [e for e in evs if e["t"] != "mouse"]
+    if tick_vectors(evs) != tick_vectors(stripped):
+        sys.exit(f"{path}: tick-channel features depend on mouse events")
+    print(f"{path.rsplit('/', 1)[-1]}: {len(evs) - len(stripped)} mouse events, tick features unchanged without them")
+EOF
+
 "${PY[@]}" "$HERE/discriminate.py" \
     --human "$TMP"/traces/*-human.jsonl --bot "$TMP"/traces/*-bot.jsonl \
     --min-accuracy 0.8

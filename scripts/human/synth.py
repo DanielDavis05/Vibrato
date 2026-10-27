@@ -135,8 +135,8 @@ def simulate(source, seed, seconds):
     _, ax, az, _, _ = locate(P["look_ahead"])
     yaw = math.degrees(math.atan2(-(ax - bx), az - bz))
 
-    # Vertical steps along the path, as arc positions. Human ticks report "edge" as the distance to the next one
-    # within 6 blocks. Synthetic ledges are up and down steps alike; the real recorder reports gaps and drops.
+    # Vertical steps along the path, as arc positions. Ticks report "edge" as the distance to the next one within
+    # 6 blocks. Synthetic ledges are up and down steps alike; the real recorder reports gaps and drops.
     steps = [arc[j - 1] for j in range(1, len(nodes)) if nodes[j][1] != nodes[j - 1][1]]
 
     lines = [{"t": "header", "v": 1, "source": source, "mcVersion": "1.21.1", "guiScale": 2,
@@ -216,10 +216,10 @@ def simulate(source, seed, seconds):
                 t["vx"] = round(t["x"] - prev["x"], 4)
                 t["vy"] = round(t["y"] - prev["y"], 4)
                 t["vz"] = round(t["z"] - prev["z"], 4)
-            if human:
-                k = bisect.bisect_left(steps, s)
-                if k < len(steps) and steps[k] - s <= 6.0:
-                    t["edge"] = round(steps[k] - s, 3)
+            # Real bot ticks carry edges too, so both classes get them. Otherwise edge presence alone would separate.
+            k = bisect.bisect_left(steps, s)
+            if k < len(steps) and steps[k] - s <= 6.0:
+                t["edge"] = round(steps[k] - s, 3)
             prev = t
             push(tms, t)
             node = (nx, ny, nz)
