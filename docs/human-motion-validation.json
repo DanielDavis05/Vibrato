@@ -1,0 +1,1716 @@
+{
+  "limitations": [
+    "The original human world is absent; matrix used another saved world. Human traces and routes do not match the matrix.",
+    "run1 human records about 107 s and 11 usable windows, below 20; no real-data discriminator acceptance can be claimed.",
+    "Search distance measures wandering length rather than successful task progress on a fixed route.",
+    "Position-derived speed and key metrics for flat fixtures come exclusively from recorded trace ticks; setup teleport and global script distance are excluded.",
+    "The first flat-hop fixture failed: hopping increased completion time; retained separately and superseded only after fresh post-native completed artifacts.",
+    "PathOffset changes visual look targeting only; physical lateral path offset is not demonstrated."
+  ],
+  "matrix": {
+    "ab-water-off": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-water-off bot",
+          "status": "completed"
+        },
+        {
+          "action": "@goto -148 -64",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 45",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 311,
+        "duration_s": 15.5,
+        "matched_ikey_ticks": 311,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.886051750729386,
+        "net_horizontal_displacement_blocks": 28.854106015474837,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.943144519872074,
+        "moving_median_speed_blocks_s": 1.9598410617189934,
+        "moving_p90_speed_blocks_s": 1.9599210616757388,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "ab-water-behavior": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-water-behavior bot",
+          "status": "completed"
+        },
+        {
+          "action": "@goto -148 -64",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 45",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 33,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 33,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 33,
+        "ticks": 310,
+        "duration_s": 15.45,
+        "matched_ikey_ticks": 310,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.945912406217495,
+        "net_horizontal_displacement_blocks": 28.854126032666542,
+        "moving_time_s": 14.85,
+        "moving_mean_speed_blocks_s": 1.9393133869511097,
+        "moving_median_speed_blocks_s": 1.9598823576939497,
+        "moving_p90_speed_blocks_s": 1.9599242884356922,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8.0
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "ab-water-camera": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-water-camera bot",
+          "status": "completed"
+        },
+        {
+          "action": "@goto -148 -64",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 45",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 311,
+        "duration_s": 15.5,
+        "matched_ikey_ticks": 311,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854148000000002,
+        "net_horizontal_displacement_blocks": 28.854148000000002,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.9434538983050849,
+        "moving_median_speed_blocks_s": 1.9599999999999795,
+        "moving_p90_speed_blocks_s": 1.9600000000001216,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "ab-water-keys": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-water-keys bot",
+          "status": "completed"
+        },
+        {
+          "action": "@goto -148 -64",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 45",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 312,
+        "duration_s": 15.55,
+        "matched_ikey_ticks": 312,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854794312012142,
+        "net_horizontal_displacement_blocks": 28.854115008612723,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.943341580335094,
+        "moving_median_speed_blocks_s": 1.9598731520176593,
+        "moving_p90_speed_blocks_s": 1.9599223576458726,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "ab-water-all": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-water-all bot",
+          "status": "completed"
+        },
+        {
+          "action": "@goto -148 -64",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 45",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 312,
+        "duration_s": 15.55,
+        "matched_ikey_ticks": 312,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854148000000002,
+        "net_horizontal_displacement_blocks": 28.854148000000002,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.9434538983050849,
+        "moving_median_speed_blocks_s": 1.9599999999999795,
+        "moving_p90_speed_blocks_s": 1.9600000000001216,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "ab-search-off": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-search-off bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cactus 1",
+          "status": "dispatched"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 17,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 17,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 17,
+        "effective_jump_presses": 10,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 199.06001581011532,
+        "net_horizontal_displacement_blocks": 108.0538747833443,
+        "moving_time_s": 38.6,
+        "moving_mean_speed_blocks_s": 5.146296815564714,
+        "moving_median_speed_blocks_s": 5.59474066820558,
+        "moving_p90_speed_blocks_s": 5.612155476463634,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 5,
+        "jump_interval_median_ticks": 16
+      },
+      "log": {
+        "task_starts": 3,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      },
+      "search_distance_ratio_to_off": 1.0,
+      "search_distance_at_least_90_percent_of_off": true
+    },
+    "ab-search-behavior": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-search-behavior bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cactus 1",
+          "status": "dispatched"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 15,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 15,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 15,
+        "effective_jump_presses": 10,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 197.67575850782623,
+        "net_horizontal_displacement_blocks": 106.66732421775322,
+        "moving_time_s": 38.45,
+        "moving_mean_speed_blocks_s": 5.129230110523704,
+        "moving_median_speed_blocks_s": 5.601321096241289,
+        "moving_p90_speed_blocks_s": 5.6121638808573815,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 5,
+        "jump_interval_median_ticks": 16
+      },
+      "log": {
+        "task_starts": 4,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>",
+          "<Gather seeds from grass at -234, 66, -75>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 1,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      },
+      "search_distance_ratio_to_off": 0.9930460303810609,
+      "search_distance_at_least_90_percent_of_off": true
+    },
+    "ab-search-camera": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-search-camera bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cactus 1",
+          "status": "dispatched"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 5,
+        "intended_sprint_starts": 19,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 5,
+        "shaped_sprint_starts": 19,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 5,
+        "effective_sprint_starts": 19,
+        "effective_jump_presses": 10,
+        "ticks": 800,
+        "duration_s": 39.95,
+        "matched_ikey_ticks": 800,
+        "partial_line": false,
+        "horizontal_distance_blocks": 196.69554945730263,
+        "net_horizontal_displacement_blocks": 106.1816260228228,
+        "moving_time_s": 38.4,
+        "moving_mean_speed_blocks_s": 5.1095701693984985,
+        "moving_median_speed_blocks_s": 5.585545126214871,
+        "moving_p90_speed_blocks_s": 5.612340046183934,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 5,
+        "jump_interval_median_ticks": 17
+      },
+      "log": {
+        "task_starts": 3,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      },
+      "search_distance_ratio_to_off": 0.98812184183152,
+      "search_distance_at_least_90_percent_of_off": true
+    },
+    "ab-search-keys": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-search-keys bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cactus 1",
+          "status": "dispatched"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 7,
+        "intended_sprint_starts": 21,
+        "intended_jump_presses": 9,
+        "shaped_forward_releases": 7,
+        "shaped_sprint_starts": 21,
+        "shaped_jump_presses": 12,
+        "effective_forward_releases": 7,
+        "effective_sprint_starts": 21,
+        "effective_jump_presses": 12,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 196.05905352786365,
+        "net_horizontal_displacement_blocks": 105.7176128484531,
+        "moving_time_s": 38.35,
+        "moving_mean_speed_blocks_s": 5.099450842247927,
+        "moving_median_speed_blocks_s": 5.5785180693084335,
+        "moving_p90_speed_blocks_s": 5.612234856846162,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 7,
+        "jump_interval_median_ticks": 17
+      },
+      "log": {
+        "task_starts": 3,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      },
+      "search_distance_ratio_to_off": 0.9849243341509915,
+      "search_distance_at_least_90_percent_of_off": true
+    },
+    "ab-search-all": {
+      "result_status": "exit",
+      "commands": [
+        {
+          "action": "@record start ab-search-all bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cactus 1",
+          "status": "dispatched"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "exit_code": 0,
+      "trace": {
+        "intended_forward_releases": 6,
+        "intended_sprint_starts": 18,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 6,
+        "shaped_sprint_starts": 18,
+        "shaped_jump_presses": 12,
+        "effective_forward_releases": 6,
+        "effective_sprint_starts": 18,
+        "effective_jump_presses": 12,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 191.83017844144948,
+        "net_horizontal_displacement_blocks": 93.8877818471608,
+        "moving_time_s": 37.7,
+        "moving_mean_speed_blocks_s": 5.075866719637609,
+        "moving_median_speed_blocks_s": 5.58150582970022,
+        "moving_p90_speed_blocks_s": 5.612340759611935,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 7,
+        "jump_interval_median_ticks": 24
+      },
+      "log": {
+        "task_starts": 4,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>",
+          "<Gather seeds from grass at -239, 65, -63>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 1,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      },
+      "search_distance_ratio_to_off": 0.9636801125567958,
+      "search_distance_at_least_90_percent_of_off": true
+    }
+  },
+  "post_hardening_all": {
+    "water": {
+      "exit_code": 0,
+      "result": {
+        "status": "exit",
+        "commands": [
+          {
+            "action": "@record start ab-final-water-all bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto -148 -64",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 45",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "metrics": {
+          "sampleTicks": 332,
+          "movingTicks": 305,
+          "movingDistanceBlocks": 28.919127021559987,
+          "movingSpeedBlocksPerSecond": 1.896336198135081,
+          "forwardReleases": 3,
+          "sprintRestarts": 0,
+          "pathStationaryTicks": 7,
+          "stuckFirings": null,
+          "taskRestarts": null
+        }
+      },
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 310,
+        "duration_s": 15.45,
+        "matched_ikey_ticks": 310,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854148000000002,
+        "net_horizontal_displacement_blocks": 28.854148000000002,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.9434538983050849,
+        "moving_median_speed_blocks_s": 1.9599999999999795,
+        "moving_p90_speed_blocks_s": 1.9600000000001216,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "log": {
+        "task_starts": 1,
+        "task_start_details": [
+          "<Getting to (-148,-64)>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 0,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    },
+    "search": {
+      "exit_code": 0,
+      "result": {
+        "status": "exit",
+        "commands": [
+          {
+            "action": "@record start ab-final-search-all bot",
+            "status": "completed"
+          },
+          {
+            "action": "@get cactus 1",
+            "status": "dispatched"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "metrics": {
+          "sampleTicks": 824,
+          "movingTicks": 777,
+          "movingDistanceBlocks": 192.97411375888868,
+          "movingSpeedBlocksPerSecond": 4.96715865531245,
+          "forwardReleases": 7,
+          "sprintRestarts": 18,
+          "pathStationaryTicks": 15,
+          "stuckFirings": null,
+          "taskRestarts": null
+        }
+      },
+      "trace": {
+        "intended_forward_releases": 6,
+        "intended_sprint_starts": 18,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 6,
+        "shaped_sprint_starts": 18,
+        "shaped_jump_presses": 11,
+        "effective_forward_releases": 6,
+        "effective_sprint_starts": 18,
+        "effective_jump_presses": 11,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 192.46003641658882,
+        "net_horizontal_displacement_blocks": 94.36025771329666,
+        "moving_time_s": 37.75,
+        "moving_mean_speed_blocks_s": 5.085486875177186,
+        "moving_median_speed_blocks_s": 5.58557370636181,
+        "moving_p90_speed_blocks_s": 5.6123400487854855,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 6,
+        "jump_interval_median_ticks": 28.5
+      },
+      "log": {
+        "task_starts": 4,
+        "task_start_details": [
+          "<Mine And Collect: [[cactus] x 1]>",
+          "<Mining or Collecting>",
+          "<Wander for 64.0 blocks>",
+          "<Gather seeds from grass at -239, 65, -63>"
+        ],
+        "repeated_task_starts_same_description": 0,
+        "unstuck_actions": 0,
+        "search_opportunity_starts": 1,
+        "behavior_pause_count": null,
+        "behavior_pause_count_note": "No comprehensive pause logging; opportunity task starts are a partial proxy."
+      }
+    }
+  },
+  "fresh_axe": {
+    "process_build_successful": true,
+    "result": {
+      "status": "exit",
+      "metrics": {
+        "sampleTicks": 490,
+        "movingTicks": 138,
+        "movingDistanceBlocks": 27.733260007256938,
+        "movingSpeedBlocksPerSecond": 4.019313044529992,
+        "forwardReleases": 9,
+        "sprintRestarts": 8,
+        "pathStationaryTicks": 106,
+        "stuckFirings": null,
+        "taskRestarts": null
+      },
+      "commands": [
+        {
+          "action": "@record start fresh-axe bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get wooden_axe",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 110",
+          "status": "idle"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "@stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ]
+    },
+    "task_finish_seconds": 23.191,
+    "held_wooden_axe_logged": true,
+    "stack_overflow_logged": false,
+    "trace": {
+      "intended_forward_releases": 9,
+      "intended_sprint_starts": 8,
+      "intended_jump_presses": 1,
+      "shaped_forward_releases": 9,
+      "shaped_sprint_starts": 8,
+      "shaped_jump_presses": 5,
+      "effective_forward_releases": 9,
+      "effective_sprint_starts": 8,
+      "effective_jump_presses": 5,
+      "ticks": 467,
+      "duration_s": 23.3,
+      "matched_ikey_ticks": 467,
+      "partial_line": false,
+      "horizontal_distance_blocks": 27.74441688579295,
+      "net_horizontal_displacement_blocks": 24.269808494806462,
+      "moving_time_s": 6.1,
+      "moving_mean_speed_blocks_s": 4.494576953981162,
+      "moving_median_speed_blocks_s": 4.6894909519758174,
+      "moving_p90_speed_blocks_s": 5.769679999999653,
+      "stationary_with_path_over_2s": [
+        4.1
+      ],
+      "longest_stationary_with_path_s": 4.1,
+      "jump_presses_grounded_sprinting": 0,
+      "jump_presses_sprinting": 4,
+      "jump_interval_median_ticks": 17.0
+    }
+  },
+  "flat_pre_native_failed": {
+    "nohop": {
+      "result": {
+        "metrics": {
+          "sampleTicks": 447,
+          "movingTicks": 167,
+          "movingDistanceBlocks": 63.88746958805158,
+          "movingSpeedBlocksPerSecond": 7.651193962640908,
+          "forwardReleases": 1,
+          "sprintRestarts": 1,
+          "pathStationaryTicks": 3,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "status": "exit",
+        "commands": [
+          {
+            "action": "/fill 118 80 14 170 80 26 stone",
+            "status": "sent"
+          },
+          {
+            "action": "/fill 118 81 14 170 84 26 air",
+            "status": "sent"
+          },
+          {
+            "action": "/tp @s 121.5 81 20.5",
+            "status": "sent"
+          },
+          {
+            "action": "/effect give @s saturation 30 10 true",
+            "status": "sent"
+          },
+          {
+            "action": "@record start flat-nohop bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto 166 81 20",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 90",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ]
+      },
+      "trace": {
+        "intended_forward_releases": 1,
+        "intended_sprint_starts": 1,
+        "intended_jump_presses": 0,
+        "shaped_forward_releases": 1,
+        "shaped_sprint_starts": 1,
+        "shaped_jump_presses": 0,
+        "effective_forward_releases": 1,
+        "effective_sprint_starts": 1,
+        "effective_jump_presses": 0,
+        "ticks": 204,
+        "duration_s": 10.15,
+        "matched_ikey_ticks": 204,
+        "partial_line": false,
+        "horizontal_distance_blocks": 44.89152882837428,
+        "net_horizontal_displacement_blocks": 44.89093701867889,
+        "moving_time_s": 8.1,
+        "moving_mean_speed_blocks_s": 5.5303465220215156,
+        "moving_median_speed_blocks_s": 5.612035592955381,
+        "moving_p90_speed_blocks_s": 5.612163880857382,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.05,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": null
+      },
+      "task_finish_seconds": 8.113,
+      "trace_sha256": "e58d81d71749e1158e3106eba8fedabb5c8d1920322b2fd2a732f25890b4600f"
+    },
+    "hop": {
+      "result": {
+        "metrics": {
+          "sampleTicks": 467,
+          "movingTicks": 183,
+          "movingDistanceBlocks": 63.83652621689832,
+          "movingSpeedBlocksPerSecond": 6.9766695319014564,
+          "forwardReleases": 11,
+          "sprintRestarts": 11,
+          "pathStationaryTicks": 3,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "commands": [
+          {
+            "action": "/fill 118 80 14 170 80 26 stone",
+            "status": "sent"
+          },
+          {
+            "action": "/fill 118 81 14 170 84 26 air",
+            "status": "sent"
+          },
+          {
+            "action": "/tp @s 121.5 81 20.5",
+            "status": "sent"
+          },
+          {
+            "action": "/effect give @s saturation 30 10 true",
+            "status": "sent"
+          },
+          {
+            "action": "@record start flat-hop bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto 166 81 20",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 90",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "status": "exit"
+      },
+      "trace": {
+        "intended_forward_releases": 11,
+        "intended_sprint_starts": 11,
+        "intended_jump_presses": 0,
+        "shaped_forward_releases": 11,
+        "shaped_sprint_starts": 11,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 11,
+        "effective_sprint_starts": 11,
+        "effective_jump_presses": 10,
+        "ticks": 221,
+        "duration_s": 11.0,
+        "matched_ikey_ticks": 221,
+        "partial_line": false,
+        "horizontal_distance_blocks": 44.840613432564496,
+        "net_horizontal_displacement_blocks": 44.840080002071375,
+        "moving_time_s": 8.9,
+        "moving_mean_speed_blocks_s": 5.0274404980409555,
+        "moving_median_speed_blocks_s": 5.241139999999689,
+        "moving_p90_speed_blocks_s": 6.0602996270807985,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.05,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 10,
+        "jump_interval_median_ticks": 17
+      },
+      "task_finish_seconds": 8.963,
+      "trace_sha256": "c1378234c7db300251b1b8d84c823f408c39f695272bf4fa7f3d295d1f010798"
+    }
+  },
+  "flat_post_native": {
+    "nohop": {
+      "status": "completed",
+      "fresh_trace": true,
+      "fresh_result": true,
+      "fresh_log": true,
+      "result": {
+        "metrics": {
+          "sampleTicks": 449,
+          "movingTicks": 167,
+          "movingDistanceBlocks": 63.88736785943244,
+          "movingSpeedBlocksPerSecond": 7.651181779572747,
+          "forwardReleases": 1,
+          "sprintRestarts": 1,
+          "pathStationaryTicks": 3,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "status": "exit",
+        "commands": [
+          {
+            "action": "/fill 118 80 14 170 80 26 stone",
+            "status": "sent"
+          },
+          {
+            "action": "/fill 118 81 14 170 84 26 air",
+            "status": "sent"
+          },
+          {
+            "action": "/tp @s 121.5 81 20.5",
+            "status": "sent"
+          },
+          {
+            "action": "/effect give @s saturation 30 10 true",
+            "status": "sent"
+          },
+          {
+            "action": "@record start flat-nohop bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto 166 81 20",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 90",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ]
+      },
+      "trace": {
+        "intended_forward_releases": 1,
+        "intended_sprint_starts": 1,
+        "intended_jump_presses": 0,
+        "shaped_forward_releases": 1,
+        "shaped_sprint_starts": 1,
+        "shaped_jump_presses": 0,
+        "effective_forward_releases": 1,
+        "effective_sprint_starts": 1,
+        "effective_jump_presses": 0,
+        "ticks": 205,
+        "duration_s": 10.2,
+        "matched_ikey_ticks": 205,
+        "partial_line": false,
+        "horizontal_distance_blocks": 44.89142650858036,
+        "net_horizontal_displacement_blocks": 44.890806128454095,
+        "moving_time_s": 8.1,
+        "moving_mean_speed_blocks_s": 5.530334754145727,
+        "moving_median_speed_blocks_s": 5.612001273342898,
+        "moving_p90_speed_blocks_s": 5.612183880843501,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.05,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": null
+      },
+      "task_finish_seconds": 8.124,
+      "trace_sha256": "f13ff99b6c0867ffc79b44c2f4d419f3e0871ce775db92aaf0e6f25805166d37"
+    },
+    "hop": {
+      "status": "completed",
+      "fresh_trace": true,
+      "fresh_result": true,
+      "fresh_log": true,
+      "result": {
+        "status": "exit",
+        "commands": [
+          {
+            "action": "/fill 118 80 14 170 80 26 stone",
+            "status": "sent"
+          },
+          {
+            "action": "/fill 118 81 14 170 84 26 air",
+            "status": "sent"
+          },
+          {
+            "action": "/tp @s 121.5 81 20.5",
+            "status": "sent"
+          },
+          {
+            "action": "/effect give @s saturation 30 10 true",
+            "status": "sent"
+          },
+          {
+            "action": "@record start flat-hop bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto 166 81 20",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 90",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "metrics": {
+          "sampleTicks": 420,
+          "movingTicks": 139,
+          "movingDistanceBlocks": 63.998890739083826,
+          "movingSpeedBlocksPerSecond": 9.20847348763796,
+          "forwardReleases": 2,
+          "sprintRestarts": 2,
+          "pathStationaryTicks": 3,
+          "stuckFirings": null,
+          "taskRestarts": null
+        }
+      },
+      "trace": {
+        "intended_forward_releases": 2,
+        "intended_sprint_starts": 2,
+        "intended_jump_presses": 0,
+        "shaped_forward_releases": 2,
+        "shaped_sprint_starts": 2,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 2,
+        "effective_sprint_starts": 2,
+        "effective_jump_presses": 10,
+        "ticks": 177,
+        "duration_s": 8.8,
+        "matched_ikey_ticks": 177,
+        "partial_line": false,
+        "horizontal_distance_blocks": 45.002999785313165,
+        "net_horizontal_displacement_blocks": 45.00282127058555,
+        "moving_time_s": 6.7,
+        "moving_mean_speed_blocks_s": 6.702403997807931,
+        "moving_median_speed_blocks_s": 6.520971352856596,
+        "moving_p90_speed_blocks_s": 7.193981967089005,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.05,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 10,
+        "jump_interval_median_ticks": 12
+      },
+      "task_finish_seconds": 6.751,
+      "trace_sha256": "c8f9b068fcf4e5561a88a98edcd6f71eead76bf0bc5a90e7aa74a285606331d1"
+    }
+  },
+  "original_traces": [
+    {
+      "path": "/opt/traces/run1-human.jsonl",
+      "sha256": "89679b492deebea8abd1cfc1dc4a2b9e13ea832186d7b1ec5f7a5717d81589f6",
+      "source": "human",
+      "ticks": 2139,
+      "duration_tick_seconds": 106.9,
+      "usable_10s_windows": 11
+    },
+    {
+      "path": "/opt/traces/run1-bot.jsonl",
+      "sha256": "2c51c4bdb243ab5974fae2f47e504f94369e86758540695d8ea2a5f01cdcd80b",
+      "source": "bot",
+      "ticks": 2774,
+      "duration_tick_seconds": 138.65,
+      "usable_10s_windows": 13
+    },
+    {
+      "path": "/opt/traces/walk1-human.jsonl",
+      "sha256": "22b494d53d54c2e258180a0699f4ab85da20e3a985c52d346011843c540d539b",
+      "source": "human",
+      "ticks": 1666,
+      "duration_tick_seconds": 83.25,
+      "usable_10s_windows": 8
+    },
+    {
+      "path": "/opt/traces/walk1-bot.jsonl",
+      "sha256": "37ad197653e86dbe92e73823c1dd4a5e237d58c5ab8ac46218a9b2edc38df724",
+      "source": "bot",
+      "ticks": 2808,
+      "duration_tick_seconds": 140.35,
+      "usable_10s_windows": 1
+    }
+  ],
+  "date_utc": "2026-10-27",
+  "canonical_branch": "master",
+  "retired_branch": "human-motion",
+  "mining_and_nerdpole": {
+    "result": {
+      "status": "exit",
+      "commands": [
+        {
+          "action": "/fill 118 80 14 170 80 26 obsidian",
+          "status": "sent"
+        },
+        {
+          "action": "/fill 118 81 14 170 92 26 air",
+          "status": "sent"
+        },
+        {
+          "action": "/tp @s 140.5 81 20.5",
+          "status": "sent"
+        },
+        {
+          "action": "/fill 143 81 20 146 82 20 stone",
+          "status": "sent"
+        },
+        {
+          "action": "/give @s stone_pickaxe",
+          "status": "sent"
+        },
+        {
+          "action": "@record start release-smoke bot",
+          "status": "completed"
+        },
+        {
+          "action": "@get cobblestone 8",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 40",
+          "status": "idle"
+        },
+        {
+          "action": "@inventory cobblestone",
+          "status": "completed"
+        },
+        {
+          "action": "@goto 140 81 20",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 15",
+          "status": "idle"
+        },
+        {
+          "action": "/give @s dirt 64",
+          "status": "sent"
+        },
+        {
+          "action": "@goto 140 87 20",
+          "status": "completed"
+        },
+        {
+          "action": "wait-idle 25",
+          "status": "idle"
+        },
+        {
+          "action": "@coords",
+          "status": "completed"
+        },
+        {
+          "action": "@inventory dirt",
+          "status": "completed"
+        },
+        {
+          "action": "@record stop",
+          "status": "completed"
+        },
+        {
+          "action": "exit",
+          "status": "exit"
+        }
+      ],
+      "metrics": {
+        "sampleTicks": 509,
+        "movingTicks": 70,
+        "movingDistanceBlocks": 11.182719754828359,
+        "movingSpeedBlocksPerSecond": 3.1950627870938164,
+        "forwardReleases": 5,
+        "sprintRestarts": 5,
+        "pathStationaryTicks": 69,
+        "stuckFirings": null,
+        "taskRestarts": null
+      }
+    },
+    "final_position": [
+      140.48685790979604,
+      87.0,
+      20.500012214323554
+    ],
+    "on_ground": true,
+    "inventory": {
+      "minecraft:stone_pickaxe": 1,
+      "minecraft:cobblestone": 8,
+      "minecraft:dirt": 58
+    },
+    "cheats": true,
+    "purpose": "Controlled mining and nerdpole regression fixture; setup commands confined to the disposable copy."
+  },
+  "code_commit": "a3c6dbf4cd7e7d6d89a179a18ffa2b6a2b0fcaad",
+  "tests": {
+    "vibrato": {
+      "tests": 570,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "baritone": {
+      "tests": 51,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "release_validation": {
+    "ab-release-water-camera": {
+      "result": {
+        "metrics": {
+          "sampleTicks": 333,
+          "movingTicks": 305,
+          "movingDistanceBlocks": 28.919127021559987,
+          "movingSpeedBlocksPerSecond": 1.896336198135081,
+          "forwardReleases": 3,
+          "sprintRestarts": 0,
+          "pathStationaryTicks": 7,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "status": "exit",
+        "commands": [
+          {
+            "action": "@record start ab-release-water-camera bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto -148 -64",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 45",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ]
+      },
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 310,
+        "duration_s": 15.45,
+        "matched_ikey_ticks": 310,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854148000000002,
+        "net_horizontal_displacement_blocks": 28.854148000000002,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.9434538983050849,
+        "moving_median_speed_blocks_s": 1.9599999999999795,
+        "moving_p90_speed_blocks_s": 1.9600000000001216,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "unstuck_actions": 0
+    },
+    "ab-release-search-camera": {
+      "result": {
+        "metrics": {
+          "sampleTicks": 825,
+          "movingTicks": 791,
+          "movingDistanceBlocks": 200.5870536425906,
+          "movingSpeedBlocksPerSecond": 5.071733341152734,
+          "forwardReleases": 4,
+          "sprintRestarts": 17,
+          "pathStationaryTicks": 12,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "commands": [
+          {
+            "action": "@record start ab-release-search-camera bot",
+            "status": "completed"
+          },
+          {
+            "action": "@get cactus 1",
+            "status": "dispatched"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "status": "exit"
+      },
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 17,
+        "intended_jump_presses": 10,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 17,
+        "shaped_jump_presses": 10,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 17,
+        "effective_jump_presses": 10,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 199.88822214998135,
+        "net_horizontal_displacement_blocks": 108.48932682802155,
+        "moving_time_s": 38.65,
+        "moving_mean_speed_blocks_s": 5.161137551328914,
+        "moving_median_speed_blocks_s": 5.595787994411639,
+        "moving_p90_speed_blocks_s": 5.612340132600649,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 5,
+        "jump_interval_median_ticks": 16
+      },
+      "unstuck_actions": 0
+    },
+    "ab-release-water-all": {
+      "result": {
+        "metrics": {
+          "sampleTicks": 332,
+          "movingTicks": 305,
+          "movingDistanceBlocks": 28.919127021559987,
+          "movingSpeedBlocksPerSecond": 1.896336198135081,
+          "forwardReleases": 3,
+          "sprintRestarts": 0,
+          "pathStationaryTicks": 8,
+          "stuckFirings": null,
+          "taskRestarts": null
+        },
+        "commands": [
+          {
+            "action": "@record start ab-release-water-all bot",
+            "status": "completed"
+          },
+          {
+            "action": "@goto -148 -64",
+            "status": "completed"
+          },
+          {
+            "action": "wait-idle 45",
+            "status": "idle"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "status": "exit"
+      },
+      "trace": {
+        "intended_forward_releases": 3,
+        "intended_sprint_starts": 0,
+        "intended_jump_presses": 34,
+        "shaped_forward_releases": 3,
+        "shaped_sprint_starts": 0,
+        "shaped_jump_presses": 34,
+        "effective_forward_releases": 3,
+        "effective_sprint_starts": 0,
+        "effective_jump_presses": 34,
+        "ticks": 311,
+        "duration_s": 15.5,
+        "matched_ikey_ticks": 311,
+        "partial_line": false,
+        "horizontal_distance_blocks": 28.854148000000002,
+        "net_horizontal_displacement_blocks": 28.854148000000002,
+        "moving_time_s": 14.75,
+        "moving_mean_speed_blocks_s": 1.9434538983050849,
+        "moving_median_speed_blocks_s": 1.9599999999999795,
+        "moving_p90_speed_blocks_s": 1.9600000000001216,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 0,
+        "jump_presses_sprinting": 0,
+        "jump_interval_median_ticks": 8
+      },
+      "unstuck_actions": 0
+    },
+    "ab-release-search-all": {
+      "result": {
+        "commands": [
+          {
+            "action": "@record start ab-release-search-all bot",
+            "status": "completed"
+          },
+          {
+            "action": "@get cactus 1",
+            "status": "dispatched"
+          },
+          {
+            "action": "@record stop",
+            "status": "completed"
+          },
+          {
+            "action": "@stop",
+            "status": "completed"
+          },
+          {
+            "action": "exit",
+            "status": "exit"
+          }
+        ],
+        "status": "exit",
+        "metrics": {
+          "sampleTicks": 824,
+          "movingTicks": 776,
+          "movingDistanceBlocks": 194.68351705701997,
+          "movingSpeedBlocksPerSecond": 5.0176164189953605,
+          "forwardReleases": 5,
+          "sprintRestarts": 16,
+          "pathStationaryTicks": 16,
+          "stuckFirings": null,
+          "taskRestarts": null
+        }
+      },
+      "trace": {
+        "intended_forward_releases": 4,
+        "intended_sprint_starts": 16,
+        "intended_jump_presses": 9,
+        "shaped_forward_releases": 4,
+        "shaped_sprint_starts": 16,
+        "shaped_jump_presses": 11,
+        "effective_forward_releases": 4,
+        "effective_sprint_starts": 16,
+        "effective_jump_presses": 11,
+        "ticks": 801,
+        "duration_s": 40.0,
+        "matched_ikey_ticks": 801,
+        "partial_line": false,
+        "horizontal_distance_blocks": 193.97678008088556,
+        "net_horizontal_displacement_blocks": 103.65308882763226,
+        "moving_time_s": 37.7,
+        "moving_mean_speed_blocks_s": 5.132522046403254,
+        "moving_median_speed_blocks_s": 5.596075161218521,
+        "moving_p90_speed_blocks_s": 5.612384814924832,
+        "stationary_with_path_over_2s": [],
+        "longest_stationary_with_path_s": 0.3,
+        "jump_presses_grounded_sprinting": 1,
+        "jump_presses_sprinting": 6,
+        "jump_interval_median_ticks": 20.5
+      },
+      "unstuck_actions": 0
+    }
+  },
+  "artifact": {
+    "filename": "vibrato-unified-motion-0.1.0.jar",
+    "sha256": "43656493a6304dec67940dd6a65b742f37f5849cb0c33ca7d1155563ed1f7526",
+    "bundled_engine": [
+      {
+        "file": "META-INF/jars/baritone-unoptimized-fabric-1.11.3-vibrato-2dabae8be46f.jar",
+        "sha256": "2dabae8be46f8bea7fcb29a9e21a1a5df8afa31cc12c01a09bc675be843eb0ab"
+      }
+    ]
+  },
+  "engine": {
+    "path": "/opt/Baritone",
+    "base_commit": "11ea66cd11c3bdf2eb7a8dfdbdec97b964fda6c7",
+    "source_stamp": "a029dac052ae9abd363fcaf317e8a15d0bc1ceb145597511b90d43b4d79f9e2e",
+    "files_changed_this_turn": [
+      "src/main/java/baritone/vibrato/VibratoSettings.java",
+      "src/main/java/baritone/vibrato/OptionalHopPolicy.java",
+      "src/main/java/baritone/pathing/movement/movements/MovementTraverse.java",
+      "src/main/java/baritone/pathing/path/PathExecutor.java",
+      "src/test/java/baritone/vibrato/OptionalHopPolicyTest.java"
+    ]
+  },
+  "experiment_worlds": {
+    "matrix": "Copies of survival-fixed-20261027, normalized to the same shore, peaceful difficulty; original untouched.",
+    "flat": "Disposable copies with explicit fill, teleport and saturation setup; controlled physics fixture, not human data.",
+    "fresh_axe": "New normal survival world seed 1; no cheat commands."
+  },
+  "remaining": [
+    "At least four minutes of matched human movement and the original human save are still required for classifier acceptance.",
+    "Physical lateral path variation remains pending; the current PathOffset affects gaze only.",
+    "The exact supplied recording water stall was not reproduced on the copied local world."
+  ]
+}

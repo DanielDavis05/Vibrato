@@ -3,8 +3,33 @@
 Written for the agent continuing this work on the main checkout. Read `docs/HUMAN_MOTION_PLAN.md` first for the design and the
 trace format. This file is what has been learned since, what is broken, and what to do, in priority order.
 
-Branch `human-motion` is ahead of `master` and builds; the full unit suite passes (about 510 tests). Nothing on it has been
-validated in game except the recorder (it wrote real traces). Merge it into `master` only after step 1 passes.
+## Unified continuation (2026-10-27)
+
+`master` is now the canonical branch. The user explicitly requested integration along the way instead of maintaining two
+branches, superseding the original merge-order instructions below. The original workstream notes remain as historical context.
+
+The independent behavior/camera/key switches, opt-in scripted harness, intended/shaped key traces, crafting-cycle guard,
+water-bobbing detection and bounded recovery, short search opportunities, and guarded sprint-hop layer are implemented.
+The ten layer-isolation runs complete on copied worlds. Search distance stays above 96% of the all-off control, and the
+water crossings have no sampled path stall exceeding two seconds. Wandering distance is a progress proxy, not task success.
+The exact original `human` save is absent locally, so this does not reproduce or dismiss its recorded water stall.
+
+The flat fixture exposed Baritone dropping forward when a hop raised the feet above its planned traverse. The local engine
+now has a player-specific, expiring optional-hop token and a narrow traverse exception; ordinary movement keeps its original
+rules. The guarded flat run completes in about 6.75 seconds versus 8.12 without hops; the old 100-tick engine hop injector
+has been retired so the key layer owns optional hops. See `docs/human-motion-validation.json` for the measured phases and
+limitations rather than relying on unit tests alone. The modified engine is still
+the independent `/opt/Baritone` checkout; its exact source changes ship with the validation evidence.
+
+The all-layer mining/pillaring smoke check also passes: eight cobblestone collected, then six dirt blocks placed to the
+exact goal height with 58 dirt remaining and the player grounded. Ordinary planned jumps and airborne steering pass
+through the key layer unchanged. The script and supplied-trace analysis pipeline are covered by regression tests.
+
+Remaining acceptance work: the supplied real human `run1` trace has only 11 usable windows (the old bot trace 13), below
+the 20-per-class requirement. Acquire at least four minutes of matched human movement and the original world/route before
+claiming discriminator acceptance or fitting production defaults. `PathOffset` currently changes the visible gaze only;
+physical lateral wander still needs a separate bounded planner integration and controlled tests. Do not describe it as
+physical path variation. The original recorded stall has not been reproduced on the local engine.
 
 Rules that still apply: do not edit `../Baritone` unless a step says so, and if you do, list every change in the commit message
 and tell the user (that checkout is local only, not in git). Another Minecraft client may be running on the user's machine; do
@@ -124,5 +149,7 @@ It exists in `human/motion/PathOffset` and is tested but not used. It needs an a
   and forward-release counts close to the human's, no stalls longer than 2 s on the water route, discriminator held-out accuracy
   well below the synthetic 1.0 (target under about 0.65 on real data with at least 20 windows per class), full `./gradlew test` green.
 
-### 7. Merging
-Merge `master` into `human-motion` first, resolve, run the full suite, then merge `human-motion` into `master` and push both.
+### 7. Integration
+Continue on `master`. The fully integrated `human-motion` branch has been retired at the user's request; do not recreate
+a parallel development branch for these experiments. Keep changes reviewable through regular commits, use the component
+switches and copied worlds for experiments, run the relevant checks, and push the unified branch.

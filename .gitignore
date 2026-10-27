@@ -124,3 +124,6 @@ run-protocol-*/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Human trace analysis bytecode cache
+__pycache__/

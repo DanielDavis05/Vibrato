@@ -1,6 +1,8 @@
 # Human motion plan
 
-Branch `human-motion`. Goal: bots that move like a person. The camera (`HumanLook`) is already humanized; the
+Canonical branch: `master` (`human-motion` was integrated at the user's request). The workstreams below document the original
+division of work; current findings and outstanding acceptance are in `HUMAN_MOTION_NEXT.md`.
+Goal: bots that move like a person. The camera (`HumanLook`) is already humanized; the
 movement keys and path geometry are not (Baritone emits perfect keys along the planner's centerline).
 
 Approach: record a little real human play, fit parameters, then add a human layer between Baritone's intent and the
