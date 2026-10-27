@@ -19,6 +19,12 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerSessionC2SPacket;
+import net.minecraft.network.encryption.PlayerPublicKey;
+import net.minecraft.network.encryption.PublicPlayerSession;
+import java.security.KeyPairGenerator;
+import java.security.GeneralSecurityException;
+import java.util.UUID;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
@@ -67,6 +73,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("chat", new Requirement("Join a server that permits chat", List.of("Chat Message"))),
             Map.entry("command", new Requirement("Join a server with the help command", List.of("Chat Command"))),
             Map.entry("chat_ack_empty", new Requirement("Fresh isolated connection with no pending signed messages", List.of("Acknowledge Message"))),
+            Map.entry("player_session_untrusted", new Requirement("Terminal negative fixture: an expired self-generated RSA key with an invalid signature; no authenticated identity", List.of("Player Session"))),
             Map.entry("signed_command_empty", new Requirement("Fresh isolated connection with no pending signed messages and operator permission", List.of("Signed Chat Command"))),
             Map.entry("signed_command", new Requirement("Join an authenticated server with profile keys and the msg command", List.of("Signed Chat Command"))),
             Map.entry("move_ground", new Requirement("Direct protocol fixture packet with the current ground state", List.of("Set Player On Ground"))),
@@ -223,6 +230,20 @@ public final class ClientProtocolScenarioTask extends Task {
             case "chat_ack_empty" -> {
                 client.getNetworkHandler().sendPacket(new MessageAcknowledgmentC2SPacket(0));
                 yield true;
+            }
+            case "player_session_untrusted" -> {
+                // Explicit negative test: the key is generated locally and has no Mojang signature.
+                try {
+                    var generator = KeyPairGenerator.getInstance("RSA");
+                    generator.initialize(1024);
+                    var publicKey = generator.generateKeyPair().getPublic();
+                    var keyData = new PlayerPublicKey.PublicKeyData(Instant.EPOCH, publicKey, new byte[256]);
+                    client.getNetworkHandler().sendPacket(new PlayerSessionC2SPacket(
+                            new PublicPlayerSession.Serialized(UUID.randomUUID(), keyData)));
+                    yield true;
+                } catch (GeneralSecurityException e) {
+                    throw new IllegalStateException("Cannot generate negative fixture key", e);
+                }
             }
             case "signed_command_empty" -> {
                 if (!client.player.hasPermissionLevel(2)) yield false;
