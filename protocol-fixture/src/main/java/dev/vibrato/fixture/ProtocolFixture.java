@@ -75,7 +75,7 @@ public final class ProtocolFixture implements DedicatedServerModInitializer {
         scenario("written_book", List.of("open_book", "container_set_slot"), ProtocolFixture::writtenBook);
         scenario("horse_screen", List.of("horse_screen_open", "container_set_content"), ProtocolFixture::horseScreen);
         scenario("merchant_screen", List.of("open_screen", "merchant_offers", "container_set_content"), ProtocolFixture::merchantScreen);
-        scenario("reconfigure", List.of("start_configuration"), p -> p.networkHandler.reconfigure());
+        scenario("reconfigure", List.of("start_configuration"), p -> ((dev.vibrato.protocolfixture.TriggerReconfiguration) p.networkHandler).vibrato$fixtureReconfigure());
         scenario("death", List.of("damage_event", "player_combat_kill"), p -> commands(p, "gamemode survival @s", "kill @s"));
         scenario("resource_pack_unavailable", List.of("resource_pack_push"), p -> p.networkHandler.sendPacket(new ResourcePackSendS2CPacket(UUID.fromString("00000000-0000-0000-0000-000000000767"), "http://127.0.0.1:1/vibrato-fixture.zip", "", false, Optional.of(Text.literal("Local unavailable fixture pack")))));
         scenario("container", List.of("open_screen", "container_set_content", "container_set_data", "container_close"), ProtocolFixture::container);

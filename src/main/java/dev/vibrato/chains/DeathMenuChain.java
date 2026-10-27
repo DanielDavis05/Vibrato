@@ -88,7 +88,7 @@ public class DeathMenuChain extends TaskChain {
                 }
             }
         } else {
-            _waitOnDeathScreenBeforeRespawnTimer.reset();
+            if (Vibrato.inGame()) _waitOnDeathScreenBeforeRespawnTimer.reset();
             if (screen instanceof DisconnectedScreen) {
                 if (shouldAutoReconnect(mod)) {
                     Debug.logMessage("RECONNECTING: Going to Multiplayer Screen");
