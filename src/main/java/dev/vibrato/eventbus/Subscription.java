@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 // A wrapper object for event subscription
 public class Subscription<T> {
     private final Consumer<T> _callback;
-    private boolean _shouldDelete;
+    private volatile boolean _shouldDelete;
 
     public Subscription(Consumer<T> callback) {
         _callback = callback;
