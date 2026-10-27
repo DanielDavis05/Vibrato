@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractCommandBlockScreen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
+import net.minecraft.client.gui.screen.ingame.BeaconScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.screen.ingame.JigsawBlockScreen;
 import net.minecraft.client.gui.screen.ingame.StructureBlockScreen;
@@ -65,6 +66,20 @@ public final class ScreenScenarios {
         if (!(screen instanceof InventoryScreen inventory)) return false;
         inventory.getRecipeBookWidget().toggleOpen();
         return true;
+    }
+
+    /** Select the first primary beacon effect and confirm the payment in the open screen. */
+    public static boolean setBeaconEffect() {
+        Screen current = MinecraftClient.getInstance().currentScreen;
+        if (!(current instanceof BeaconScreen screen) || !screen.getScreenHandler().hasPayment()
+                || screen.getScreenHandler().getProperties() < 1) return false;
+        // Vanilla's 230x219 beacon screen places the first primary effect and Done here.
+        int left = (screen.width - 230) / 2;
+        int top = (screen.height - 219) / 2;
+        screen.handledScreenTick();
+        if (!screen.mouseClicked(left + 53, top + 23, 0)) return false;
+        screen.handledScreenTick();
+        return screen.mouseClicked(left + 165, top + 108, 0);
     }
 
     private static TextFieldWidget firstTextField(Screen screen) {

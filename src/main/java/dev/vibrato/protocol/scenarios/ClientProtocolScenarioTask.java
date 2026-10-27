@@ -23,6 +23,7 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("jigsaw", new Requirement("Open a jigsaw block as an authorized creative operator", List.of("Program Jigsaw Block"))),
             Map.entry("jigsaw_generate", new Requirement("Open a configured jigsaw block in an isolated world as an authorized creative operator", List.of("Program Jigsaw Block", "Jigsaw Generate"))),
             Map.entry("structure", new Requirement("Open a structure block as an authorized creative operator", List.of("Program Structure Block"))),
+            Map.entry("beacon", new Requirement("Open a powered beacon with a payment item in its slot", List.of("Set Beacon Effect"))),
             Map.entry("recipe_book", new Requirement("Open the player inventory", List.of("Change Recipe Book Settings"))),
             Map.entry("advancements", new Requirement("Join a world with an available root advancement", List.of("Seen Advancements"))),
             Map.entry("pick_item", new Requirement("Join a world with an item in inventory slot 9", List.of("Pick Item"))),
@@ -58,6 +59,7 @@ public final class ClientProtocolScenarioTask extends Task {
             case "jigsaw" -> ScreenScenarios.programJigsaw();
             case "jigsaw_generate" -> ScreenScenarios.generateJigsaw();
             case "structure" -> ScreenScenarios.programStructure();
+            case "beacon" -> ScreenScenarios.setBeaconEffect();
             case "recipe_book" -> ScreenScenarios.toggleRecipeBook();
             case "advancements" -> openAdvancements(client);
             case "pick_item" -> {
