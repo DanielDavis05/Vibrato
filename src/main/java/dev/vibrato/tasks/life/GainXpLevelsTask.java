@@ -1,6 +1,7 @@
 package dev.vibrato.tasks.life;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
 import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
@@ -42,11 +43,16 @@ public class GainXpLevelsTask extends Task {
     private final TimerGame _budget = new TimerGame(TIME_LIMIT_SECONDS);
     private SmeltInFurnaceTask _smelt;
     private KillEntitiesTask _kill;
+    private Task _replacementPickaxe;
     private Source _source;
 
     enum Source { SMELT, ORE, MOBS, SEARCH }
 
     static final class SourcePolicy {
+        static boolean needsReplacement(Source current, boolean hasBasicPickaxe) {
+            return current == Source.ORE && !hasBasicPickaxe;
+        }
+
         /** Keep an available source until it finishes or disappears; otherwise choose by cost. */
         static Source choose(Source current, boolean smelt, boolean ore, boolean mobs) {
             if (current == Source.SMELT && smelt || current == Source.ORE && ore || current == Source.MOBS && mobs) {
@@ -68,6 +74,22 @@ public class GainXpLevelsTask extends Task {
 
     @Override
     protected Task onTick(Vibrato mod) {
+        // Finish a started craft, including moving its result out of the cursor, before resuming XP.
+        if (_replacementPickaxe != null) {
+            if (!_replacementPickaxe.isFinished(mod)) {
+                setDebugState("Replacing broken pickaxe for XP mining");
+                return _replacementPickaxe;
+            }
+            _replacementPickaxe = null;
+        }
+        boolean hasBasicPickaxe = mod.getItemStorage().getItemCountInventoryOnly(
+                Items.STONE_PICKAXE, Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE) > 0;
+        if (SourcePolicy.needsReplacement(_source, hasBasicPickaxe)) {
+            _replacementPickaxe = java.util.Objects.requireNonNull(TaskCatalogue.getItemTask("stone_pick", 1));
+            setDebugState("Replacing broken pickaxe for XP mining");
+            return _replacementPickaxe;
+        }
+
         Item raw = null;
         Item cooked = null;
         for (Item candidate : ItemHelper.RAW_FOODS) {
