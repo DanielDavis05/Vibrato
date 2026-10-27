@@ -31,32 +31,14 @@ If the gradle tab doesn't exist, try `View > Tool Windows > Gradle`
 
 ## Baritone
 
-Vibrato uses [Baritone](https://github.com/cabaletta/baritone) for pathfinding. It is vendored as the `baritone/`
-git submodule (branch `1.21.1`, kept pristine) and Vibrato's hooks are carried as patches in `patches/baritone/`:
+Vibrato uses [Baritone](https://github.com/cabaletta/baritone) for pathfinding. Its source is a separate sibling checkout, `../Baritone` (`/opt/Baritone` when Vibrato is at `/opt/Vibrato`), containing the Vibrato hooks.
 
-* `baritone.vibrato.VibratoSettings` - break/place avoidance, forced walkable/non-walkable blocks, tool overrides,
-  protected items, global heuristics, an interaction pause, flowing-water and lava passes
-* `baritone.vibrato.RotationSmoother` - lets Vibrato's human camera model decide every rotation Baritone applies
-* `RayTraceUtils.fluidHandling`
-
-You do not build Baritone by hand. `gradle/baritone.gradle` runs on every Gradle configure and, when needed,
-initializes the submodule, applies the patches, builds Baritone's fabric jar into `baritone/dist` and records a stamp
-of what it was built from. The first build is slow (it downloads and remaps Minecraft); later ones are instant.
+The root build builds Baritone automatically when its tracked or untracked source or build configuration changes. Generated build, runtime and distribution files are excluded from the fingerprint. Override the checkout with `-PbaritoneSource=/path/to/Baritone`, or use `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip the source build.
 
 ```
-git clone --recurse-submodules <repo>     # or: git submodule update --init baritone
 ./gradlew build
+./gradlew build -PbaritoneSource=/path/to/Baritone
 ```
-
-The numbered patches are applied in order. The bootstrap composes them against submodule `HEAD` in a temporary Git index, then recognizes the newest applied prefix in the working tree. It applies only the missing suffix when the tree is compatible; overlapping edits are left untouched and reported for manual resolution. Non-overlapping tracked source edits are included in the build stamp and trigger a rebuild.
-
-For independent Baritone development, pass `-PbaritoneSource=/path/to/Baritone` to build from that Git checkout. It must already contain the Vibrato hooks and have a `gradlew`; this mode does not apply or validate the patch stack. The build fingerprint includes tracked changes and untracked source/build configuration files, so edits trigger a rebuild. Generated build, runtime and distribution files are excluded. For example:
-
-```
-./gradlew build -PbaritoneSource=/opt/Baritone
-```
-
-When changing a hook in the default submodule workflow, update the ordered patch stack so each patch applies after its predecessors. Preserve any local edits before resolving a conflicting stack. Pass `-PbaritoneDist=/path/to/dist` to use a prebuilt jar and skip the bootstrap.
 
 ## Task Development Guides
 
