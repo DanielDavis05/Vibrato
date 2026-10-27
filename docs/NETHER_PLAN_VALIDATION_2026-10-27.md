@@ -55,6 +55,10 @@ The food loop in the newly supplied gamer log has a separate confirmed cause: `C
 
 ## Scope and evidence
 
+The final integrated `test build` passed **623 Java tests**, with no failures, errors or skips; all **nine Python harness tests** passed. The packaged integrated mod has SHA-256 `054a6b6df5be9e31ec36cc6da2928540c1940908b3b3146885b36d78c79fdde5`. Later changes to the supervisor CLI and documentation do not change its Java sources.
+
+The [round-zero campaign report](test-rounds/ROUND_0.md) records simultaneous four- and six-client capacity checks on a separately frozen baseline. Those short probes establish launcher/telemetry behavior, not the reliability of the later integrated gameplay fixes. The staged 20-run pass-rate campaign and longer soak remain open.
+
 The original `human` save is still absent. New fixed-seed survival worlds and copies of the existing development save were used; differing spawn positions mean the fresh survival runs are not strict same-terrain A/B comparisons. No original player save or `/opt/traces` input was modified. Normal survival scripts contain only recording, task, observation and stop commands; fixture scripts explicitly supply terrain/items and teleport.
 
 The planner still treats verified water landings as legitimate descent routes. This review does not claim that every route avoids all water/lava. Native Baritone water-bucket fall planning checks a hotbar bucket and the literal Nether dimension; its handling of custom ultrawarm dimensions was not changed. Vibrato's actual emergency water use checks `ultrawarm` at the point of use. An observed source at an attempted target is evidence of water there, not proof the click caused it; hard process crashes cannot emit a final fall summary.
