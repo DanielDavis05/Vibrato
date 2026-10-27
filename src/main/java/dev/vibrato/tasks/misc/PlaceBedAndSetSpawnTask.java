@@ -16,6 +16,9 @@ import dev.vibrato.tasks.movement.GetToBlockTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasks.resources.CollectBedTask;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.nav.NavSafety;
+import dev.vibrato.nav.Waypoint;
+import dev.vibrato.nav.WaypointKind;
 import dev.vibrato.util.Dimension;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.helpers.ItemHelper;
@@ -213,6 +216,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
                     _inBedTimer.reset();
                 }
                 // Keep track of where our spawn point is
+                rememberSpawn(mod, _bedForSpawnPoint);
                 _progressChecker.reset();
                 return new InteractWithBlockTask(_bedForSpawnPoint);
             }, BEDS);
@@ -306,6 +310,12 @@ public class PlaceBedAndSetSpawnTask extends Task {
         }
 
         return new InteractWithBlockTask(new ItemTarget("bed", 1), BED_PLACE_DIRECTION, toPlace.offset(BED_PLACE_DIRECTION.getOpposite()), false);
+    }
+
+    /** Remembers the bed we sleep in as the spawn point, so return-to-spawn can find it. */
+    private static void rememberSpawn(Vibrato mod, BlockPos bed) {
+        String dimension = mod.getWorld().getRegistryKey().getValue().toString();
+        NavSafety.waypoints().set(WaypointKind.BED, new Waypoint(WaypointKind.BED, dimension, bed.getX(), bed.getY(), bed.getZ()));
     }
 
     @Override
