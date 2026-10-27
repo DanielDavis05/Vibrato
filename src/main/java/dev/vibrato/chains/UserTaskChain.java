@@ -55,9 +55,21 @@ public class UserTaskChain extends SingleTaskChain {
     }
 
     public void cancel(Vibrato mod) {
-        if (_mainTask != null && _mainTask.isActive()) {
+        // Cancellation is not successful completion: discard command-chain continuations
+        // before stopping, including when the task has been scheduled but not ticked yet.
+        _currentOnFinish = null;
+        if (_mainTask != null) {
+            Task cancelledTask = _mainTask;
             stop(mod);
-            onTaskFinish(mod);
+            mod.getTaskRunner().disable();
+            mod.getClientBaritone().getInputOverrideHandler().clearAllKeys();
+            if (!_runningIdleTask) {
+                double seconds = _taskStopwatch.time();
+                Debug.logInternal("User task cancelled after %s.", prettyPrintTimeDuration(seconds));
+                EventBus.publish(new TaskFinishedEvent(seconds, cancelledTask, true));
+            }
+            _runningIdleTask = false;
+            _nextTaskIdleFlag = false;
         }
     }
 
@@ -102,9 +114,10 @@ public class UserTaskChain extends SingleTaskChain {
         double seconds = _taskStopwatch.time();
         Task oldTask = _mainTask;
         _mainTask = null;
-        if (_currentOnFinish != null) {
-            //noinspection unchecked
-            _currentOnFinish.run();
+        Runnable onFinish = _currentOnFinish;
+        _currentOnFinish = null;
+        if (onFinish != null) {
+            onFinish.run();
         }
         // our `onFinish` might have triggered more tasks.
         boolean actuallyDone = _mainTask == null;
