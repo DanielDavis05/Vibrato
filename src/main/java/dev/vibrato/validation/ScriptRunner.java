@@ -53,7 +53,7 @@ public final class ScriptRunner {
         }
     }
 
-    private synchronized void tick() {
+    private void tick() {
         MinecraftClient client = MinecraftClient.getInstance();
         long now = System.nanoTime();
         double dt = previousNanos == 0 ? 0 : Math.max(0, (now - previousNanos) / 1e9);
