@@ -91,6 +91,7 @@ public class SmeltInFurnaceTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(Vibrato mod, Task interruptTask) {
+        mod.getBehaviour().pop();
         // Close furnace screen
         StorageHelper.closeScreen();
     }

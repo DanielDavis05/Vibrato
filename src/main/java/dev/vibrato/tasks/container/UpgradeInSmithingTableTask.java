@@ -101,7 +101,7 @@ public class UpgradeInSmithingTableTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(Vibrato mod, Task interruptTask) {
-        mod.getBehaviour().push();
+        mod.getBehaviour().pop();
     }
 
     @Override
