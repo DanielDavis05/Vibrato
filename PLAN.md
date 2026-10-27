@@ -206,6 +206,17 @@ At most 3 agents at a time. Each item is an agent assignment; the lead reviews, 
 | I6 | **Performance**: `PerfBudget` telemetry (log any bot spending > 20 ms/tick in Vibrato code), audit per-tick allocations and scans in new chains and trackers | PLAN section 5; ten bots |
 | I7 | **Docs and cleanup**: README, FEATURES.md vs reality, dead code, `Playground`, stale references | |
 
+### I8 - Scenario harness (added 2026-10-27 after the first live runs)
+
+The first live runs showed that "it works" cannot be judged from a long random run: failures are specific
+(false unstuck while mining, nerd poling / pillar jumps, corners and edges, water). Add `-Dvibrato.scenario=<name>`
+to the test launch: an auto-created cheats-on world, scripted setup (`/give`, `/tp`, `/time`, `/gamemode`), one
+scripted goal, a 60 s limit, and a logged `SCENARIO <name> PASS|FAIL reason metrics` line, then exit. Scenarios:
+`mine_no_cancel` (pickaxe, mine 5 stone; assert no cancels), `pillar_up` (64 blocks, go up 12), `edge_jump` (1-3 block
+gaps), `corner_walk` (L-shaped corridor, diagonal corners), `water_cross` (swim 30 blocks with bank climb-out),
+`underground_escape` (no pickaxe, enclosed, must reach open sky), `human_ab` (same route with `-Dvibrato.human=off`
+vs on, compare "FAR AWAY FROM PATH" and time). Owner: the smoke-test agent (resume it), after the nav fixes land.
+
 ### Variation workstreams (V) - see docs/VARIATION.md
 
 V1 macro scenarios + persona traits + needs/events layer; V2 technique parameters; V3 interaction sets A, B, C.
