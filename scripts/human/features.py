@@ -122,7 +122,7 @@ def tick_clock(events):
     anchors = sorted((e["ms"], e["n"]) for e in events if e["t"] == "tick")
     anchor_ms = [ms for ms, _ in anchors]
     for e in events:
-        if e["t"] == "tick":
+        if e["t"] in ("tick", "ikey"):
             e["tk"] = e["n"] * TICK_MS
         elif not anchors:
             e["tk"] = float(e["ms"])
@@ -167,6 +167,50 @@ def clean_mouse(events):
     return out
 
 
+def input_attribution(events):
+    """Compare intended, shaped, and sampled effective keys on matching tick numbers.
+
+    Returns None for legacy traces. Missing ikey samples break transition runs rather than being assumed held.
+    Stationary path ticks require a path node, intended forward, and horizontal speed at or below the movement gate.
+    """
+    snapshots = {e["n"]: e for e in events if e["t"] == "ikey"}
+    if not snapshots:
+        return None
+    held = set()
+    rows = []
+    for e in events:
+        if e["t"] == "key":
+            if e["down"]:
+                held.add(e["key"])
+            else:
+                held.discard(e["key"])
+        elif e["t"] == "tick" and e["n"] in snapshots:
+            snap = snapshots[e["n"]]
+            rows.append((e, snap, set(held)))
+    result = {"matched_ticks": len(rows), "stationary_path_intended_forward_ticks": 0,
+              "stationary_path_shaped_forward_ticks": 0, "stationary_path_effective_forward_ticks": 0}
+    for name in ("intended", "shaped", "effective"):
+        result[name + "_forward_releases"] = 0
+        result[name + "_sprint_restarts"] = 0
+    prev = None
+    for tick, snap, effective in rows:
+        states = {"intended": (bool(snap["intended"] & 1), bool(snap["intended"] & 32)),
+                  "shaped": (bool(snap["shaped"] & 1), bool(snap["shaped"] & 32)),
+                  "effective": ("forward" in effective, "sprint" in effective)}
+        if "nextX" in tick and not _moving(tick) and states["intended"][0]:
+            result["stationary_path_intended_forward_ticks"] += 1
+            for name in ("shaped", "effective"):
+                if states[name][0]:
+                    result["stationary_path_" + name + "_forward_ticks"] += 1
+        if prev is not None and tick["n"] == prev[0] + 1:
+            for name in states:
+                old, new = prev[1][name], states[name]
+                result[name + "_forward_releases"] += int(old[0] and not new[0])
+                result[name + "_sprint_restarts"] += int(not old[1] and new[1])
+        prev = (tick["n"], states)
+    return result
+
+
 def window_ticks(seconds=WINDOW_SECONDS):
     """Window length in ticks: 10 s is 200 ticks."""
     return int(round(seconds * 1000.0 / TICK_MS))
@@ -184,7 +228,8 @@ def split_windows(events, seconds=WINDOW_SECONDS):
     windows = []
     current = None
     held = set()
-    for e in events:
+    # ikey snapshots describe the next sampled tick and can precede mouse events in file order.
+    for e in sorted(events, key=lambda event: event["tk"]):
         index = math.floor(e["tk"] / span)
         if index != current:
             current = index

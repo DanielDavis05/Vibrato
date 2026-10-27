@@ -23,7 +23,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from features import (DEFAULT_CHANNEL, MIN_MOVING_S, MOUSE_ONLY_FEATURES, TICK_FEATURE_NAMES,  # noqa: E402
-                      moving_seconds, read_trace, split_windows, vector, window_features, window_is_usable)
+                      input_attribution, moving_seconds, read_trace, split_windows, vector, window_features, window_is_usable)
 
 MIN_WINDOW_COUNT = 20  # usable windows per class below this make the accuracy unreliable
 TRAIN_FRACTION = 0.7   # used for the time split of a single-trace class
@@ -118,6 +118,13 @@ def main():
     for label, group in files.items():
         if not group:
             sys.exit(f"no {label} traces given")
+
+    # Attribution is diagnostic only: intent is unavailable for human and legacy traces and is never a classifier input.
+    for path in files["bot"]:
+        _, events = read_trace(path)
+        attr = input_attribution(events)
+        if attr is not None:
+            print(f"input attribution {path}: {attr}")
 
     # Per class and per trace: the usable window vectors, in time order.
     data = {label: {path: load(path, args.window) for path in group} for label, group in files.items()}

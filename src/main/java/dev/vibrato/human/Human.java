@@ -30,32 +30,36 @@ public final class Human {
      * {@code -Dvibrato.humanKeys=off} skips only the key layer; {@code -Dvibrato.debugKeys=true} logs shaped keys.
      */
     public static void install(Vibrato mod, long seed) {
-        if ("off".equalsIgnoreCase(System.getProperty("vibrato.human"))) {
-            Debug.logMessage("Human camera: OFF (-Dvibrato.human=off), using Baritone's stock aiming");
-            return;
-        }
-        Debug.logMessage("Human camera: ON");
         HumanProfile profile = HumanProfile.sample(new SplittableRandom(seed), Population.load());
         Debug.logMessage("Human profile: " + profile);
-        HumanLook humanLook = new HumanLook(seed, HumanLookConfig.DEFAULT, profile);
-        humanLook.setSensitivitySource(() -> MinecraftClient.getInstance().options.getMouseSensitivity().getValue());
-        look = humanLook;
-        VibratoSettings.getInstance().setRotationSmoother(humanLook);
+        if (HumanComponents.enabled("humanLook")) {
+            Debug.logMessage("Human camera: ON");
+            HumanLook humanLook = new HumanLook(seed, HumanLookConfig.DEFAULT, profile);
+            humanLook.setSensitivitySource(() -> MinecraftClient.getInstance().options.getMouseSensitivity().getValue());
+            look = humanLook;
+            VibratoSettings.getInstance().setRotationSmoother(humanLook);
 
-        Settings settings = mod.getClientBaritoneSettings();
-        settings.randomLooking.value = 0.0;
-        settings.randomLooking113.value = 0.0;
-        settings.smoothLook.value = false;
-        settings.freeLook.value = false;
+            Settings settings = mod.getClientBaritoneSettings();
+            settings.randomLooking.value = 0.0;
+            settings.randomLooking113.value = 0.0;
+            settings.smoothLook.value = false;
+            settings.freeLook.value = false;
+        } else {
+            look = null;
+            VibratoSettings.getInstance().setRotationSmoother(null);
+            Debug.logMessage("Human camera: OFF; using Baritone's stock aiming");
+        }
 
-        if ("off".equalsIgnoreCase(System.getProperty("vibrato.humanKeys"))) {
+        if (!HumanComponents.enabled("humanKeys")) {
             Debug.logMessage("Human keys: OFF (-Dvibrato.humanKeys=off), Baritone's keys pass through");
+            HumanKeys.install(null, Boolean.getBoolean("vibrato.debugKeys"));
         } else {
             Debug.logMessage("Human keys: ON");
             // A separate stream from the profile's, so the same seed still gives the same profile.
             HumanKeys.install(new ShapingLayer(seed ^ KEY_SEED_SALT, profile),
                     Boolean.getBoolean("vibrato.debugKeys"));
         }
+        Debug.logMessage("Human behavior: " + (HumanComponents.behavior() ? "ON" : "OFF"));
     }
 
     /**

@@ -19,6 +19,11 @@ public final class SearchOpportunityController {
 
     /** Call only while the search owns the main task chain. */
     public Task tick(Vibrato mod, boolean canInterrupt) {
+        if (!dev.vibrato.human.HumanComponents.behavior()) {
+            release = task != null;
+            if (task != null) end(mod);
+            return null;
+        }
         double elapsed = clock.tick();
         release = false;
         if (task != null) {

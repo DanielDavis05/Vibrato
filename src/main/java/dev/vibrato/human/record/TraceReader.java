@@ -45,6 +45,9 @@ public final class TraceReader {
                     integer64(fields, "ms"), decimal(fields, "dx"), decimal(fields, "dy"));
             case "key" -> new TraceEvent.Key(
                     integer64(fields, "ms"), required(fields, "key"), bool(fields, "down"));
+            case "ikey" -> new TraceEvent.IntendedKeys(
+                    integer64(fields, "n"), integer64(fields, "ms"),
+                    integer(fields, "intended"), integer(fields, "shaped"));
             case "tick" -> new TraceEvent.Tick(
                     integer64(fields, "n"), integer64(fields, "ms"),
                     decimal(fields, "x"), decimal(fields, "y"), decimal(fields, "z"),

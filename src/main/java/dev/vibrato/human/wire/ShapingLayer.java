@@ -3,6 +3,8 @@ package dev.vibrato.human.wire;
 import dev.vibrato.human.motion.HumanProfile;
 import dev.vibrato.human.motion.Key;
 import dev.vibrato.human.motion.KeyShaper;
+import dev.vibrato.human.motion.PathOffset;
+import java.util.List;
 
 import java.util.EnumSet;
 
@@ -18,12 +20,16 @@ public final class ShapingLayer {
     private final long seed;
     private final HumanProfile profile;
     private KeyShaper shaper;
+    private final SprintHop hop;
+    private final PathOffset offset;
     private long generation;
     private KeyShaper.Stats retired = KeyShaper.Stats.ZERO;
 
     public ShapingLayer(long seed, HumanProfile profile) {
         this.seed = seed;
         this.profile = profile;
+        this.hop = new SprintHop(seed ^ 0x19E3779B, profile);
+        this.offset = new PathOffset(seed ^ 0x51E3779B, profile);
     }
 
     public KeyAdapter.Flags apply(KeyAdapter.Flags intended, PathView view, Bypass bypass) {
@@ -44,6 +50,18 @@ public final class ShapingLayer {
             shaped.remove(Key.SPRINT);
         }
         return KeyAdapter.toFlags(shaped);
+    }
+
+    public KeyAdapter.Flags addHop(KeyAdapter.Flags shaped, PathView view, List<MovementKind> movements,
+                                   boolean clear, boolean enabled) {
+        boolean jump = hop.tick(shaped, view, movements, clear, enabled);
+        return jump ? new KeyAdapter.Flags(shaped.forward(), shaped.back(), shaped.left(), shaped.right(),
+                true, shaped.sprint(), shaped.sneak()) : shaped;
+    }
+
+    /** Camera-only offset; the path planner retains control of physical movement. */
+    public double visualOffsetDegrees(boolean clear) {
+        return Math.toDegrees(Math.atan2(offset.step(clear ? 0.25 : 0), Math.max(1, profile.lookAheadBlocks())));
     }
 
     /** Counters for every shaper this layer has run, including the current one. */

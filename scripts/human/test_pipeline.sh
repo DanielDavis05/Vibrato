@@ -10,6 +10,8 @@ trap 'rm -rf "$TMP"' EXIT
 # -I isolates the interpreter and -B keeps __pycache__ out of the repo.
 PY=(python3 -I -B)
 
+"${PY[@]}" "$HERE/test_attribution.py"
+
 "${PY[@]}" "$HERE/synth.py" "$TMP/traces" --humans 8 --bots 8 --seconds 90 --seed 7 > /dev/null
 "${PY[@]}" "$HERE/synth.py" "$TMP/traces_reclocked" --humans 8 --bots 8 --seconds 90 --seed 7 --clock-seed 5 > /dev/null
 "${PY[@]}" "$HERE/fit.py" "$TMP"/traces/*-human.jsonl -o "$TMP/human_profile.json"

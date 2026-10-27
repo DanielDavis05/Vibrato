@@ -21,6 +21,10 @@ public sealed interface TraceEvent {
      */
     record Key(long ms, String key, boolean down) implements TraceEvent {}
 
+    /** Input snapshot for the movement that will be reflected by tick n. Masks use bits 0..6 in the
+     * order forward, back, left, right, jump, sprint, sneak. Absent in older traces. */
+    record IntendedKeys(long n, long ms, int intended, int shaped) implements TraceEvent {}
+
     /**
      * Player state sampled once per client tick. The {@code next*} fields are the next path node while pathing and
      * {@code null} otherwise. {@code edge} is the horizontal distance in blocks to the first gap or drop ahead along

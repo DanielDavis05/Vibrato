@@ -47,6 +47,15 @@ Every tool runs as `python3 -I -B scripts/human/<tool>.py`. The `-B` flag keeps 
 * `mouse`: deltas are cleaned on read (`features.clean_mouse`). A delta over 200 px in either axis is dropped
   (cursor recentre or screen switch). After a silence of more than 500 ms with no mouse events, deltas over 50 px in
   the first 100 ms are dropped (a huge first sample after a gap).
+* `ikey` (optional in version 1): one bot input snapshot per input tick. `n` is the next sampled tick, and
+  `intended` and `shaped` are masks with bits 0 through 6 for forward, back, left, right, jump, sprint and sneak.
+  `ms` is the monotonic capture timestamp. Missing snapshots mean attribution is unavailable, not that all keys
+  were up. Existing traces without this event remain valid.
+* The discriminator prints input attribution separately from its classifier: forward releases and sprint starts for
+  intended, shaped and effective inputs, plus stationary path ticks where forward was intended, and the subset where
+  shaped/effective forward was still held. Effective sprint is sampled player sprint state; intended and shaped
+  sprint are requested inputs. Transitions across missing snapshots are excluded. These diagnostic fields never
+  enter the classifier, since intent is not available for human or older traces.
 * `tick.n`: the tick count. The tick channel times everything from it (see Tick clock). Its `ms` is the sampler's
   timestamp and is bursty.
 * `tick.yaw`, `tick.vx/vz`, `tick.ground`: what a server sees. The tick channel uses only these.
@@ -81,7 +90,7 @@ to time would make every tick-channel feature depend on sampler bursts, not on t
 
 So the tick channel runs on the tick clock:
 
-* `read_trace()` sets `tk` on every event (`features.tick_clock`). A tick has `tk = n * 50` ms exactly.
+* `read_trace()` sets `tk` on every event (`features.tick_clock`). A tick or ikey snapshot has `tk = n * 50` ms exactly.
 * A key or mouse event has only `ms`. Its `tk` is its fractional tick position, by linear interpolation between the
   neighbouring tick events' `(ms, n)` pairs. Outside the first and last tick it extrapolates at 50 ms per tick.
 * Windows are sliced on `tk`. A 10 s window is 200 ticks (`features.window_ticks`).

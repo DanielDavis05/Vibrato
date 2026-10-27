@@ -98,6 +98,15 @@ class KeyShaperTest {
     }
 
     @Test
+    void sprintCancelsExistingHesitationAndPreventsAnother() {
+        HumanProfile always = new HumanProfile(5, 0, 0, 0, 0, 6, 0.3, 1, 0.03, 0.1, 3, 0.92, 1.2, 1, 1);
+        KeyShaper shaper = new KeyShaper(1, always);
+        assertTrue(shaper.shape(EnumSet.of(Key.FORWARD), ctx(true, KeyShaper.NO_JUMP, 0, 0)).isEmpty());
+        var sprint = EnumSet.of(Key.FORWARD, Key.SPRINT);
+        for (int i = 0; i < 20; i++) assertEquals(sprint, shaper.shape(sprint, ctx(true, KeyShaper.NO_JUMP, 0, 0)));
+    }
+
+    @Test
     void certainHesitationReleasesEveryKey() {
         HumanProfile always = new HumanProfile(5, 0, 0, 0, 0, 6, 0.3, 1, 0.03, 0.1, 3, 0.92, 1.2, 1, 1);
         KeyShaper shaper = new KeyShaper(1, always);

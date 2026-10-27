@@ -11,7 +11,7 @@ import java.util.random.RandomGenerator;
  * A planned jump is pressed a few ticks early or late, decided once per jump. The shift is clamped to the tolerance
  * window the caller passes in, so the bot never jumps earlier or later than the path planner allowed. A missed jump is
  * retried after a short wait, but a jump is never missed when a gap or ledge is within 2 blocks,
- * since it may be the jump that clears the gap. Hesitations release every key for a few ticks, only when nothing time-critical is happening. Strafe taps break a held strafe key for a
+ * since it may be the jump that clears the gap. Hesitations release every key for a few ticks, only when nothing time-critical is happening and sprint is not intended. Strafe taps break a held strafe key for a
  * log-normal length. Before a close gap, W may be released for 1-2 ticks, decided once per gap approach (see
  * {@code isBeforeGap}); a sprinting bot never has W released this way, since releasing W cancels the sprint.
  * <p>
@@ -128,6 +128,7 @@ public final class KeyShaper {
 
     private EnumSet<Key> decide(Set<Key> intended, Context ctx, long now) {
         EnumSet<Key> out = EnumSet.noneOf(Key.class);
+        if (intended.contains(Key.SPRINT)) hesitateUntil = now;
         if (now < hesitateUntil) {
             hesitationTicks++;
             return out;
@@ -259,6 +260,7 @@ public final class KeyShaper {
                 && !jumpScheduled
                 && ctx.ticksUntilJump() == NO_JUMP
                 && !intended.contains(Key.JUMP)
+                && !intended.contains(Key.SPRINT)
                 && ctx.gapAheadBlocks() > GAP_RELEASE_BLOCKS;
     }
 

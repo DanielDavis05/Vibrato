@@ -5,6 +5,7 @@ import baritone.api.utils.input.Input;
 import dev.vibrato.Debug;
 import dev.vibrato.Vibrato;
 import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.human.motion.Key;
 import dev.vibrato.eventbus.Subscription;
 import dev.vibrato.eventbus.events.ClientTickEvent;
 import net.minecraft.SharedConstants;
@@ -20,6 +21,7 @@ import net.minecraft.world.chunk.EmptyChunk;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -121,6 +123,25 @@ public final class MotionRecorder {
             return;
         }
         current.emit(new TraceEvent.Mouse(nowMillis(), dx, dy));
+    }
+
+    /** Record the pre- and post-shaping movement flags once after input processing. The next client tick
+     * samples the movement produced by these flags. The masks are deliberately independent of enum ordinals. */
+    public static synchronized void recordInputs(Set<Key> intended, Set<Key> shaped) {
+        if (!recording || current == null || !current.bot) {
+            return;
+        }
+        current.emit(new TraceEvent.IntendedKeys(current.tickCount + 1, nowMillis(),
+                keyMask(intended), keyMask(shaped)));
+    }
+
+    private static int keyMask(Set<Key> keys) {
+        int mask = 0;
+        Key[] order = {Key.FORWARD, Key.BACK, Key.LEFT, Key.RIGHT, Key.JUMP, Key.SPRINT, Key.SNEAK};
+        for (int i = 0; i < order.length; i++) {
+            if (keys.contains(order[i])) mask |= 1 << i;
+        }
+        return mask;
     }
 
     /**

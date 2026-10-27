@@ -1,80 +1,51 @@
 package dev.vibrato.eventbus;
 
-import net.minecraft.util.Pair;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * A static class to solve dependency issues. Lets us send and receive events globally, decoupling our codebase.
- *
- * Technically `ConfigHelper` does something like this, but here is a more general case.
- */
-@SuppressWarnings({"rawtypes", "unchecked"})
+/** A global event bus for decoupled components. */
 public class EventBus {
+    private static final Map<Class<?>, List<Subscription<?>>> topics = new HashMap<>();
 
-    private static boolean _lock;
-
-    private static final HashMap<Class, List<Subscription>> _topics = new HashMap<>();
-    private static final List<Pair<Class, Subscription>> _toAdd = new ArrayList<>();
-
+    /** Each publication uses a snapshot. New subscriptions take effect on the next (including nested) publication;
+     * an unsubscribed listener is skipped even if it was already present in the snapshot. */
     public static <T> void publish(T event) {
-        Class type = event.getClass();
-
-        // Add all subscriptions we need to add
-        for (Pair<Class, Subscription> toAdd : _toAdd) {
-            subscribeInternal(toAdd.getLeft(), toAdd.getRight());
+        List<Subscription<?>> snapshot;
+        synchronized (topics) {
+            List<Subscription<?>> listeners = topics.get(event.getClass());
+            if (listeners == null) return;
+            snapshot = List.copyOf(listeners);
         }
-        _toAdd.clear();
-
-        if (_topics.containsKey(type)) {
-            List<Subscription> subscribers = _topics.get(type);
-
-            // Subscriptions can be deleted while they're called
-            List<Subscription> toDelete = new ArrayList<>();
-
-            // Go through our subscription list. We shouldn't modify the list while we're iterating it.
-            _lock = true;
-            for (Subscription subRaw : subscribers) {
-                Subscription<T> sub;
-                try {
-                    sub = (Subscription<T>) subRaw;
-                    if (sub.shouldDelete()) {
-                        toDelete.add(sub);
-                    } else {
-                        sub.accept(event);
-                    }
-                } catch (ClassCastException e) {
-                    System.err.println("TRIED PUBLISHING MISMAPPED EVENT: " + event);
-                    e.printStackTrace();
+        try {
+            for (Subscription<?> raw : snapshot) {
+                if (!raw.shouldDelete()) {
+                    @SuppressWarnings("unchecked") Subscription<T> sub = (Subscription<T>) raw;
+                    sub.accept(event);
                 }
             }
-            // Delete all subscriptions
-            _lock = false;
+        } finally {
+            synchronized (topics) {
+                List<Subscription<?>> listeners = topics.get(event.getClass());
+                if (listeners != null) {
+                    listeners.removeIf(Subscription::shouldDelete);
+                    if (listeners.isEmpty()) topics.remove(event.getClass());
+                }
+            }
         }
-    }
-
-    private static <T> void subscribeInternal(Class<T> type, Subscription<T> sub) {
-        if (!_topics.containsKey(type)) {
-            _topics.put(type, new ArrayList<>());
-        }
-        _topics.get(type).add(sub);
     }
 
     public static <T> Subscription<T> subscribe(Class<T> type, Consumer<T> consumeEvent) {
         Subscription<T> sub = new Subscription<>(consumeEvent);
-        if (_lock) {
-            _toAdd.add(new Pair<>(type, sub));
-        } else {
-            subscribeInternal(type, sub);
+        synchronized (topics) {
+            topics.computeIfAbsent(type, ignored -> new ArrayList<>()).add(sub);
         }
         return sub;
     }
 
     public static <T> void unsubscribe(Subscription<T> subscription) {
-        if (subscription != null)
-            subscription.delete();
+        if (subscription != null) subscription.delete();
     }
 }

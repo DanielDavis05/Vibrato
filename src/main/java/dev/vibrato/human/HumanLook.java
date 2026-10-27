@@ -46,6 +46,12 @@ public final class HumanLook implements RotationSmoother {
     private DoubleSupplier sensitivity;
     private Rotation lastPrevious;
     private Rotation lastDesired;
+    private double travelYawOffset;
+
+    /** Visual only: the key layer supplies zero around interaction or uncertain terrain. */
+    public void setTravelYawOffset(double degrees) {
+        travelYawOffset = Double.isFinite(degrees) ? Math.max(-3, Math.min(3, degrees)) : 0;
+    }
 
     public HumanLook(long seed, HumanLookConfig cfg) {
         this(seed, cfg, HumanProfile.typical(Population.DEFAULT));
@@ -82,11 +88,17 @@ public final class HumanLook implements RotationSmoother {
         copy.pitch.copyState(pitch);
         copy.lastPrevious = lastPrevious;
         copy.lastDesired = lastDesired;
+        copy.travelYawOffset = travelYawOffset;
         return copy;
     }
 
     @Override
     public Rotation smooth(Rotation previous, Rotation desired) {
+        var settings = baritone.vibrato.VibratoSettings.getInstance();
+        long interaction = settings.getLastBlockInteractLookTick();
+        if (travelYawOffset != 0 && (interaction == Long.MIN_VALUE || settings.getLookTick() - interaction > 1)) {
+            desired = new Rotation(desired.getYaw() + (float) travelYawOffset, desired.getPitch());
+        }
         lastPrevious = previous;
         lastDesired = desired;
         Rotation smoothed = next(previous, desired);

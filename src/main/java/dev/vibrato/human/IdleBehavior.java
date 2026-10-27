@@ -26,7 +26,7 @@ public final class IdleBehavior {
      * Busy ticks return nothing and restart the schedule.
      */
     public Optional<Glance> poll(long tick, boolean idle, RandomGenerator rng) {
-        if (!idle) {
+        if (!idle || !HumanComponents.behavior()) {
             nextGlanceTick = -1;
             return Optional.empty();
         }

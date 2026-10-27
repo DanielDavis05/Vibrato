@@ -38,6 +38,7 @@ class TraceRoundTripTest {
                 new TraceEvent.Mouse(123456, 3.0, -1.0),
                 new TraceEvent.Key(123460, "forward", true),
                 new TraceEvent.Key(123480, "sprint", false),
+                new TraceEvent.IntendedKeys(1042, 123490, 33, 32),
                 new TraceEvent.Tick(1042, 123500, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 10.0, 5.0,
                         true, false, 1.5, 64.0, 0.5, 2.25));
 

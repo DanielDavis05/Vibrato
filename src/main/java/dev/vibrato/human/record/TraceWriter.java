@@ -73,6 +73,9 @@ public final class TraceWriter implements Closeable {
             case TraceEvent.Key k -> "{\"t\":\"key\",\"ms\":" + k.ms()
                     + ",\"key\":" + quote(k.key())
                     + ",\"down\":" + k.down() + "}";
+            case TraceEvent.IntendedKeys k -> "{\"t\":\"ikey\",\"n\":" + k.n()
+                    + ",\"ms\":" + k.ms() + ",\"intended\":" + k.intended()
+                    + ",\"shaped\":" + k.shaped() + "}";
             case TraceEvent.Tick t -> tickJson(t);
         };
     }

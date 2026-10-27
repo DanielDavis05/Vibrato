@@ -14,6 +14,11 @@ import dev.vibrato.chains.MLGBucketFallChain;
 import dev.vibrato.chains.MobDefenseChain;
 import dev.vibrato.chains.SingleTaskChain;
 import dev.vibrato.human.motion.KeyShaper;
+import dev.vibrato.human.Human;
+import dev.vibrato.human.HumanComponents;
+import dev.vibrato.human.record.MotionRecorder;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.BlockPos;
 import dev.vibrato.nav.NavSafetyChain;
 import dev.vibrato.tasksystem.TaskChain;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -70,13 +75,20 @@ public final class HumanKeys {
     public static void afterInputTick(ClientPlayerEntity player) {
         ShapingLayer active = layer;
         Vibrato mod = Debug.jankModInstance;
-        if (active == null || failed || mod == null || player != mod.getPlayer()) {
+        if (mod == null || player != mod.getPlayer()) return;
+        if (active == null || failed) {
+            KeyAdapter.Flags flags = intended(player, BaritoneAPI.getProvider().getBaritoneForPlayer(player));
+            MotionRecorder.recordInputs(KeyAdapter.toKeys(flags), KeyAdapter.toKeys(flags));
+            if (Human.look() != null) Human.look().setTravelYawOffset(0);
             return;
         }
         try {
             shape(active, mod, player);
         } catch (RuntimeException e) {
             failed = true;
+            KeyAdapter.Flags flags = intended(player, BaritoneAPI.getProvider().getBaritoneForPlayer(player));
+            MotionRecorder.recordInputs(KeyAdapter.toKeys(flags), KeyAdapter.toKeys(flags));
+            if (Human.look() != null) Human.look().setTravelYawOffset(0);
             Debug.logWarning("Human key layer disabled after error: " + e);
         }
     }
@@ -87,7 +99,9 @@ public final class HumanKeys {
         IBaritone baritone = BaritoneAPI.getProvider().getBaritoneForPlayer(player);
         IPathExecutor executor = baritone == null ? null : baritone.getPathingBehavior().getCurrent();
         boolean controlled = input instanceof PlayerMovementInput && executor != null;
-        boolean interacting = baritone != null
+        var client = MinecraftClient.getInstance();
+        boolean interacting = client.currentScreen != null || client.options.attackKey.isPressed()
+                || client.options.useKey.isPressed() || baritone != null
                 && (baritone.getInputOverrideHandler().isInputForcedDown(Input.CLICK_LEFT)
                 || baritone.getInputOverrideHandler().isInputForcedDown(Input.CLICK_RIGHT));
         Bypass bypass = new Bypass(
@@ -101,9 +115,15 @@ public final class HumanKeys {
                 interacting,
                 safetyChainInCharge(mod));
 
-        KeyAdapter.Flags intended = new KeyAdapter.Flags(input.pressingForward, input.pressingBack,
-                input.pressingLeft, input.pressingRight, input.jumping, false, input.sneaking);
-        KeyAdapter.Flags shaped = active.apply(intended, view(player, executor), bypass);
+        KeyAdapter.Flags intended = intended(player, baritone);
+        PathView pathView = view(player, executor);
+        List<MovementKind> movements = movements(executor);
+        boolean clear = !bypass.any() && player.getHungerManager().getFoodLevel() > 6
+                && SprintHop.straightFlat(pathView.nodes(), movements) && clearCorridor(mod, pathView);
+        KeyAdapter.Flags shaped = active.apply(intended, pathView, bypass);
+        shaped = active.addHop(shaped, pathView, movements, clear, HumanComponents.enabled("humanHops"));
+        MotionRecorder.recordInputs(KeyAdapter.toKeys(intended), KeyAdapter.toKeys(shaped));
+        if (Human.look() != null) Human.look().setTravelYawOffset(active.visualOffsetDegrees(clear));
         if (debug && tick - lastSummaryTick >= SUMMARY_INTERVAL_TICKS) {
             lastSummaryTick = tick;
             Debug.logMessage(summary(active.stats()));
@@ -122,6 +142,41 @@ public final class HumanKeys {
             lastDebugTick = tick;
             Debug.logMessage("Keys intended " + intended + " shaped " + shaped);
         }
+    }
+
+    private static KeyAdapter.Flags intended(ClientPlayerEntity player, IBaritone baritone) {
+        var input = player.input;
+        boolean sprint = player.isSprinting() || baritone != null
+                && baritone.getInputOverrideHandler().isInputForcedDown(Input.SPRINT);
+        return new KeyAdapter.Flags(input.pressingForward, input.pressingBack, input.pressingLeft,
+                input.pressingRight, input.jumping, sprint, input.sneaking);
+    }
+
+    private static List<MovementKind> movements(IPathExecutor executor) {
+        List<MovementKind> result = new ArrayList<>();
+        if (executor == null) return result;
+        var moves = executor.getPath().movements();
+        int at = executor.getPosition();
+        for (int i = Math.max(0, at); i < moves.size() && i < at + 3; i++)
+            result.add(MovementKind.fromClassName(moves.get(i).getClass().getSimpleName()));
+        return result;
+    }
+
+    /** Full support and three clear blocks in a 3x3 corridor at each of the next four nodes. */
+    private static boolean clearCorridor(Vibrato mod, PathView view) {
+        var world = MinecraftClient.getInstance().world;
+        if (world == null || view.nodes().size() < 4) return false;
+        for (int i = 0; i < 4; i++) {
+            var node = view.nodes().get(i);
+            int x = (int) Math.floor(node.x()), y = (int) Math.floor(node.y()), z = (int) Math.floor(node.z());
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                BlockPos floor = new BlockPos(x + dx, y - 1, z + dz);
+                if (!mod.getChunkTracker().isChunkLoaded(floor)
+                        || !world.getBlockState(floor).isSolidBlock(world, floor)) return false;
+                for (int h = 1; h <= 3; h++) if (!world.getBlockState(floor.up(h)).isAir()) return false;
+            }
+        }
+        return true;
     }
 
     /** One line of shaper counters, so a run can attribute stutter to a component. */
