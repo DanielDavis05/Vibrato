@@ -13,6 +13,7 @@ import dev.vibrato.util.helpers.StlHelper;
 import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.helpers.WorldHelper;
 import dev.vibrato.util.progresscheck.MovementProgressChecker;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -34,6 +35,9 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
     private final ItemTarget[] _itemTargets;
     private final Set<ItemEntity> _blacklist = new HashSet<>();
     private final MovementProgressChecker _progressChecker = new MovementProgressChecker(3);
+    private final PickupApproachWatchdog<ItemEntity> _approachWatchdog = new PickupApproachWatchdog<>();
+    private BlockPos _breakingBlock;
+    private double _bestBreakingProgress;
     private final TimeoutWanderTask _wanderTask = new TimeoutWanderTask(20);
     private final boolean _freeInventoryIfFull;
     private final boolean _opportunistic;
@@ -78,12 +82,34 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
     @Override
     protected void onStop(Vibrato mod, Task interruptTask) {
-
+        // Interrupted time is not time spent trying to reach the drop.
+        _approachWatchdog.suspend();
     }
 
     @Override
     protected Task onTick(Vibrato mod) {
         _mod = mod;
+        boolean temporarilySuspended = false;
+        if (_currentDrop != null && isValid(mod, _currentDrop)) {
+            boolean grounded = mod.getPlayer().isOnGround() || mod.getPlayer().isSwimming()
+                    || mod.getPlayer().isTouchingWater() || mod.getPlayer().isClimbing();
+            temporarilySuspended = !grounded || mod.getFoodChain().isTryingToEat()
+                    || MinecraftClient.getInstance().currentScreen != null
+                    || hasActiveCraftingGridUser()
+                    || thisOrChildSatisfies(task -> task instanceof EnsureFreeInventorySlotTask)
+                    || _collectingPickaxeForThisResource;
+            boolean mined = observeMiningProgress(mod);
+            int held = Arrays.stream(_itemTargets)
+                    .mapToInt(target -> mod.getItemStorage().getItemCountInventoryOnly(target.getMatches())).sum();
+            double distance = Math.sqrt(_currentDrop.squaredDistanceTo(mod.getPlayer().getPos()));
+            if (_approachWatchdog.stalled(_currentDrop, System.nanoTime(), distance, held, temporarilySuspended, mined)) {
+                Debug.logMessage("Pickup approach made no progress; ignoring this drop and trying another target.");
+                rejectCurrentDrop(mod);
+                return null;
+            }
+        } else {
+            _approachWatchdog.clear();
+        }
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
             setDebugState("Wandering after blacklisting item...");
             _progressChecker.reset();
@@ -102,7 +128,8 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
             _collectingPickaxeForThisResource = false;
         }
 
-        if (!_progressChecker.check(mod)) {
+        if (temporarilySuspended) _progressChecker.reset();
+        if (!temporarilySuspended && !_progressChecker.check(mod)) {
             _progressChecker.reset();
             if (_currentDrop != null && isValid(mod, _currentDrop)) {
                 // We might want to get a pickaxe first.
@@ -115,15 +142,45 @@ public class PickupDroppedItemTask extends AbstractDoToClosestObjectTask<ItemEnt
 
                 Debug.logInternal(StlHelper.toString(_blacklist, element -> element == null ? "(null)" : element.getStack().getItem().getTranslationKey()));
                 Debug.logMessage("Failed to pick up drop, suggesting it's unreachable.");
-                _blacklist.add(_currentDrop);
-                mod.getEntityTracker().requestEntityUnreachable(_currentDrop);
-                return _wanderTask;
+                rejectCurrentDrop(mod);
+                return null;
             }
         }
 
         return super.onTick(mod);
     }
 
+
+    private void rejectCurrentDrop(Vibrato mod) {
+        _blacklist.add(_currentDrop);
+        mod.getEntityTracker().requestEntityUnreachableNow(_currentDrop);
+        _currentDrop = null;
+        _approachWatchdog.clear();
+        _progressChecker.reset();
+        resetSearch();
+    }
+
+    private boolean observeMiningProgress(Vibrato mod) {
+        boolean completed = _breakingBlock != null && mod.getChunkTracker().isChunkLoaded(_breakingBlock)
+                && WorldHelper.isAir(mod, _breakingBlock);
+        if (completed) {
+            _breakingBlock = null;
+            _bestBreakingProgress = 0;
+        }
+        if (mod.getControllerExtras().isBreakingBlock()) {
+            BlockPos current = mod.getControllerExtras().getBreakingBlockPos();
+            if (current != null && !current.equals(_breakingBlock)) {
+                _breakingBlock = current;
+                _bestBreakingProgress = 0;
+            }
+            double progress = mod.getControllerExtras().getBreakingBlockProgress();
+            if (progress >= _bestBreakingProgress + 0.1) {
+                _bestBreakingProgress = progress;
+                return true;
+            }
+        }
+        return completed;
+    }
 
     @Override
     protected boolean isEqual(Task other) {

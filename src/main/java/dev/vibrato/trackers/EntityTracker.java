@@ -295,6 +295,11 @@ public class EntityTracker extends Tracker {
         _entityBlacklist.blackListItem(_mod, entity, 3);
     }
 
+    /** Reject a drop after a sustained, target-scoped failed approach. */
+    public void requestEntityUnreachableNow(Entity entity) {
+        _entityBlacklist.blackListItem(_mod, entity, 0);
+    }
+
     /**
      * Whether we have decided that this entity is unreachable.
      */
