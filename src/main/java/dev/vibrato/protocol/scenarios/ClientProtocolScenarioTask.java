@@ -11,6 +11,13 @@ import net.minecraft.client.gui.screen.advancement.AdvancementsScreen;
 import net.minecraft.client.gui.screen.StatsScreen;
 import net.minecraft.client.gui.screen.ingame.CrafterScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.screen.ingame.MerchantScreen;
+import net.minecraft.client.gui.screen.ingame.SignEditScreen;
+import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
 import net.minecraft.network.packet.c2s.play.ChatCommandSignedC2SPacket;
 import net.minecraft.network.packet.c2s.play.MessageAcknowledgmentC2SPacket;
@@ -58,10 +65,29 @@ public final class ClientProtocolScenarioTask extends Task {
             Map.entry("chat_ack_empty", new Requirement("Fresh isolated connection with no pending signed messages", List.of("Acknowledge Message"))),
             Map.entry("signed_command_empty", new Requirement("Fresh isolated connection with no pending signed messages and operator permission", List.of("Signed Chat Command"))),
             Map.entry("signed_command", new Requirement("Join an authenticated server with profile keys and the msg command", List.of("Signed Chat Command"))),
+            Map.entry("move_position", new Requirement("Walk on fixture floor", List.of("Set Player Position"))),
+            Map.entry("move_rotation", new Requirement("Turn on fixture floor", List.of("Set Player Rotation"))),
+            Map.entry("move_full", new Requirement("Walk and turn on fixture floor", List.of("Set Player Position and Rotation"))),
+            Map.entry("player_command", new Requirement("Sprint on fixture floor", List.of("Player Command"))),
+            Map.entry("swing", new Requirement("Join fixture world", List.of("Swing Arm"))),
+            Map.entry("held_item", new Requirement("Join fixture world with an item in hotbar", List.of("Set Held Item (serverbound)"))),
+            Map.entry("drop_item", new Requirement("Join fixture world with an item in hotbar", List.of("Player Action"))),
+            Map.entry("use_item", new Requirement("Join fixture with a writable book", List.of("Use Item"))),
+            Map.entry("use_block", new Requirement("Open fixture chest", List.of("Use Item On"))),
+            Map.entry("attack_block", new Requirement("Aim at fixture chest", List.of("Player Action"))),
+            Map.entry("interact_entity", new Requirement("Interact with fixture armor stand", List.of("Interact"))),
+            Map.entry("attack_entity", new Requirement("Attack fixture armor stand", List.of("Interact", "Swing Arm"))),
+            Map.entry("update_sign", new Requirement("Open fixture sign editor", List.of("Update Sign"))),
+            Map.entry("inventory_click", new Requirement("Open player inventory with an item", List.of("Click Container"))),
+            Map.entry("close_container", new Requirement("Open player inventory", List.of("Close Container"))),
+            Map.entry("place_recipe", new Requirement("Open player inventory with the crafting table recipe unlocked", List.of("Place Recipe"))),
+            Map.entry("select_trade", new Requirement("Open fixture villager trade screen", List.of("Select Trade"))),
+            Map.entry("boat", new Requirement("Ride and steer fixture boat", List.of("Move Vehicle", "Paddle Boat", "Player Input"))),
             Map.entry("abilities", new Requirement("Join a world with flight permitted", List.of("Player Abilities (serverbound)")))
     );
     private final String action;
     private boolean done;
+    private int phaseTicks;
     private final ProtocolScenarioPreparation preparation = new ProtocolScenarioPreparation();
 
     public ClientProtocolScenarioTask(String action) {
@@ -76,9 +102,10 @@ public final class ClientProtocolScenarioTask extends Task {
     public static String fixtureSetup(String action) {
         requirement(action);
         return switch (action) {
-            case "command_block", "jigsaw", "jigsaw_generate", "structure", "beacon", "crafter_slot", "query_block" -> "blocks";
-            case "query_entity", "spectator_teleport", "command_minecart" -> "entities";
-            case "book_edit", "book_sign", "pick_item", "creative_slot", "recipe_seen" -> "inventory";
+            case "command_block", "jigsaw", "jigsaw_generate", "structure", "beacon", "crafter_slot", "query_block", "use_block", "attack_block", "update_sign" -> "blocks";
+            case "query_entity", "spectator_teleport", "command_minecart", "interact_entity", "attack_entity", "select_trade" -> "entities";
+            case "boat" -> "watercraft";
+            case "book_edit", "book_sign", "pick_item", "creative_slot", "recipe_seen", "use_item", "place_recipe" -> "inventory";
             case "difficulty", "difficulty_lock" -> "world";
             default -> "none";
         };
@@ -89,13 +116,13 @@ public final class ClientProtocolScenarioTask extends Task {
         return result;
     }
 
-    @Override protected void onStart(Vibrato mod) { done = false; }
+    @Override protected void onStart(Vibrato mod) { done = false; phaseTicks = 0; }
     @Override protected Task onTick(Vibrato mod) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.interactionManager == null || client.getNetworkHandler() == null) return null;
         if (!preparation.prepare(action, mod)) {
             setDebugState("Preparing fixture: " + requirements(action));
-            return null;
+            return preparation.navigationTask();
         }
         done = switch (action) {
             case "book_edit" -> ScreenScenarios.editBook("Protocol fixture page", null);
@@ -191,6 +218,61 @@ public final class ClientProtocolScenarioTask extends Task {
                 client.getNetworkHandler().sendChatCommand("msg " + client.player.getGameProfile().getName() + " protocol fixture");
                 yield true;
             }
+            case "move_position", "move_rotation", "move_full", "player_command", "boat" -> drive(client);
+            case "swing" -> { client.player.swingHand(Hand.MAIN_HAND); yield true; }
+            case "held_item" -> {
+                client.player.getInventory().selectedSlot = (client.player.getInventory().selectedSlot + 1) % 9;
+                client.interactionManager.tick();
+                yield true;
+            }
+            case "drop_item" -> {
+                int slot = ProtocolScenarioPreparation.firstHotbarItem(client);
+                if (slot < 0) yield false;
+                client.player.getInventory().selectedSlot = slot;
+                client.interactionManager.tick();
+                yield client.player.dropSelectedItem(false);
+            }
+            case "use_item", "use_block" -> true; // Preparation performed the native interaction.
+            case "attack_block" -> {
+                var pos = preparation.targetBlock();
+                if (pos == null) yield false;
+                yield client.interactionManager.attackBlock(pos, Direction.UP);
+            }
+            case "interact_entity" -> {
+                if (preparation.targetEntity() == null) yield false;
+                client.interactionManager.interactEntity(client.player, preparation.targetEntity(), Hand.MAIN_HAND);
+                yield true;
+            }
+            case "attack_entity" -> {
+                if (preparation.targetEntity() == null) yield false;
+                client.interactionManager.attackEntity(client.player, preparation.targetEntity());
+                client.player.swingHand(Hand.MAIN_HAND);
+                yield true;
+            }
+            case "update_sign" -> {
+                if (!(client.currentScreen instanceof SignEditScreen screen)) yield false;
+                for (char c : "Protocol fixture".toCharArray()) screen.charTyped(c, 0);
+                screen.close();
+                yield true;
+            }
+            case "inventory_click" -> clickInventory(client);
+            case "close_container" -> {
+                if (!(client.currentScreen instanceof InventoryScreen)) yield false;
+                client.player.closeHandledScreen();
+                yield true;
+            }
+            case "place_recipe" -> {
+                if (!(client.currentScreen instanceof InventoryScreen screen)) yield false;
+                var recipe = client.getNetworkHandler().getRecipeManager().get(Identifier.of("minecraft", "crafting_table"));
+                if (recipe.isEmpty() || !client.player.getRecipeBook().contains(recipe.get())) yield false;
+                client.interactionManager.clickRecipe(screen.getScreenHandler().syncId, recipe.get(), false);
+                yield true;
+            }
+            case "select_trade" -> {
+                if (!(client.currentScreen instanceof MerchantScreen screen) || screen.getScreenHandler().getRecipes().isEmpty()) yield false;
+                client.getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(0));
+                yield true;
+            }
             case "abilities" -> {
                 if (!client.player.getAbilities().allowFlying) yield false;
                 client.player.getAbilities().flying = !client.player.getAbilities().flying;
@@ -201,6 +283,30 @@ public final class ClientProtocolScenarioTask extends Task {
         };
         if (!done) setDebugState("Waiting for fixture: " + requirements(action));
         return null;
+    }
+    private boolean drive(MinecraftClient client) {
+        if (phaseTicks++ == 0 && (action.equals("move_rotation") || action.equals("move_full")))
+            client.player.setYaw(client.player.getYaw() + 35.0f);
+        if (action.equals("move_position") || action.equals("move_full") || action.equals("player_command") || action.equals("boat"))
+            client.options.forwardKey.setPressed(true);
+        if (action.equals("player_command")) client.options.sprintKey.setPressed(true);
+        if (phaseTicks < 20) return false;
+        client.options.forwardKey.setPressed(false);
+        client.options.sprintKey.setPressed(false);
+        return true;
+    }
+    private static boolean clickInventory(MinecraftClient client) {
+        if (!(client.currentScreen instanceof InventoryScreen screen)) return false;
+        var handler = screen.getScreenHandler();
+        if (!handler.getCursorStack().isEmpty()) return false;
+        for (int i = 9; i < handler.slots.size(); i++) {
+            if (handler.getSlot(i).hasStack()) {
+                client.interactionManager.clickSlot(handler.syncId, i, 0, SlotActionType.PICKUP, client.player);
+                client.interactionManager.clickSlot(handler.syncId, i, 0, SlotActionType.PICKUP, client.player);
+                return true;
+            }
+        }
+        return false;
     }
     private static boolean toggleCrafterSlot(MinecraftClient client) {
         if (!(client.currentScreen instanceof CrafterScreen screen) || client.player.isSpectator()) return false;
@@ -235,7 +341,11 @@ public final class ClientProtocolScenarioTask extends Task {
         client.setScreen(null);
         return true;
     }
-    @Override protected void onStop(Vibrato mod, Task interruptTask) { }
+    @Override protected void onStop(Vibrato mod, Task interruptTask) {
+        var client = MinecraftClient.getInstance();
+        client.options.forwardKey.setPressed(false);
+        client.options.sprintKey.setPressed(false);
+    }
     @Override public boolean isFinished(Vibrato mod) { return done; }
     @Override protected boolean isEqual(Task other) {
         return other instanceof ClientProtocolScenarioTask task && action.equals(task.action);

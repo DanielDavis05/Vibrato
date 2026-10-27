@@ -1,6 +1,9 @@
 package dev.vibrato.protocol.scenarios;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasks.movement.GetWithinRangeOfBlockTask;
+import dev.vibrato.tasks.movement.GetToEntityTask;
 import dev.vibrato.util.helpers.LookHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -9,6 +12,8 @@ import net.minecraft.client.gui.screen.ingame.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.vehicle.CommandBlockMinecartEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
@@ -23,7 +28,9 @@ final class ProtocolScenarioPreparation {
     private int tick;
     private Entity targetEntity;
     private BlockPos targetBlock;
+    private Task navigation;
 
+    Task navigationTask() { return navigation; }
     Entity targetEntity() { return targetEntity; }
     BlockPos targetBlock() { return targetBlock; }
 
@@ -31,17 +38,23 @@ final class ProtocolScenarioPreparation {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null || client.interactionManager == null) return false;
         tick++;
+        navigation = null;
         return switch (action) {
-            case "book_edit", "book_sign" -> prepareBook(client);
+            case "book_edit", "book_sign", "use_item" -> prepareBook(client);
             case "command_block" -> prepareBlock(client, mod, Blocks.COMMAND_BLOCK, CommandBlockScreen.class);
             case "command_minecart" -> prepareMinecart(client, mod);
             case "jigsaw", "jigsaw_generate" -> prepareBlock(client, mod, Blocks.JIGSAW, JigsawBlockScreen.class);
             case "structure" -> prepareBlock(client, mod, Blocks.STRUCTURE_BLOCK, StructureBlockScreen.class);
             case "beacon" -> prepareBeacon(client, mod);
             case "crafter_slot" -> prepareBlock(client, mod, Blocks.CRAFTER, CrafterScreen.class);
-            case "recipe_book", "recipe_seen" -> prepareInventory(client);
+            case "use_block" -> prepareBlock(client, mod, Blocks.CHEST, GenericContainerScreen.class);
+            case "update_sign" -> prepareBlock(client, mod, Blocks.OAK_SIGN, SignEditScreen.class);
+            case "attack_block" -> prepareAttackBlock(client, mod);
+            case "select_trade" -> prepareVillager(client, mod);
+            case "boat" -> prepareBoat(client, mod);
+            case "recipe_book", "recipe_seen", "inventory_click", "close_container", "place_recipe" -> prepareInventory(client);
             case "query_block" -> prepareQueryBlock(client, mod);
-            case "query_entity", "spectator_teleport" -> prepareQueryEntity(client, mod);
+            case "query_entity", "spectator_teleport", "interact_entity", "attack_entity" -> prepareQueryEntity(client, mod);
             case "pick_item" -> preparePickItem(client);
             case "creative_slot" -> firstHotbarItem(client) >= 0;
             default -> true;
@@ -76,9 +89,14 @@ final class ProtocolScenarioPreparation {
 
     private boolean prepareBlock(MinecraftClient client, Vibrato mod, Block block, Class<?> screenType) {
         if (screenType.isInstance(client.currentScreen)) return true;
-        if (client.currentScreen != null || !ready()) return false;
+        if (client.currentScreen != null) return false;
         BlockPos pos = findBlock(client, block);
-        if (pos == null || client.player.squaredDistanceTo(Vec3d.ofCenter(pos)) > 25.0) return false;
+        if (pos == null) return false;
+        if (client.player.squaredDistanceTo(Vec3d.ofCenter(pos)) > 16.0) {
+            navigation = new GetWithinRangeOfBlockTask(pos, 3);
+            return false;
+        }
+        if (!ready()) return false;
         Vec3d center = Vec3d.ofCenter(pos);
         LookHelper.lookAtInstant(mod, center);
         client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND,
@@ -113,6 +131,46 @@ final class ProtocolScenarioPreparation {
                 break;
             }
         }
+        return false;
+    }
+
+    private boolean prepareAttackBlock(MinecraftClient client, Vibrato mod) {
+        targetBlock = findBlock(client, Blocks.CHEST);
+        if (targetBlock == null) return false;
+        if (client.player.squaredDistanceTo(Vec3d.ofCenter(targetBlock)) > 16.0) {
+            navigation = new GetWithinRangeOfBlockTask(targetBlock, 3);
+            return false;
+        }
+        LookHelper.lookAtInstant(mod, Vec3d.ofCenter(targetBlock));
+        return true;
+    }
+
+    private boolean prepareVillager(MinecraftClient client, Vibrato mod) {
+        if (client.currentScreen instanceof MerchantScreen) return true;
+        if (client.currentScreen != null) return false;
+        var villagers = client.world.getEntitiesByClass(VillagerEntity.class,
+                client.player.getBoundingBox().expand(9), Entity::isAlive);
+        if (villagers.isEmpty()) return false;
+        return interactNear(client, mod, villagers.getFirst());
+    }
+
+    private boolean prepareBoat(MinecraftClient client, Vibrato mod) {
+        if (client.player.getVehicle() instanceof BoatEntity) return true;
+        if (client.currentScreen != null) return false;
+        var boats = client.world.getEntitiesByClass(BoatEntity.class,
+                client.player.getBoundingBox().expand(12), Entity::isAlive);
+        if (boats.isEmpty()) return false;
+        return interactNear(client, mod, boats.getFirst());
+    }
+
+    private boolean interactNear(MinecraftClient client, Vibrato mod, Entity entity) {
+        if (client.player.squaredDistanceTo(entity) > 16.0) {
+            navigation = new GetToEntityTask(entity, 3);
+            return false;
+        }
+        if (!ready()) return false;
+        LookHelper.lookAtInstant(mod, entity.getBoundingBox().getCenter());
+        client.interactionManager.interactEntity(client.player, entity, Hand.MAIN_HAND);
         return false;
     }
 
