@@ -32,6 +32,7 @@ class NavInterventionTest {
         assertTrue(UnstuckAction.SWIM_TO_SURFACE.cancelsPath());
         assertTrue(UnstuckAction.CLIMB_OUT_OF_WATER.cancelsPath());
         assertFalse(UnstuckAction.JUMP.cancelsPath());
+        assertFalse(UnstuckAction.WATER_FORWARD_SPRINT.cancelsPath());
         assertFalse(UnstuckAction.RECENTER_ON_BLOCK.cancelsPath());
         assertFalse(UnstuckAction.SIDESTEP_LEFT.cancelsPath());
         assertFalse(UnstuckAction.SIDESTEP_RIGHT.cancelsPath());

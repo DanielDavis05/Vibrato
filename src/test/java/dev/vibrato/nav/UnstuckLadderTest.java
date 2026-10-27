@@ -24,10 +24,11 @@ class UnstuckLadderTest {
     }
 
     @Test
-    void waterDriftClimbsOutFirst() {
+    void waterDriftEscalatesThroughBoundedForwardAndRepath() {
         UnstuckLadder ladder = new UnstuckLadder();
-        assertEquals(CLIMB_OUT_OF_WATER, ladder.next(StuckState.WATER_DRIFT));
-        assertEquals(SWIM_TO_SURFACE, ladder.next(StuckState.WATER_DRIFT));
+        assertEquals(JUMP, ladder.next(StuckState.WATER_DRIFT));
+        assertEquals(WATER_FORWARD_SPRINT, ladder.next(StuckState.WATER_DRIFT));
+        assertEquals(SIDESTEP_LEFT, ladder.next(StuckState.WATER_DRIFT));
         assertEquals(BACK_OFF_AND_REPATH, ladder.next(StuckState.WATER_DRIFT));
         assertEquals(ABANDON_TASK, ladder.next(StuckState.WATER_DRIFT));
     }

@@ -2,6 +2,7 @@ package dev.vibrato.nav;
 
 public enum UnstuckAction {
     JUMP,
+    WATER_FORWARD_SPRINT,
     RECENTER_ON_BLOCK,
     SIDESTEP_LEFT,
     SIDESTEP_RIGHT,

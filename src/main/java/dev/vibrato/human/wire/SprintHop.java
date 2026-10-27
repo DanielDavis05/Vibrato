@@ -6,6 +6,8 @@ import java.util.SplittableRandom;
 
 /** Conservative, deterministic-on-seed hop decision, called once per input tick. */
 public final class SprintHop {
+    /** Five complete flat segments cover a hop initiated near the end of the current node. */
+    public static final int HORIZON = 5;
     private final SplittableRandom random;
     private final HumanProfile profile;
     private long tick;
@@ -42,9 +44,9 @@ public final class SprintHop {
     }
 
     public static boolean straightFlat(List<PathView.Node> nodes, List<MovementKind> movements) {
-        if (nodes.size() < 4 || movements.size() < 3) return false;
+        if (nodes.size() < HORIZON + 1 || movements.size() < HORIZON) return false;
         double dx = 0, dz = 0;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < HORIZON; i++) {
             if (movements.get(i) != MovementKind.TRAVERSE) return false;
             var a = nodes.get(i); var b = nodes.get(i + 1);
             double x = b.x() - a.x(), z = b.z() - a.z(), length = Math.hypot(x, z);

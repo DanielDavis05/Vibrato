@@ -35,6 +35,19 @@ class ShapingLayerTest {
     }
 
     @Test
+    void protectedMovementKeepsLateralSteeringAndJumpExactly() {
+        ShapingLayer layer = new ShapingLayer(7, busyProfile());
+        KeyAdapter.Flags precision = new KeyAdapter.Flags(true, false, true, false, true, true, false);
+        for (MovementKind kind : MovementKind.values()) {
+            if (kind == MovementKind.TRAVERSE || kind == MovementKind.DIAGONAL) continue;
+            var view = new PathView(kind, FLAT.nodes(), .5, 64, .5, .2, 0, 0, true);
+            for (int i = 0; i < 200; i++) assertEquals(precision, layer.apply(precision, view, Bypass.NONE));
+        }
+        var airborne = new PathView(MovementKind.TRAVERSE, FLAT.nodes(), .5, 65, .5, .2, .1, 0, false);
+        for (int i = 0; i < 200; i++) assertEquals(precision, layer.apply(precision, airborne, Bypass.NONE));
+    }
+
+    @Test
     void shapingChangesSomeKeysAndIsDeterministicPerSeed() {
         List<KeyAdapter.Flags> first = run(7, Bypass.NONE, 400);
         assertEquals(first, run(7, Bypass.NONE, 400));

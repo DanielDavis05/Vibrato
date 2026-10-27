@@ -31,6 +31,7 @@ final class SearchOpportunityTask extends Task {
             boolean berries = state.isOf(Blocks.SWEET_BERRY_BUSH) && state.get(SweetBerryBushBlock.AGE) >= 2;
             boolean mine = isOre(state) && mod.getPlayer().getMainHandStack().getItem() instanceof PickaxeItem
                     && mod.getPlayer().getMainHandStack().isSuitableFor(state)
+                    && state.calcBlockBreakingDelta(mod.getPlayer(), mod.getWorld(), p) >= 0.1f
                     && WorldHelper.canBreak(mod, p) && safeOre(mod, p);
             boolean seeds = state.isOf(Blocks.SHORT_GRASS) && !mod.getItemStorage().hasItem(Items.WHEAT_SEEDS)
                     && WorldHelper.canBreak(mod, p);

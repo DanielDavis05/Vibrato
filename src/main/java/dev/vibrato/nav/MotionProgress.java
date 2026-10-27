@@ -6,18 +6,23 @@ final class MotionProgress {
 
     private final double _distance;
     private boolean _anchored;
+    private boolean _inWater;
     private double _x, _y, _z;
 
     MotionProgress(double distance) {
         _distance = distance;
     }
 
-    Result observe(double x, double y, double z, boolean wantsToMove) {
-        if (!_anchored || !wantsToMove) {
+    Result observe(double x, double y, double z, boolean wantsToMove, boolean inWater) {
+        // Rebase while a recovery owns movement and at water transitions. Neither
+        // action movement nor a change of coordinate metric proves path progress.
+        if (!_anchored || !wantsToMove || inWater != _inWater) {
+            _inWater = inWater;
             anchor(x, y, z);
             return Result.IDLE_OR_INITIAL;
         }
-        if (Math.sqrt(Math.pow(x - _x, 2) + Math.pow(y - _y, 2) + Math.pow(z - _z, 2)) >= _distance) {
+        double dy = inWater ? 0 : y - _y;
+        if (Math.sqrt(Math.pow(x - _x, 2) + dy * dy + Math.pow(z - _z, 2)) >= _distance) {
             anchor(x, y, z);
             return Result.MOVED;
         }

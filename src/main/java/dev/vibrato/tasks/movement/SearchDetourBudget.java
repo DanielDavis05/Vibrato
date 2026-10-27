@@ -6,7 +6,7 @@ final class SearchDetourBudget {
     private static final double COOLDOWN_SECONDS = 30;
     private static final double MIN_TRAVEL_SQUARED = 12 * 12;
     private static final double SHARE = 0.15;
-    private static final double MAX_DETOUR_SECONDS = 4;
+    private static final double MAX_DETOUR_SECONDS = 0.8;
     private double spent;
     private double started = -1;
     private double lastEnded = -1;

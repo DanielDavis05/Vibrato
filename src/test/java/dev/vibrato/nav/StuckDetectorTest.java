@@ -106,11 +106,21 @@ class StuckDetectorTest {
     }
 
     @Test
-    void swimmingVerticallyIsNotWaterDrift() {
+    void verticalSwimmingWithoutHorizontalProgressIsWaterDrift() {
         for (int i = 0; i < 100; i++) {
             MotionSample s = new MotionSample(tick++, 0.5, 64 + i * 0.05, 0.5, 0f, 0f,
                     false, true, true, false, true, MotionSample.FULL_AIR);
-            assertEquals(StuckState.OK, detector.update(s), "tick " + i);
+            StuckState expected = i < 39 ? StuckState.OK : StuckState.WATER_DRIFT;
+            assertEquals(expected, detector.update(s), "tick " + i);
+        }
+    }
+
+    @Test
+    void surfaceBobbingDoesNotHideWaterDrift() {
+        for (int i = 0; i < 80; i++) {
+            MotionSample s = new MotionSample(tick++, 0.5, 64 + (i % 2) * 0.8, 0.5, 0f, 0f,
+                    false, true, false, false, true, MotionSample.FULL_AIR);
+            assertEquals(i < 39 ? StuckState.OK : StuckState.WATER_DRIFT, detector.update(s));
         }
     }
 

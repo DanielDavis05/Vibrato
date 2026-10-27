@@ -67,6 +67,8 @@ public class NavSafetyChain extends TaskChain {
     private double _targetX;
     private double _targetZ;
     private BlockPos _bank;
+    private double _waterTargetX, _waterTargetZ;
+    private boolean _hasWaterTarget;
     private Task _delegate;
 
     public NavSafetyChain(TaskRunner runner) {
@@ -127,7 +129,8 @@ public class NavSafetyChain extends TaskChain {
                 _detector.reset();
             } else if (wantsToMove && _waste.isWasting(_tick) && _rateLimit.tryAcquire(_tick)) {
                 startAction(mod, UnstuckAction.ABANDON_TASK, "the step made no progress", PRIORITY_ACTION);
-            } else if (state != StuckState.OK && _ladder.ready(_tick) && _rateLimit.tryAcquire(_tick)) {
+            } else if (state != StuckState.OK && _ladder.ready(_tick)
+                    && (state == StuckState.WATER_DRIFT || _rateLimit.tryAcquire(_tick))) {
                 UnstuckAction action = _ladder.next(state);
                 if (action == UnstuckAction.BACK_OFF_AND_REPATH && !_backOffCap.tryUse(_watchedSerial)) {
                     action = UnstuckAction.ABANDON_TASK;
@@ -179,7 +182,7 @@ public class NavSafetyChain extends TaskChain {
     }
 
     private void trackProgress(MotionSample sample, boolean wantsToMove) {
-        MotionProgress.Result progress = _progress.observe(sample.x(), sample.y(), sample.z(), wantsToMove);
+        MotionProgress.Result progress = _progress.observe(sample.x(), sample.y(), sample.z(), wantsToMove, sample.inWater());
         if (progress != MotionProgress.Result.NONE) {
             _waste.onProgress(_tick);
         }
@@ -202,6 +205,20 @@ public class NavSafetyChain extends TaskChain {
         _targetX = Math.floor(player.getX()) + 0.5;
         _targetZ = Math.floor(player.getZ()) + 0.5;
         _bank = action == UnstuckAction.CLIMB_OUT_OF_WATER ? findBank(mod) : null;
+        _hasWaterTarget = false;
+        if (action == UnstuckAction.WATER_FORWARD_SPRINT) {
+            var executor = mod.getClientBaritone().getPathingBehavior().getCurrent();
+            if (executor != null) {
+                var positions = executor.getPath().positions();
+                int next = executor.getPosition() + 1;
+                if (next >= 0 && next < positions.size()) {
+                    var node = positions.get(next);
+                    _waterTargetX = node.getX() + 0.5;
+                    _waterTargetZ = node.getZ() + 0.5;
+                    _hasWaterTarget = true;
+                }
+            }
+        }
         _delegate = createDelegate(mod, action);
     }
 
@@ -221,8 +238,25 @@ public class NavSafetyChain extends TaskChain {
         InputControls input = mod.getInputControls();
         return switch (_action) {
             case JUMP -> {
-                input.tryPress(Input.JUMP);
+                // Keep the press through one game tick. finishAction releases
+                // all keys, so finishing in the same tick would erase it.
+                if (_actionTicks == 1) {
+                    input.tryPress(Input.JUMP);
+                    yield false;
+                }
                 yield true;
+            }
+            case WATER_FORWARD_SPRINT -> {
+                ClientPlayerEntity player = mod.getPlayer();
+                // Without a current target or once out of water, fail open to
+                // normal pathing instead of holding an arbitrary direction.
+                if (!WaterRecovery.shouldMove(_hasWaterTarget, player.isTouchingWater(),
+                        _actionTicks, player.getX(), player.getZ(), _waterTargetX, _waterTargetZ)) yield true;
+                input.forceLook(WaterRecovery.yaw(player.getX(), player.getZ(), _waterTargetX, _waterTargetZ),
+                        player.getPitch());
+                input.hold(Input.MOVE_FORWARD);
+                input.hold(Input.SPRINT);
+                yield _actionTicks >= WaterRecovery.FORWARD_TICKS;
             }
             case SIDESTEP_LEFT -> {
                 input.hold(Input.MOVE_LEFT);

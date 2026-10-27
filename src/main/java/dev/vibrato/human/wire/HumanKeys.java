@@ -49,7 +49,7 @@ import java.util.List;
  */
 public final class HumanKeys {
 
-    private static final int PATH_NODES = 6;
+    private static final int PATH_NODES = SprintHop.HORIZON + 1;
     private static final int DEBUG_INTERVAL_TICKS = 20;
     /** About 10 seconds at 20 ticks per second. */
     private static final int SUMMARY_INTERVAL_TICKS = 200;
@@ -157,16 +157,16 @@ public final class HumanKeys {
         if (executor == null) return result;
         var moves = executor.getPath().movements();
         int at = executor.getPosition();
-        for (int i = Math.max(0, at); i < moves.size() && i < at + 3; i++)
+        for (int i = Math.max(0, at); i < moves.size() && i < at + SprintHop.HORIZON; i++)
             result.add(MovementKind.fromClassName(moves.get(i).getClass().getSimpleName()));
         return result;
     }
 
-    /** Full support and three clear blocks in a 3x3 corridor at each of the next four nodes. */
+    /** Full support and three clear blocks in a 3x3 corridor at each node through the complete hop horizon. */
     private static boolean clearCorridor(Vibrato mod, PathView view) {
         var world = MinecraftClient.getInstance().world;
-        if (world == null || view.nodes().size() < 4) return false;
-        for (int i = 0; i < 4; i++) {
+        if (world == null || view.nodes().size() < SprintHop.HORIZON + 1) return false;
+        for (int i = 0; i <= SprintHop.HORIZON; i++) {
             var node = view.nodes().get(i);
             int x = (int) Math.floor(node.x()), y = (int) Math.floor(node.y()), z = (int) Math.floor(node.z());
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {

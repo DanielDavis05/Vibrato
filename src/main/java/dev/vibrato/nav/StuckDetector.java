@@ -53,9 +53,16 @@ public final class StuckDetector {
         if (s.productive()) {
             return StuckState.OK;
         }
-        if (s.inWater() && s.wantsToMove() && hasWindow(_config.waterTicks())
-                && distance3d(ago(_config.waterTicks() - 1), s) < _config.waterMinMove()) {
-            return StuckState.WATER_DRIFT;
+        if (s.inWater() && s.wantsToMove()) {
+            // At the surface vertical bobbing does not advance the route. Diagnose
+            // a motionless swimmer at the stationary threshold, and slower drift
+            // over the longer water window, before the generic stationary check.
+            if ((hasWindow(_config.stationaryTicks())
+                    && horizontalDistance(ago(_config.stationaryTicks() - 1), s) < _config.stationaryMinMove())
+                    || (hasWindow(_config.waterTicks())
+                    && horizontalDistance(ago(_config.waterTicks() - 1), s) < _config.waterMinMove())) {
+                return StuckState.WATER_DRIFT;
+            }
         }
         if (_edgeRun >= _config.edgeJamTicks()) {
             return StuckState.EDGE_JAM;

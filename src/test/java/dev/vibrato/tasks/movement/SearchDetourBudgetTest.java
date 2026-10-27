@@ -27,7 +27,8 @@ class SearchDetourBudgetTest {
         assertFalse(budget.canStart(24.9, Double.POSITIVE_INFINITY));
         assertTrue(budget.canStart(25, Double.POSITIVE_INFINITY));
         budget.start(25);
-        assertTrue(budget.canContinue(28));
+        assertTrue(budget.canContinue(25.7));
+        assertFalse(budget.canContinue(25.9));
         assertFalse(budget.canContinue(29));
         budget.end(29);
         // Four seconds is within 15% of the 29 seconds spent searching.
@@ -50,7 +51,7 @@ class SearchDetourBudgetTest {
         budget.end(29);
         assertTrue(budget.canStart(59, 144));
         budget.start(59);
-        assertTrue(budget.canContinue(62));
+        assertTrue(budget.canContinue(59.7));
         assertFalse(budget.canContinue(63));
         budget.end(63);
         assertFalse(budget.canStart(64, 144));

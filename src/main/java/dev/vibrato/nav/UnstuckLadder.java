@@ -26,7 +26,7 @@ public final class UnstuckLadder {
         RUNGS.put(StuckState.SPINNING, new UnstuckAction[]{
                 BACK_OFF_AND_REPATH, JUMP, ABANDON_TASK});
         RUNGS.put(StuckState.WATER_DRIFT, new UnstuckAction[]{
-                CLIMB_OUT_OF_WATER, SWIM_TO_SURFACE, BACK_OFF_AND_REPATH, ABANDON_TASK});
+                JUMP, WATER_FORWARD_SPRINT, SIDESTEP_LEFT, BACK_OFF_AND_REPATH, ABANDON_TASK});
         RUNGS.put(StuckState.LOW_AIR, new UnstuckAction[]{
                 SWIM_TO_SURFACE});
     }
