@@ -34,6 +34,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
     // For vines and stuff
     private boolean _wasClose = false;
+    private boolean _manualBreaking;
 
     public DestroyBlockTask(BlockPos pos) {
         _pos = pos;
@@ -41,6 +42,8 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected void onStart(Vibrato mod) {
+        _manualBreaking = false;
+        _moveChecker.reset();
         _tryToMineTimer.forceElapse();
         _wanderTask.resetWander();
         StorageHelper.closeScreen();
@@ -52,6 +55,13 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected Task onTick(Vibrato mod) {
+        boolean wasManualBreaking = _manualBreaking;
+        _manualBreaking = false;
+        if (wasManualBreaking) {
+            // Release our own attack before aiming again. A held attack while the camera
+            // turns can otherwise chew through the floor on the way to the intended block.
+            mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, false);
+        }
 
         // Wander and check
         if (_wanderTask.isActive() && !_wanderTask.isFinished(mod)) {
@@ -62,6 +72,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
             _moveChecker.reset();
             mod.getBlockTracker().requestBlockUnreachable(_pos);
             _wanderTask.resetWander();
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
             return _wanderTask;
         }
 
@@ -82,8 +93,12 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
             if (reach.isPresent() && (mod.getPlayer().isTouchingWater() || mod.getPlayer().isOnGround())) {
                 setDebugState("Block in range, mining...");
                 // Break the block, force it.
-                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
-                mod.getClientBaritone().getBuilderProcess().onLostControl();
+                if (!wasManualBreaking) {
+                    // Losing process control alone leaves the old path moving until the next
+                    // engine tick. Stop that path once before taking over a reachable block.
+                    mod.getClientBaritone().getPathingBehavior().cancelEverything();
+                }
+                _manualBreaking = true;
                 if (!LookHelper.isLookingAt(mod, _pos)) {
                     LookHelper.lookAt(mod, reach.get());
                 }
@@ -119,6 +134,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
 
     @Override
     protected void onStop(Vibrato mod, Task interruptTask) {
+        _manualBreaking = false;
         if (!Vibrato.inGame())
             return;
         mod.getBehaviour().pop();
