@@ -7,7 +7,6 @@ import dev.vibrato.tasks.container.CraftInTableTask;
 import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.container.SmeltInFurnaceTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
-import dev.vibrato.tasks.entity.KillEntityTask;
 import dev.vibrato.tasks.movement.PickupDroppedItemTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
@@ -72,6 +71,7 @@ public class CollectFoodTask extends Task {
     private final TimerGame _checkNewOptionsTimer = new TimerGame(10);
     private SmeltInFurnaceTask _smeltTask = null;
     private Task _currentResourceTask = null;
+    private boolean _animalRescanPending;
 
     public CollectFoodTask(double unitsNeeded) {
         _unitsNeeded = unitsNeeded;
@@ -145,18 +145,25 @@ public class CollectFoodTask extends Task {
             return _smeltTask;
         }
 
-        // Don't recalculate the absolute target halfway through a kill or its
-        // pickup just because the periodic search timer expired. Search-only
-        // tasks can still be reconsidered on schedule.
-        if (_currentResourceTask instanceof KillAndLootTask && _currentResourceTask.isActive()
-                && !_currentResourceTask.isFinished(mod) && !_currentResourceTask.thisOrChildAreTimedOut()
-                && _currentResourceTask.thisOrChildSatisfies(t -> t instanceof KillEntityTask
-                        || t instanceof PickupDroppedItemTask)) return _currentResourceTask;
+        // Wait until a protected pickup has actually detached before choosing a
+        // fresh attempt. Its inventory count is then a stable new baseline.
+        if (_animalRescanPending) {
+            if (hasChild()) return null;
+            _animalRescanPending = false;
+        }
 
         if (_checkNewOptionsTimer.elapsed()) {
             // Try a new resource task
             _checkNewOptionsTimer.reset();
+            // A newly selected equal task can be inactive while Task retains its
+            // previous equal child. Inspect the attached tree, not the candidate.
+            boolean stopAnimalAttempt = thisOrChildSatisfies(t -> t instanceof KillAndLootTask
+                    && t.isActive() && !t.isFinished(mod));
             _currentResourceTask = null;
+            if (stopAnimalAttempt) {
+                _animalRescanPending = true;
+                return null;
+            }
         }
 
         if (_currentResourceTask != null && _currentResourceTask.isActive() && !_currentResourceTask.isFinished(mod) && !_currentResourceTask.thisOrChildAreTimedOut()) {

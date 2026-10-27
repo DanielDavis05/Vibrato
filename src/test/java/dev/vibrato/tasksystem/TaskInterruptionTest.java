@@ -109,6 +109,28 @@ class TaskInterruptionTest {
     }
 
     @Test
+    void nullHandoffAllowsReselectionOfAnEqualObjective() {
+        TestChain chain = new TestChain();
+        FakeTask parent = new FakeTask();
+        ObjectiveTask first = new ObjectiveTask("animal target");
+        ObjectiveTask next = new ObjectiveTask("animal target");
+        parent.next = first;
+        parent.tick(null, chain);
+        // Returning a fresh equal goal directly retains the old pursuit.
+        parent.next = next;
+        parent.tick(null, chain);
+        assertEquals(2, first.ticks);
+        assertEquals(0, next.ticks);
+        // A null handoff actually detaches it before a rescan selects again.
+        parent.next = null;
+        parent.tick(null, chain);
+        assertEquals(1, first.stops);
+        parent.next = next;
+        parent.tick(null, chain);
+        assertEquals(1, next.ticks);
+    }
+
+    @Test
     void materialRecountWaitsUntilForcedCollectionChildReleasesProtection() {
         TestChain chain = new TestChain();
         ForcedTask pickup = new ForcedTask();

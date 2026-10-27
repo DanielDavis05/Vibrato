@@ -1,0 +1,34 @@
+# Disposable creative-cheats-enabled world only; builds at y=149..154.
+# Food starts with one raw mutton. Cooked mutton provides 6 units each,
+# so @food 24 requires at least three additional pieces and cooking.
+1 /difficulty peaceful
+0.2 /gamerule doMobSpawning false
+0.2 /time set day
+0.2 /weather clear
+0.2 /gamemode creative @s
+0.2 /clear @s
+0.2 /tp @s 0.5 150 0.5
+1 /fill -8 149 -8 8 155 8 air
+0.2 /fill -8 149 -8 8 149 8 grass_block
+0.2 /fill -8 150 -8 8 153 -8 glass
+0.2 /fill -8 150 8 8 153 8 glass
+0.2 /fill -8 150 -7 -8 153 7 glass
+0.2 /fill 8 150 -7 8 153 7 glass
+0.2 /tp @s 0.5 150 0.5
+0.2 /setblock 6 150 0 furnace
+0.2 /give @s minecraft:mutton 1
+0.2 /give @s minecraft:iron_sword 1
+0.2 /give @s minecraft:coal 8
+0.2 /summon minecraft:sheep 2.5 150 2.5 {Age:0}
+0.2 /summon minecraft:sheep 4.5 150 2.5 {Age:0}
+0.2 /summon minecraft:sheep -2.5 150 2.5 {Age:0}
+0.2 /summon minecraft:sheep -4.5 150 2.5 {Age:0}
+0.2 /summon minecraft:sheep 2.5 150 -2.5 {Age:0}
+0.2 /summon minecraft:sheep 4.5 150 -2.5 {Age:0}
+0.2 /summon minecraft:sheep -2.5 150 -2.5 {Age:0}
+0.2 /summon minecraft:sheep -4.5 150 -2.5 {Age:0}
+0.2 /gamemode survival @s
+1 @food 24
+0 wait-idle 240
+0 @inventory cooked_mutton
+1 exit
