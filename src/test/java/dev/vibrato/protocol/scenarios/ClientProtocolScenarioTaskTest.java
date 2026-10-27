@@ -1,6 +1,7 @@
 package dev.vibrato.protocol.scenarios;
 
 import org.junit.jupiter.api.Test;
+import dev.vibrato.packetcoverage.ProtocolManifest;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientProtocolScenarioTaskTest {
@@ -31,6 +32,16 @@ class ClientProtocolScenarioTaskTest {
             assertFalse(ClientProtocolScenarioTask.expectedPackets(action).isEmpty(), action);
             assertTrue(java.util.Set.of("none", "blocks", "entities", "inventory", "world", "watercraft")
                     .contains(ClientProtocolScenarioTask.fixtureSetup(action)), action);
+        }
+    }
+    @Test void everyExpectedPacketUnambiguouslyTargetsPlayServerbound() throws Exception {
+        var manifest = ProtocolManifest.load();
+        for (String action : ClientProtocolScenarioTask.supportedActions()) {
+            for (String heading : ClientProtocolScenarioTask.expectedPackets(action)) {
+                long matches = manifest.packets().stream().filter(packet -> packet.state().equals("play")
+                        && packet.direction().equals("serverbound") && packet.name().equals(heading)).count();
+                assertEquals(1, matches, action + ": " + heading);
+            }
         }
     }
 }
