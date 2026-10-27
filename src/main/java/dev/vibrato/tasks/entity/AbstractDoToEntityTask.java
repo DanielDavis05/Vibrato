@@ -84,7 +84,7 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
         double sqDist = entity.squaredDistanceTo(mod.getPlayer());
 
-        if (sqDist < _combatGuardLowerRange * _combatGuardLowerRange) {
+        if (shouldLowerCombatGuard(sqDist, _combatGuardLowerRange)) {
             mod.getMobDefenseChain().setForceFieldRange(_combatGuardLowerFieldRadius);
         } else {
             mod.getMobDefenseChain().resetForceField();
@@ -131,6 +131,10 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
             return isSubEqual(task);
         }
         return false;
+    }
+
+    static boolean shouldLowerCombatGuard(double squaredDistance, double lowerRange) {
+        return lowerRange >= 0 && squaredDistance < lowerRange * lowerRange;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
