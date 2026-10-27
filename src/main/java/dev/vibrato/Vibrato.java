@@ -12,6 +12,9 @@ import dev.vibrato.eventbus.events.ClientRenderEvent;
 import dev.vibrato.eventbus.events.ClientTickEvent;
 import dev.vibrato.eventbus.events.SendChatEvent;
 import dev.vibrato.eventbus.events.TitleScreenEntryEvent;
+import dev.vibrato.fleet.FleetConfig;
+import dev.vibrato.fleet.PerformanceProfile;
+import dev.vibrato.human.Human;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.TaskRunner;
 import dev.vibrato.trackers.*;
@@ -79,6 +82,8 @@ public class Vibrato implements ModInitializer {
     private SlotHandler _slotHandler;
     // Butler
     private Butler _butler;
+    // Identity of this client when several bots run side by side
+    private FleetConfig _fleet;
 
     // Are we in game (playing in a server/world)
     public static boolean inGame() {
@@ -122,6 +127,14 @@ public class Vibrato implements ModInitializer {
         _mlgBucketChain = new MLGBucketFallChain(_taskRunner);
         new WorldSurvivalChain(_taskRunner);
         _foodChain = new FoodChain(_taskRunner);
+
+        // Fleet identity, low-resource client options and the human-like camera
+        _fleet = FleetConfig.fromSystem();
+        if (_fleet.perfMode() == FleetConfig.PerfMode.LOW) {
+            PerformanceProfile.apply(MinecraftClient.getInstance(), _fleet);
+        }
+        Debug.logMessage(PerformanceProfile.describe(_fleet));
+        Human.install(this, _fleet.seed());
 
         // Trackers
         _storageTracker = new ItemStorageTracker(this, _trackerManager, container -> _containerSubTracker = container);
@@ -348,6 +361,13 @@ public class Vibrato implements ModInitializer {
      */
     public VibratoSettings getExtraBaritoneSettings() {
         return VibratoSettings.getInstance();
+    }
+
+    /**
+     * Identity and launch settings of this client (bot id, seed, persona, autostart)
+     */
+    public FleetConfig getFleetConfig() {
+        return _fleet;
     }
 
     /**

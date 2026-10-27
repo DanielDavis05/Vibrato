@@ -1,6 +1,8 @@
 package dev.vibrato.util.helpers;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.human.Human;
+import dev.vibrato.human.HumanLook;
 import baritone.api.BaritoneAPI;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.RayTraceUtils;
@@ -198,9 +200,40 @@ public interface LookHelper {
     }
 
     static void lookAt(Vibrato mod, Rotation rotation) {
+        HumanLook look = Human.look();
+        if (look == null) {
+            lookAtInstant(mod, rotation);
+            return;
+        }
+        // Moves one human-limited step per call. No Baritone target is set, so Baritone does not add a second step.
+        turnTowards(mod.getPlayer(), look, rotation);
+    }
+
+    /**
+     * Snaps to the rotation this tick, bypassing the human camera model. Only for actions that must aim and act in
+     * the same tick, like the water bucket clutch while falling.
+     */
+    static void lookAtInstant(Vibrato mod, Rotation rotation) {
         mod.getClientBaritone().getLookBehavior().updateTarget(rotation, true);
         mod.getPlayer().setYaw(rotation.getYaw());
         mod.getPlayer().setPitch(rotation.getPitch());
+    }
+
+    static void lookAtInstant(Vibrato mod, Vec3d toLook) {
+        lookAtInstant(mod, getLookRotation(mod, toLook));
+    }
+
+    static void lookAtInstant(Vibrato mod, BlockPos toLook) {
+        lookAtInstant(mod, new Vec3d(toLook.getX() + 0.5, toLook.getY() + 0.5, toLook.getZ() + 0.5));
+    }
+
+    private static void turnTowards(PlayerEntity player, HumanLook look, Rotation target) {
+        Rotation current = new Rotation(player.getYaw(), player.getPitch());
+        float yawOffset = Rotation.normalizeYaw(target.getYaw() - current.getYaw());
+        Rotation desired = new Rotation(current.getYaw() + yawOffset, target.getPitch());
+        Rotation next = look.smooth(current, desired);
+        player.setYaw(next.getYaw());
+        player.setPitch(next.getPitch());
     }
     static void lookAt(Vibrato mod, Vec3d toLook) {
         Rotation targetRotation = getLookRotation(mod, toLook);
