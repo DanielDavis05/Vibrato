@@ -1,6 +1,0 @@
-[submodule "baritone"]
-	path = baritone
-	url = https://github.com/cabaletta/baritone
-	branch = 1.21.1
-	shallow = true
-	ignore = dirty
