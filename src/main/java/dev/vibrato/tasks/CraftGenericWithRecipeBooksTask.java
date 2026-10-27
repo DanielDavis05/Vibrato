@@ -97,8 +97,13 @@ public class CraftGenericWithRecipeBooksTask extends Task implements ITaskUsesCr
 
         // Request to fill in a recipe. Just piggy back off of the slot delay system.
         if (mod.getSlotHandler().canDoSlotAction()) {
-            mod.getSlotHandler().registerSlotAction();
-            StorageHelper.instantFillRecipeViaBook(mod, _target.getRecipe(), _target.getOutputItem(), true);
+            if (StorageHelper.instantFillRecipeViaBook(mod, _target.getRecipe(), _target.getOutputItem(), true)) {
+                mod.getSlotHandler().registerSlotAction();
+            } else {
+                _useManual = true;
+                setDebugState("Recipe book entry unavailable; placing ingredients manually");
+                return new CraftGenericManuallyTask(_target);
+            }
         }
 
 

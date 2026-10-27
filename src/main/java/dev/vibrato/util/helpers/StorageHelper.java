@@ -536,12 +536,14 @@ public class StorageHelper {
         return results;
     }
 
-    public static void instantFillRecipeViaBook(Vibrato mod, CraftingRecipe recipe, Item output, boolean craftAll) {
+    public static boolean instantFillRecipeViaBook(Vibrato mod, CraftingRecipe recipe, Item output, boolean craftAll) {
         Optional<RecipeEntry<?>> recipeToSend = JankCraftingRecipeMapping.getMinecraftMappedRecipe(recipe, output);
         if (recipeToSend.isPresent()) {
             mod.getController().clickRecipe(MinecraftClient.getInstance().player.currentScreenHandler.syncId, recipeToSend.get(), craftAll);
-        } else {
-            Debug.logError("Could not find recipe stored in Minecraft!! Recipe: " + recipe + " with output " + output);
+            return true;
         }
+        // Dedicated servers/proxies may not have synchronized a recipe-book entry.
+        // The caller can still craft normally by placing its collected ingredients.
+        return false;
     }
 }

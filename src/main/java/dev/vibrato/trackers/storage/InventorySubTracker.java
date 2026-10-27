@@ -209,6 +209,12 @@ public class InventorySubTracker extends Tracker {
         return super.isDirty() || handler != _prevScreenHandler;
     }
 
+    static boolean isMainPlayerInventoryWindowSlot(int window) {
+        // The 2x2 inputs are conversion slots, never a source for a normal inventory transfer.
+        // Otherwise filling a later input steals an ingredient from an earlier one forever.
+        return window >= 9 && window <= 44;
+    }
+
     private static boolean shouldIgnoreSlotForContainer(Slot slot) {
         // IMPORTANT NOTE:!!!!
         // Ignore crafting table output when calculating container slots.
@@ -224,7 +230,7 @@ public class InventorySubTracker extends Tracker {
         if (slot instanceof PlayerSlot) {
             // Ignore non-normal inventory slots
             int window = slot.getWindowSlot();
-            return window == 0 || (window > 4 && window < 9) || window > 44; // true if not a crafting input slot, or inventory slot.
+            return !isMainPlayerInventoryWindowSlot(window);
             // player slot numbers here:
             // https://binged.it/3SB1q3w
         }
