@@ -136,6 +136,7 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
             if (_foodTask == null) _foodTask = new CollectFoodTask(NetherFoodPlan.FOOD_UNITS);
             return _foodTask;
         }
+        setDebugState(constructing ? "Preparing and constructing Nether portal" : "Travelling to home base");
         return switch (mod.getModSettings().getOverworldToNetherBehaviour()) {
             case BUILD_PORTAL_VANILLA -> _cachedNetherBucketConstructionTask;
             case GO_TO_HOME_BASE -> new GetToBlockTask(mod.getModSettings().getHomeBasePosition());
