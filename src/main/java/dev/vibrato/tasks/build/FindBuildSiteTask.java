@@ -1,6 +1,7 @@
 package dev.vibrato.tasks.build;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
@@ -11,11 +12,15 @@ import java.util.Optional;
 public class FindBuildSiteTask extends Task {
 
     private static final int SCAN_RADIUS = 14;
+    private static final int MAX_SEARCHES = 4;
+    private static final float RELOCATE_DISTANCE = 24;
 
     private final int _width;
     private final int _depth;
     private SiteScorer.Site _site;
     private boolean _searched = false;
+    private int _searches;
+    private TimeoutWanderTask _relocate;
 
     public FindBuildSiteTask(int width, int depth) {
         _width = width;
@@ -31,12 +36,23 @@ public class FindBuildSiteTask extends Task {
     protected void onStart(Vibrato mod) {
         _searched = false;
         _site = null;
+        _searches = 0;
+        _relocate = null;
     }
 
     @Override
     protected Task onTick(Vibrato mod) {
+        if (_relocate != null && _relocate.isActive() && !_relocate.isFinished(mod)) {
+            setDebugState("Moving to look for a flat site");
+            return _relocate;
+        }
         setDebugState("Looking for a flat site");
         _site = search(mod);
+        // Nearby chunks may not be loaded yet or the ground may be too uneven here: look elsewhere a few times.
+        if (_site == null && ++_searches < MAX_SEARCHES) {
+            _relocate = new TimeoutWanderTask(RELOCATE_DISTANCE);
+            return _relocate;
+        }
         _searched = true;
         return null;
     }
