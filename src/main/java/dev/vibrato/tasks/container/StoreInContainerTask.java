@@ -103,8 +103,10 @@ public class StoreInContainerTask extends AbstractDoToStorageContainerTask {
 
     @Override
     public boolean isFinished(Vibrato mod) {
-        // We've stored all items
-        return _storedItems != null && _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0;
+        return _storedItems != null && StoreCompletion.finished(_getIfNotPresent,
+                Arrays.stream(_toStore).mapToInt(ItemTarget::getTargetCount).toArray(),
+                Arrays.stream(_toStore).mapToInt(target -> _storedItems.getStoredCount(target.getMatches())).toArray(),
+                () -> _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore).length == 0);
     }
 
     @Override
