@@ -2,19 +2,21 @@ package dev.vibrato.tasks.slot;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasksystem.ITaskUsesCraftingGrid;
+import dev.vibrato.tasksystem.ITaskCanForce;
 import dev.vibrato.tasksystem.Task;
-import dev.vibrato.util.helpers.ItemHelper;
 import dev.vibrato.util.helpers.StorageHelper;
 import dev.vibrato.util.slots.CraftingTableSlot;
 import dev.vibrato.util.slots.PlayerSlot;
 import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.screen.slot.SlotActionType;
 
-public class ReceiveCraftingOutputSlotTask extends Task implements ITaskUsesCraftingGrid {
+public class ReceiveCraftingOutputSlotTask extends Task implements ITaskUsesCraftingGrid, ITaskCanForce {
 
     private final int _toTake;
     private final Slot _slot;
+    private Item _outputItem;
 
     public ReceiveCraftingOutputSlotTask(Slot slot, int toTake) {
         _slot = slot;
@@ -26,15 +28,28 @@ public class ReceiveCraftingOutputSlotTask extends Task implements ITaskUsesCraf
 
     @Override
     protected void onStart(Vibrato mod) {
+        _outputItem = StorageHelper.getItemStackInSlot(_slot).getItem();
+    }
 
+    @Override
+    public boolean shouldForce(Vibrato mod, Task interruptingCandidate) {
+        // Parents count cursor items as available and may immediately switch to
+        // placing a furnace. Keep the crafting handler open until the output is
+        // physically stored, instead of racing onStop's close-screen packet.
+        return cursorHoldsOutput();
+    }
+
+    protected boolean cursorHoldsOutput() {
+        ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
+        return !cursor.isEmpty() && cursor.getItem() == _outputItem;
     }
 
     @Override
     protected Task onTick(Vibrato mod) {
         ItemStack inOutput = StorageHelper.getItemStackInSlot(_slot);
         ItemStack cursor = StorageHelper.getItemStackInCursorSlot();
-        boolean cursorSlotFree = cursor.isEmpty();
-        if(!cursorSlotFree && !ItemHelper.canStackTogether(inOutput, cursor)) {
+        if (!cursor.isEmpty()) {
+            setDebugState("Storing received output before releasing crafting screen");
             return new EnsureFreeCursorSlotTask();
         }
         int craftCount = inOutput.getCount() * getCraftMultipleCount(mod);
