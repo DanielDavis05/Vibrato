@@ -3,6 +3,9 @@ package dev.vibrato.tasks.resources;
 import dev.vibrato.Vibrato;
 import dev.vibrato.Debug;
 import dev.vibrato.TaskCatalogue;
+import dev.vibrato.eventbus.EventBus;
+import dev.vibrato.eventbus.Subscription;
+import dev.vibrato.eventbus.events.BlockBrokenEvent;
 import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.InteractWithBlockTask;
 import dev.vibrato.tasks.ResourceTask;
@@ -41,6 +44,9 @@ public class CollectBucketLiquidTask extends ResourceTask {
     private Optional<BlockPos> _localSource = Optional.empty();
     private boolean _localScanInitialized;
     private final int _count;
+    private final LiquidApproachProgress<BlockPos> _approach = new LiquidApproachProgress<>(45, .5);
+    private Subscription<BlockBrokenEvent> _blockBreaks;
+    private long _approachBlocksBroken;
 
     //private IProgressChecker<Double> _checker = new LinearProgressChecker(5, 0.1);
     private final Item _target;
@@ -83,6 +89,11 @@ public class CollectBucketLiquidTask extends ResourceTask {
         _progressChecker.reset();
         _localSource = Optional.empty();
         _localScanInitialized = false;
+        _approach.reset();
+        _approachBlocksBroken = 0;
+        _blockBreaks = EventBus.subscribe(BlockBrokenEvent.class, event -> {
+            if (event.player == mod.getPlayer()) _approachBlocksBroken++;
+        });
     }
 
 
@@ -180,6 +191,22 @@ public class CollectBucketLiquidTask extends ResourceTask {
             //Debug.logMessage("TEST: " + RayTraceUtils.fluidHandling);
 
             return new DoToClosestBlockTask(blockPos -> {
+                double distance = mod.getPlayer().getPos().distanceTo(net.minecraft.util.math.Vec3d.ofCenter(blockPos));
+                if (_approach.stalled(blockPos.toImmutable(), distance, _approachBlocksBroken, System.nanoTime() / 1e9)) {
+                    Debug.logMessage("Deferring " + _liquidName + " source " + blockPos.toShortString()
+                            + " after 45s without approach or block-break progress; distance=" + distance);
+                    _blacklist.add(blockPos.toImmutable());
+                    _localSource = Optional.empty();
+                    _localScanInitialized = false;
+                    _approach.reset();
+                    _wanderTask.resetWander();
+                    _progressChecker.reset();
+                    mod.getClientBaritone().getPathingBehavior().cancelEverything();
+                    mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+                    mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.JUMP, false);
+                    mod.getInputControls().release(Input.JUMP);
+                    return _wanderTask;
+                }
                 // Clear above if lava because we can't enter.
                 // but NOT if we're standing right above.
                 if (WorldHelper.isSolid(mod, blockPos.up())) {
@@ -241,6 +268,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(Vibrato mod, Task interruptTask) {
+        if (_blockBreaks != null) { EventBus.unsubscribe(_blockBreaks); _blockBreaks = null; }
         mod.getBlockTracker().stopTracking(_toCollect);
         mod.getBehaviour().pop();
         //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, false);
