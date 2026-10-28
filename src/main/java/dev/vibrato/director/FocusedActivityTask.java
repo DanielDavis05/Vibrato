@@ -10,6 +10,7 @@ import dev.vibrato.tasks.combat.SlayMobTask;
 import dev.vibrato.tasks.construction.PlaceBlockTask;
 import dev.vibrato.tasks.enchant.EnchantItemTask;
 import dev.vibrato.tasks.enchant.GrindstoneTask;
+import dev.vibrato.tasks.enchant.AbstractAnvilTask;
 import dev.vibrato.tasks.life.UnsupportedLifeTask;
 import dev.vibrato.tasks.trade.AbstractVillagerTradeTask;
 import dev.vibrato.tasks.travel.CompassDirection;
@@ -138,7 +139,9 @@ public class FocusedActivityTask extends Task implements StepAbandonable, IAllow
         if (!facts.containsAll(step.activity().requires())) {
             reject("prerequisites missing before " + step.activity().id() + ": " + step.activity().requires()); return null;
         }
-        child = step.activity().create(mod, step.params());
+        if (isGoal() && goal.equals("travel_boat_cross")) travelTarget = CompassDirection.valueOf(step.params().getString("direction"))
+                .offset(mod.getPlayer().getBlockPos(), step.params().getInt("distance"));
+        child = FocusedActivityFactory.create(step.activity(), step.params(), isGoal(), mod, () -> travelTarget);
         if (child == null || knownFailed(child)) { reject("activity did not create a supported task: " + step.activity().id()); return null; }
         serial++;
         context = "activity." + goal + "." + (isGoal() ? "goal" : "provider." + serial);
@@ -147,8 +150,6 @@ public class FocusedActivityTask extends Task implements StepAbandonable, IAllow
             goalStartedWall = System.currentTimeMillis() / 1000.0;
             goalStartClientSeconds = currentClientSeconds;
             before = inventory(mod); progress.inventory(before); packetBaseline = packetCounts();
-            if (goal.equals("travel_boat_cross")) travelTarget = CompassDirection.valueOf(step.params().getString("direction"))
-                    .offset(mod.getPlayer().getBlockPos(), step.params().getInt("distance"));
         }
         outcomes.add(row("started", null)); report("started", null);
         return child;
@@ -234,6 +235,7 @@ public class FocusedActivityTask extends Task implements StepAbandonable, IAllow
         return task.failureReason() != null || task instanceof UnsupportedLifeTask
                 || task instanceof EnchantItemTask t && t.failed()
                 || task instanceof GrindstoneTask t && t.failed()
+                || task instanceof AbstractAnvilTask t && t.failed()
                 || task instanceof AbstractVillagerTradeTask t && t.failed()
                 || task instanceof SlayMobTask t && t.failed()
                 || task instanceof BuildBlueprintTask t && t.isFinished(null) && !t.isReady();

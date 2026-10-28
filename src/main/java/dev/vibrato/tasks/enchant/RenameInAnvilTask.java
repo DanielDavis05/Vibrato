@@ -2,6 +2,7 @@ package dev.vibrato.tasks.enchant;
 
 import net.minecraft.item.Item;
 import net.minecraft.screen.AnvilScreenHandler;
+import net.minecraft.client.MinecraftClient;
 
 /**
  * Renames an item at an anvil, the same way the anvil's name field does, and takes the renamed item.
@@ -17,7 +18,8 @@ public class RenameInAnvilTask extends AbstractAnvilTask {
 
     @Override
     protected void onTargetPlaced(AnvilScreenHandler handler) {
-        handler.setNewItemName(_name);
+        AnvilRenameRequest.apply(_name, handler::setNewItemName,
+                packet -> MinecraftClient.getInstance().player.networkHandler.sendPacket(packet));
     }
 
     @Override
