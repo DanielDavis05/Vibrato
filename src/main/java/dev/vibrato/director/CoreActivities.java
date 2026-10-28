@@ -48,8 +48,8 @@ public final class CoreActivities {
     private static final String[] STORED_ITEMS = {
             "cobblestone", "dirt", "sand", "gravel", "coal", "iron_ingot", "gold_ingot", "diamond", "redstone", "string"
     };
-    private static final int SMELT_BASE_MINUTES = 4;
-    private static final int ORE_SMELT_BASE_MINUTES = 12;
+    private static final int SMELT_BASE_MINUTES = 10;
+    private static final int ORE_SMELT_BASE_MINUTES = 20;
     private static final List<ParamSpec> SMELT_COUNT = List.of(ParamSpec.ints("count", 1, 64));
 
     private CoreActivities() {}

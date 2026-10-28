@@ -3,8 +3,9 @@ package dev.vibrato.tasks.build;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
 import dev.vibrato.tasksystem.Task;
+import net.minecraft.block.BlockState;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
 
 import java.util.Optional;
 
@@ -12,6 +13,8 @@ import java.util.Optional;
 public class FindBuildSiteTask extends Task {
 
     private static final int SCAN_RADIUS = 14;
+    private static final int SCAN_UP = 8;
+    private static final int SCAN_DOWN = 24;
     private static final int MAX_SEARCHES = 4;
     private static final float RELOCATE_DISTANCE = 24;
 
@@ -75,6 +78,24 @@ public class FindBuildSiteTask extends Task {
         return "Finding a " + _width + "x" + _depth + " build site";
     }
 
+    /** Returns {groundY, 1 if that column is liquid or has no ground to stand on}. */
+    private static int[] scanColumn(Vibrato mod, int x, int z, int playerY) {
+        int top = Math.min((mod.getWorld().getTopY() - 1), playerY + SCAN_UP);
+        int bottom = Math.max(mod.getWorld().getBottomY(), playerY - SCAN_DOWN);
+        BlockPos.Mutable pos = new BlockPos.Mutable(x, top, z);
+        for (int y = top; y >= bottom; y--) {
+            pos.setY(y);
+            BlockState state = mod.getWorld().getBlockState(pos);
+            if (!state.getFluidState().isEmpty()) {
+                return new int[]{y, 1};
+            }
+            if (!state.getCollisionShape(mod.getWorld(), pos).isEmpty() && !state.isIn(BlockTags.LEAVES)) {
+                return new int[]{y, 0};
+            }
+        }
+        return new int[]{bottom, 1};
+    }
+
     private SiteScorer.Site search(Vibrato mod) {
         int size = 2 * SCAN_RADIUS + 1;
         if (_width > size || _depth > size) {
@@ -87,12 +108,11 @@ public class FindBuildSiteTask extends Task {
         boolean[][] liquid = new boolean[size][size];
         for (int x = 0; x < size; x++) {
             for (int z = 0; z < size; z++) {
-                int top = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, minX + x, minZ + z);
-                BlockPos ground = new BlockPos(minX + x, top - 1, minZ + z);
-                heights[x][z] = ground.getY();
-                // Unloaded chunks report the world floor, which would otherwise score as a perfectly flat site.
-                boolean noGround = top <= mod.getWorld().getBottomY() + 1;
-                liquid[x][z] = noGround || !mod.getWorld().getBlockState(ground).getFluidState().isEmpty();
+                // The client's NO_LEAVES heightmap is not populated for loaded chunks (it reads as the world
+                // floor everywhere), so find the ground by scanning block states from just above the player.
+                int[] column = scanColumn(mod, minX + x, minZ + z, center.getY());
+                heights[x][z] = column[0];
+                liquid[x][z] = column[1] != 0;
             }
         }
         return SiteScorer.best(heights, liquid, _width, _depth)
