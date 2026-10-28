@@ -1,9 +1,32 @@
 package dev.vibrato.chains;
 
 import org.junit.jupiter.api.Test;
+import dev.vibrato.director.DirectorTask;
+import dev.vibrato.director.FocusedActivityTask;
+import dev.vibrato.tasks.movement.DefaultGoToDimensionTask;
+import dev.vibrato.tasks.speedrun.BeatMinecraft2Task;
+import dev.vibrato.tasks.resources.MineAndCollectTask;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AutonomousFoodPolicyTest {
+    @Test void longJourneyRootsOptInWhileShortManualResourceGoalsDoNot() {
+        assertTrue(FoodChain.allowsAutonomousForage(DirectorTask.class));
+        assertTrue(FoodChain.allowsAutonomousForage(DefaultGoToDimensionTask.class));
+        assertTrue(FoodChain.allowsAutonomousForage(BeatMinecraft2Task.class));
+        assertTrue(FoodChain.allowsAutonomousForage(FocusedActivityTask.class));
+        assertFalse(FoodChain.allowsAutonomousForage(MineAndCollectTask.class));
+        assertFalse(FoodChain.allowsAutonomousForage(null));
+    }
+
+    @Test void injuredHungryDimensionTravelerStartsBoundedForage() {
+        assertTrue(FoodChain.allowsAutonomousForage(DefaultGoToDimensionTask.class));
+        var policy = new AutonomousFoodPolicy();
+        assertTrue(policy.shouldCollect(10, .25f, 0, false));
+        for (int tick = 0; tick < 1200; tick++) policy.advance(true, false);
+        assertFalse(policy.shouldCollect(10, .25f, 0, false));
+        assertFalse(policy.shouldCollect(10, .25f, 0, false));
+    }
+
     @Test void startsOnlyWhenUrgentAndNoUsableFood() {
         var policy = new AutonomousFoodPolicy();
         assertFalse(policy.shouldCollect(9, 1f, 0, false));

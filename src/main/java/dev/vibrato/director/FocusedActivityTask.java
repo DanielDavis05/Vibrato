@@ -14,6 +14,7 @@ import dev.vibrato.tasks.life.UnsupportedLifeTask;
 import dev.vibrato.tasks.trade.AbstractVillagerTradeTask;
 import dev.vibrato.tasks.travel.CompassDirection;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.tasksystem.TaskChain;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.client.MinecraftClient;
@@ -30,7 +31,7 @@ import java.util.*;
 import java.util.function.LongSupplier;
 
 /** Runs one fixed seeded goal and its providers; failed or unproven goals never become successful steps. */
-public class FocusedActivityTask extends Task implements StepAbandonable {
+public class FocusedActivityTask extends Task implements StepAbandonable, IAllowsAutonomousFood {
     private final ActivityRegistry registry;
     private final String goal;
     private final long seed;

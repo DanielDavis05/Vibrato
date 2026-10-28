@@ -4,6 +4,7 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalBucketTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.util.Dimension;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
@@ -17,7 +18,7 @@ import java.util.Optional;
  * The user should be able to specify how this should be done in settings
  * (ex, craft a new portal from scratch or check particular portal areas first or highway or whatever)
  */
-public class DefaultGoToDimensionTask extends Task {
+public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousFood {
 
     private final Dimension _target;
     // Cached to keep build properties alive if this task pauses/resumes.

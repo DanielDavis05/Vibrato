@@ -4,6 +4,7 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.Settings;
 import dev.vibrato.director.DirectorTask;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.chains.FoodChain.FoodChainConfig;
 import dev.vibrato.tasks.resources.CollectFoodTask;
 import dev.vibrato.tasksystem.TaskRunner;
@@ -35,7 +36,7 @@ public class FoodChain extends SingleTaskChain {
     private boolean _requestFillup = false;
     private boolean _needsFood = false;
     private final AutonomousFoodPolicy _autonomousFood = new AutonomousFoodPolicy();
-    private Task _foodDirector;
+    private Task _foodRoot;
     private ClientPlayerEntity _foodPlayer;
     private CollectFoodTask _autonomousFoodTask;
 
@@ -44,6 +45,10 @@ public class FoodChain extends SingleTaskChain {
 
     public FoodChain(TaskRunner runner) {
         super(runner);
+    }
+
+    static boolean allowsAutonomousForage(Class<? extends Task> root) {
+        return root != null && (DirectorTask.class.isAssignableFrom(root) || IAllowsAutonomousFood.class.isAssignableFrom(root));
     }
 
     @Override
@@ -79,16 +84,16 @@ public class FoodChain extends SingleTaskChain {
             return Float.NEGATIVE_INFINITY;
         }
 
-        Task director = mod.getUserTaskChain().getCurrentTask();
-        if (!(director instanceof DirectorTask)) director = null;
-        if (director != _foodDirector || mod.getPlayer() != _foodPlayer) {
+        Task safetyRoot = mod.getUserTaskChain().getCurrentTask();
+        if (safetyRoot != null && !allowsAutonomousForage(safetyRoot.getClass())) safetyRoot = null;
+        if (safetyRoot != _foodRoot || mod.getPlayer() != _foodPlayer) {
             _autonomousFood.reset();
-            _foodDirector = director;
+            _foodRoot = safetyRoot;
             _foodPlayer = mod.getPlayer();
             if (_autonomousFoodTask != null && _mainTask == _autonomousFoodTask) setTask(null);
             _autonomousFoodTask = null;
         }
-        if (director != null) {
+        if (safetyRoot != null) {
             _autonomousFood.advance(mod.getTaskRunner().getCurrentTaskChain() == this && _autonomousFoodTask != null,
                     mod.getTaskRunner().getCurrentTaskChain() == mod.getUserTaskChain());
         }
@@ -140,7 +145,7 @@ public class FoodChain extends SingleTaskChain {
         }
 
 
-        if (director != null) {
+        if (safetyRoot != null) {
             ClientPlayerEntity player = mod.getPlayer();
             boolean collect = _autonomousFood.shouldCollect(player.getHungerManager().getFoodLevel(),
                     player.getHealth() / player.getMaxHealth(), _cachedFoodScore, forageCompleted);

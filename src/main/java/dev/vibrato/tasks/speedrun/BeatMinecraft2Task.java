@@ -16,6 +16,7 @@ import dev.vibrato.tasks.misc.SleepThroughNightTask;
 import dev.vibrato.tasks.movement.*;
 import dev.vibrato.tasks.resources.*;
 import dev.vibrato.tasksystem.Task;
+import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.util.Dimension;
 import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.MiningRequirement;
@@ -50,7 +51,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @SuppressWarnings("ALL")
-public class BeatMinecraft2Task extends Task {
+public class BeatMinecraft2Task extends Task implements IAllowsAutonomousFood {
 
     private static BeatMinecraftConfig _config;
     static {
