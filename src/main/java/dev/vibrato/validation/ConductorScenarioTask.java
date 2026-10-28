@@ -13,9 +13,12 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -144,20 +147,23 @@ public final class ConductorScenarioTask extends Task {
         if (stage == 0) { creativeStone(client); advance(); }
         else if (stage == 1 && inventoryStone(server)) {
             BlockPos origin = client.player.getBlockPos();
-            outer: for (int distance = 1; distance <= 2; distance++) for (Direction direction : Direction.Type.HORIZONTAL)
-                for (int dy = -1; dy <= 1; dy++) {
-                    BlockPos candidate = origin.offset(direction, distance).up(dy);
-                    if (client.world.isAir(candidate) && client.world.getBlockState(candidate.down()).isSolidBlock(client.world, candidate.down())) {
-                        target = candidate; break outer;
-                    }
+            for (BlockPos candidate : BlockPos.iterateOutwards(origin, 3, 2, 3)) {
+                if (placementHit(client, candidate) != null) {
+                    target = candidate.toImmutable(); break;
                 }
-            if (target == null) { reject("no reachable supported air block for placement"); return; }
+            }
+            if (target == null) { reject("no reachable collision-supported air block for placement"); return; }
             request(target); advance();
         } else if (stage == 2 && watched(server) != null) {
             originalBlock = watched(server);
-            BlockPos support = target.down();
-            client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND,
-                    new BlockHitResult(Vec3d.ofCenter(support).add(0, .5, 0), Direction.UP, support, false));
+            if (!"minecraft:air".equals(originalBlock)) { reject("placement target was not server-confirmed air"); return; }
+            BlockHitResult hit = placementHit(client, target);
+            if (hit == null) { reject("placement support is no longer reachable"); return; }
+            evidence.put("placementSupport", Map.of("block", Registries.BLOCK.getId(client.world.getBlockState(hit.getBlockPos()).getBlock()).toString(),
+                    "face", hit.getSide().getName(), "raycastConfirmed", true));
+            if (!client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND, hit).isAccepted()) {
+                reject("client rejected placement interaction"); return;
+            }
             advance();
         } else if (stage == 3 && "minecraft:stone".equals(watched(server))) {
             evidence.put("placedBlock", List.of(target.getX(), target.getY(), target.getZ()));
@@ -165,6 +171,29 @@ public final class ConductorScenarioTask extends Task {
             evidence.put("events", List.of(event("item_use", "minecraft:stone"), event("block_statechange", "minecraft:stone")));
             finish();
         }
+    }
+
+    static boolean placementHitIsValid(BlockHitResult hit, BlockPos target, Box player,
+                                       Vec3d eye, double reach) {
+        return hit.getType() == HitResult.Type.BLOCK && hit.getSide() == Direction.UP
+                && hit.getBlockPos().up().equals(target) && !player.intersects(new Box(target))
+                && eye.squaredDistanceTo(hit.getPos()) <= reach * reach;
+    }
+
+    private BlockHitResult placementHit(MinecraftClient client, BlockPos candidate) {
+        if (!client.world.isAir(candidate) || client.player.getBoundingBox().intersects(new Box(candidate))) return null;
+        BlockPos support = candidate.down();
+        var shape = client.world.getBlockState(support).getCollisionShape(client.world, support);
+        // Leaves support placement even though their block state is not tagged full-solid.
+        if (shape.isEmpty()) return null;
+        var bounds = shape.getBoundingBox();
+        Vec3d surface = new Vec3d(support.getX() + (bounds.minX + bounds.maxX) / 2,
+                support.getY() + bounds.maxY - .001, support.getZ() + (bounds.minZ + bounds.maxZ) / 2);
+        Vec3d eye = client.player.getEyePos();
+        BlockHitResult hit = client.world.raycast(new RaycastContext(eye, surface,
+                RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, client.player));
+        return placementHitIsValid(hit, candidate, client.player.getBoundingBox(), eye,
+                client.player.getBlockInteractionRange()) ? hit : null;
     }
 
     private void adventure(MinecraftClient client, Map<String, Object> server) throws IOException {
