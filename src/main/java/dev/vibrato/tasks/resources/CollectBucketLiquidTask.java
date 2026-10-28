@@ -38,6 +38,13 @@ import java.util.function.Predicate;
 public class CollectBucketLiquidTask extends ResourceTask {
 
     private final HashSet<BlockPos> _blacklist = new HashSet<>();
+    private final LiquidPoolDeferrals _deferredPools = new LiquidPoolDeferrals();
+
+    static boolean samePool(BlockPos a, BlockPos b) {
+        return Math.abs(a.getY() - b.getY()) <= 2
+                && (long) (a.getX() - b.getX()) * (a.getX() - b.getX())
+                + (long) (a.getZ() - b.getZ()) * (a.getZ() - b.getZ()) <= 64;
+    }
     private final TimerGame _tryImmediatePickupTimer = new TimerGame(3);
     private final TimerGame _pickedUpTimer = new TimerGame(0.5);
     private final TimerGame _localSourceTimer = new TimerGame(0.5);
@@ -89,8 +96,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
         _progressChecker.reset();
         _localSource = Optional.empty();
         _localScanInitialized = false;
-        _approach.reset();
-        _approachBlocksBroken = 0;
+        _approach.resume(System.nanoTime() / 1e9);
         _blockBreaks = EventBus.subscribe(BlockBrokenEvent.class, event -> {
             if (event.player == mod.getPlayer()) _approachBlocksBroken++;
         });
@@ -171,6 +177,8 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
         Predicate<BlockPos> isSourceLiquid = blockPos -> {
             if (_blacklist.contains(blockPos)) return false;
+            double now = System.nanoTime() / 1e9;
+            if (_deferredPools.suppresses(blockPos, now)) return false;
             if (!WorldHelper.canReach(mod, blockPos)) return false;
             if (!WorldHelper.canReach(mod, blockPos.up())) return false; // We may try reaching the block above.
             assert MinecraftClient.getInstance().world != null;
@@ -192,10 +200,13 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
             return new DoToClosestBlockTask(blockPos -> {
                 double distance = mod.getPlayer().getPos().distanceTo(net.minecraft.util.math.Vec3d.ofCenter(blockPos));
-                if (_approach.stalled(blockPos.toImmutable(), distance, _approachBlocksBroken, System.nanoTime() / 1e9)) {
+                double now = System.nanoTime() / 1e9;
+                if (_approach.stalled(blockPos.toImmutable(), CollectBucketLiquidTask::samePool,
+                        anchor -> mod.getPlayer().getPos().distanceTo(net.minecraft.util.math.Vec3d.ofCenter(anchor)),
+                        _approachBlocksBroken, now)) {
                     Debug.logMessage("Deferring " + _liquidName + " source " + blockPos.toShortString()
-                            + " after 45s without approach or block-break progress; distance=" + distance);
-                    _blacklist.add(blockPos.toImmutable());
+                            + " after no durable approach progress; distance=" + distance);
+                    _deferredPools.defer(_approach.anchor(), now);
                     _localSource = Optional.empty();
                     _localScanInitialized = false;
                     _approach.reset();
@@ -268,6 +279,7 @@ public class CollectBucketLiquidTask extends ResourceTask {
 
     @Override
     protected void onResourceStop(Vibrato mod, Task interruptTask) {
+        _approach.pause(System.nanoTime() / 1e9);
         if (_blockBreaks != null) { EventBus.unsubscribe(_blockBreaks); _blockBreaks = null; }
         mod.getBlockTracker().stopTracking(_toCollect);
         mod.getBehaviour().pop();

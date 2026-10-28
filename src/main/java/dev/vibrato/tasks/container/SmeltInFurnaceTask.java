@@ -175,6 +175,21 @@ public class SmeltInFurnaceTask extends ResourceTask {
                     - (outputTarget.matches(_furnaceCache.outputSlot.getItem()) ? _furnaceCache.outputSlot.getCount() : 0)
                     - totalFuelInFurnace;
 
+            // Once furnace acquisition starts, finish it even if its crafting
+            // table temporarily consumes logs reserved as smelting input.
+            if (isAcquiringContainer(mod)) return super.onTick(mod);
+
+            // A fuel acquisition may consume the same logs needed as smelting
+            // input while crafting its pickaxe. Complete it before reacquiring
+            // materials, or each prerequisite repeatedly interrupts the other.
+            int coalInMain = mod.getPlayer().getInventory().main.stream()
+                    .filter(stack -> stack.isOf(Items.COAL)).mapToInt(ItemStack::getCount).sum();
+            double committedFuel = _fuelPlan.committedSmelts(fuelNeeded, coalInMain);
+            if (committedFuel > 0) {
+                setDebugState("Getting Fuel");
+                return new CollectFuelTask(committedFuel);
+            }
+
             // We don't have enough materials...
             if (mod.getItemStorage().getItemCountInventoryOnly(materialTarget.getMatches()) < materialsNeeded) {
                 setDebugState("Getting Materials");
@@ -184,8 +199,6 @@ public class SmeltInFurnaceTask extends ResourceTask {
             // Wood can temporarily leave fuel accounting while crafting a table
             // or pickaxe. Finish a selected coal acquisition instead of repeatedly
             // aborting it when those same planks return to main inventory.
-            int coalInMain = mod.getPlayer().getInventory().main.stream()
-                    .filter(stack -> stack.isOf(Items.COAL)).mapToInt(ItemStack::getCount).sum();
             double collectFuel = _fuelPlan.collectSmelts(fuelNeeded, StorageHelper.calculateInventoryFuelCount(mod), coalInMain);
             if (collectFuel > 0) {
                 setDebugState("Getting Fuel");

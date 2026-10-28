@@ -9,6 +9,26 @@ import static dev.vibrato.tasks.build.BlockKind.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BlueprintsTest {
+    @Test void executorSortsBeforePlacementAndRequestsFullInventoryTarget() {
+        Blueprint blueprint = new Blueprint("column", java.util.List.of(
+                new Blueprint.Placement(0, 4, 0, BlockKind.WALL),
+                new Blueprint.Placement(1, 1, 0, BlockKind.WALL),
+                new Blueprint.Placement(0, 1, 0, BlockKind.WALL)));
+        var ordered = BuildBlueprintTask.executionOrder(blueprint).placements();
+        assertEquals(1, ordered.get(0).dy());
+        assertEquals(1, ordered.get(1).dy());
+        assertEquals(4, ordered.get(2).dy());
+        assertEquals(16, BuildBlueprintTask.desiredMaterialCount(16, 14));
+    }
+
+
+    @Test void protectsOnlyCompletedBlocksAtPlannedPositions() {
+        var pos = new net.minecraft.util.math.BlockPos(1, 2, 3);
+        var expected = java.util.Map.of(pos, "oak");
+        assertTrue(BuildBlueprintTask.protectsCompleted(expected, pos, "oak"));
+        assertFalse(BuildBlueprintTask.protectsCompleted(expected, pos, "stone"));
+        assertFalse(BuildBlueprintTask.protectsCompleted(expected, pos.east(), "oak"));
+    }
 
     private static long count(Blueprint blueprint, BlockKind kind) {
         return blueprint.placements().stream().filter(p -> p.kind() == kind).count();

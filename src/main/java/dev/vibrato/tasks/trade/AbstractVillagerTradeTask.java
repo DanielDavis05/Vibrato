@@ -24,12 +24,14 @@ import net.minecraft.screen.MerchantScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.village.TradeOffer;
+import net.minecraft.village.VillagerProfession;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Walks to the nearest villager, opens its trade screen and performs trades until {@link #isFinished} reports that
@@ -55,6 +57,8 @@ public abstract class AbstractVillagerTradeTask extends Task {
     private final TimerGame _interactTimer = new TimerGame(1);
     private final TimerGame _progressTimer = new TimerGame(8);
     private final Set<Offer<Item>> _blocked = new HashSet<>();
+    private final VillagerRetryTracker _unavailableVillagers = new VillagerRetryTracker(120_000_000_000L);
+    private UUID _villagerId;
 
     private int _gained = 0;
     private int _failures = 0;
@@ -62,6 +66,10 @@ public abstract class AbstractVillagerTradeTask extends Task {
     private int _interactAttempts = 0;
     private boolean _exhausted = false;
     private boolean _outputCounted = false;
+    private int _outputBefore;
+    private ClickSlotTask _takeOutputTask;
+    private long _offerWaitStarted;
+
     private Offer<Item> _current = null;
     private Task _collectTask = null;
 
@@ -95,7 +103,6 @@ public abstract class AbstractVillagerTradeTask extends Task {
         mod.getBehaviour().push();
         mod.getBehaviour().addProtectedItems(Items.EMERALD, _item);
         _wander.resetWander();
-        _interactAttempts = 0;
     }
 
     @Override
@@ -104,7 +111,7 @@ public abstract class AbstractVillagerTradeTask extends Task {
             return null;
         }
         if (_failures >= MAX_FAILURES) {
-            return exhaust("too many failed trades");
+            return rejectVillager("too many failed trades");
         }
         if (_collectTask != null && _collectTask.isActive() && !_collectTask.isFinished(mod)) {
             setDebugState("Collecting trade inputs");
@@ -118,19 +125,22 @@ public abstract class AbstractVillagerTradeTask extends Task {
 
     private Task trade(Vibrato mod, MerchantScreenHandler merchant) {
         _interactAttempts = 0;
-        ItemStack output = StorageHelper.getItemStackInSlot(new PlayerSlot(OUTPUT_SLOT));
-        if (!output.isEmpty()) {
-            if (!_outputCounted && _current != null) {
-                _gained += gainOf(_current);
-                _outputCounted = true;
+        if (_outputCounted && _current != null) {
+            if (_takeOutputTask != null && !_takeOutputTask.isFinished(mod)) return _takeOutputTask;
+            int trades = TradeTransfer.completedTrades(_outputBefore,
+                    playerInventoryCount(mod, _current.output().item()), _current.output().count());
+            if (trades > 0) {
+                _gained += trades * gainOf(_current);
+                _outputCounted = false;
+                _current = null;
                 _progressTimer.reset();
+            } else if (_progressTimer.elapsed()) {
+                _outputCounted = false;
+                stall();
+            } else {
+                setDebugState("Waiting for trade output transfer");
+                return null;
             }
-            setDebugState("Taking trade output");
-            return new ClickSlotTask(new PlayerSlot(OUTPUT_SLOT), SlotActionType.QUICK_MOVE);
-        }
-        if (_outputCounted) {
-            _outputCounted = false;
-            _current = null;
         }
         if (_gained >= _count) {
             setDebugState("Goal reached");
@@ -139,21 +149,36 @@ public abstract class AbstractVillagerTradeTask extends Task {
 
         if (_current == null) {
             List<Offer<Item>> offers = snapshot(merchant.getRecipes());
+            if (offers.isEmpty()) {
+                if (_offerWaitStarted == 0) _offerWaitStarted = System.nanoTime();
+                if (System.nanoTime() - _offerWaitStarted < 8_000_000_000L) {
+                    setDebugState("Waiting for merchant offers");
+                    return null;
+                }
+                return rejectVillager("merchant offers did not arrive");
+            }
+            _offerWaitStarted = 0;
             List<Offer<Item>> usable = new ArrayList<>();
             for (Offer<Item> offer : offers) {
-                if (!_blocked.contains(offer)) {
-                    usable.add(offer);
-                }
+                if (!_blocked.contains(offer)) usable.add(offer);
             }
             Optional<Offer<Item>> chosen = chooseOffer(mod, usable);
-            if (chosen.isEmpty()) {
-                return exhaust("no usable trade");
-            }
+            if (chosen.isEmpty()) return rejectVillager("no usable trade");
             _current = chosen.get();
             int index = offers.indexOf(_current);
             merchant.setRecipeIndex(index);
             MinecraftClient.getInstance().getNetworkHandler().sendPacket(new SelectMerchantTradeC2SPacket(index));
             _progressTimer.reset();
+        }
+
+        ItemStack output = StorageHelper.getItemStackInSlot(new PlayerSlot(OUTPUT_SLOT));
+        if (!output.isEmpty() && output.isOf(_current.output().item())) {
+            _outputBefore = playerInventoryCount(mod, _current.output().item());
+            _outputCounted = true;
+            _progressTimer.reset();
+            setDebugState("Taking trade output");
+            _takeOutputTask = new ClickSlotTask(new PlayerSlot(OUTPUT_SLOT), SlotActionType.QUICK_MOVE);
+            return _takeOutputTask;
         }
 
         // Clear stale items left in the input slots by a previous trade.
@@ -189,6 +214,15 @@ public abstract class AbstractVillagerTradeTask extends Task {
         return null;
     }
 
+    private int playerInventoryCount(Vibrato mod, Item item) {
+        int count = 0;
+        for (int slot = 0; slot < mod.getPlayer().getInventory().size(); slot++) {
+            ItemStack stack = mod.getPlayer().getInventory().getStack(slot);
+            if (stack.isOf(item)) count += stack.getCount();
+        }
+        return count;
+    }
+
     private Task missingInput(Stack<Item> input) {
         if (!mayCollectInputs() || _collections >= MAX_COLLECTIONS) {
             stall();
@@ -210,12 +244,20 @@ public abstract class AbstractVillagerTradeTask extends Task {
         _current = null;
         _outputCounted = false;
 
-        Optional<Entity> villager = mod.getEntityTracker().getClosestEntity(VillagerEntity.class);
+        long now = System.nanoTime();
+        Optional<Entity> villager = mod.getEntityTracker().getClosestEntity(entity ->
+                entity instanceof VillagerEntity candidate && candidate.isAlive() && !candidate.isBaby()
+                        && candidate.getVillagerData().getProfession() != VillagerProfession.NITWIT
+                        && _unavailableVillagers.available(candidate.getUuid(), now)
+                        && (_villagerId == null || _villagerId.equals(candidate.getUuid())), VillagerEntity.class);
         if (villager.isEmpty()) {
-            setDebugState("No villager nearby, wandering");
+            // A selected villager can leave loaded range or die while approaching.
+            if (_villagerId != null) return rejectVillager("villager no longer available");
+            setDebugState("No usable villager nearby, wandering");
             return _wander;
         }
         Entity entity = villager.get();
+        _villagerId = entity.getUuid();
         if (!mod.getPlayer().isInRange(entity, VILLAGER_REACH)) {
             setDebugState("Walking to villager");
             return new GetToEntityTask(entity, VILLAGER_REACH);
@@ -223,11 +265,25 @@ public abstract class AbstractVillagerTradeTask extends Task {
         if (_interactTimer.elapsed()) {
             _interactTimer.reset();
             if (++_interactAttempts > MAX_INTERACT_ATTEMPTS) {
-                return exhaust("villager would not open its trades");
+                return rejectVillager("villager would not open its trades");
             }
             mod.getController().interactEntity(mod.getPlayer(), entity, Hand.MAIN_HAND);
         }
         setDebugState("Opening trade screen");
+        return null;
+    }
+
+    private Task rejectVillager(String reason) {
+        if (_villagerId != null) _unavailableVillagers.reject(_villagerId, System.nanoTime());
+        _villagerId = null;
+        _interactAttempts = 0;
+        _offerWaitStarted = 0;
+        _failures = 0;
+        _current = null;
+        _outputCounted = false;
+        _blocked.clear();
+        StorageHelper.closeScreen();
+        setDebugState("Trying another villager: " + reason);
         return null;
     }
 

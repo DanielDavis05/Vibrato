@@ -7,8 +7,19 @@ public final class TransitCombatPolicy {
 
     private TransitCombatPolicy() {}
 
-    public static boolean shouldEscapeDanger(boolean combatTargetIsHostile) {
-        return !combatTargetIsHostile;
+    public static boolean criticalHealth(float health) { return health <= 6; }
+
+    public static boolean vulnerable(int armor, float health) {
+        return criticalHealth(health) || (armor <= 15 && health < 3)
+                || (armor < 10 && health < 10) || (armor < 5 && health < 18);
+    }
+
+    public static boolean yieldToEating(boolean criticalEating, boolean criticalHealth, boolean immediateHostile) {
+        return criticalEating && !(criticalHealth && immediateHostile);
+    }
+
+    public static boolean shouldEscapeDanger(boolean combatTargetIsHostile, boolean transitCombat, boolean criticalHealth) {
+        return !combatTargetIsHostile || transitCombat || criticalHealth;
     }
 
     public static boolean rangedThreat(boolean alive, boolean angry, boolean excluded,

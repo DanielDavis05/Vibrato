@@ -10,6 +10,7 @@ import dev.vibrato.eventbus.events.TaskStartedEvent;
 import dev.vibrato.eventbus.events.BlockBrokenEvent;
 import dev.vibrato.eventbus.events.BlockPlaceEvent;
 import dev.vibrato.director.DirectorTask;
+import dev.vibrato.tasks.life.FarmCropsTask;
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.client.gui.screen.CreditsScreen;
 import net.minecraft.entity.mob.MobEntity;
@@ -20,6 +21,8 @@ import java.util.ArrayDeque;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.CropBlock;
+import net.minecraft.util.math.BlockPos;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -37,6 +40,7 @@ public final class ScriptRunner {
     private final ScriptState state;
     private final WorldReadyGate readyGate = new WorldReadyGate();
     private final Path result;
+    private final CropGrowthProgress cropGrowth = new CropGrowthProgress();
     private final List<Map<String, Object>> commands = new ArrayList<>();
     private final List<Map<String, Object>> taskOutcomes = new ArrayList<>();
     private final List<Map<String, Object>> timeline = new ArrayList<>();
@@ -142,6 +146,19 @@ public final class ScriptRunner {
                 heartbeat.put("taskFailure", rootTask == null ? null : rootTask.failureReason());
                 heartbeat.put("blocksBrokenCount", blocksBrokenCount);
                 heartbeat.put("blockChangesNearPlayerCount", blockChangesNearPlayerCount);
+                Map<String, Integer> nearbyCropAges = new LinkedHashMap<>();
+                if (rootTask != null && rootTask.thisOrChildSatisfies(task -> task instanceof FarmCropsTask)) {
+                    BlockPos center = client.player.getBlockPos();
+                    for (BlockPos position : BlockPos.iterate(center.add(-8, -3, -8), center.add(8, 3, 8))) {
+                        var blockState = client.world.getBlockState(position);
+                        if (blockState.getBlock() instanceof CropBlock crop) {
+                            String key = client.world.getRegistryKey().getValue() + ":" + position.toShortString()
+                                    + ":" + Registries.BLOCK.getId(crop);
+                            nearbyCropAges.put(key, crop.getAge(blockState));
+                        }
+                    }
+                }
+                heartbeat.put("cropGrowthCount", cropGrowth.observe(nearbyCropAges));
                 heartbeat.put("pillarAttempts", pillarAttempts);
                 heartbeat.put("movement", currentMovement());
                 heartbeat.put("onGround", client.player.isOnGround());

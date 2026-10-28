@@ -82,11 +82,14 @@ public final class ServerTelemetry implements ModInitializer {
                 entry.put("noClip", player.noClip);
                 entry.put("position", List.of(player.getX(), player.getY(), player.getZ()));
                 var inventory = new TreeMap<String, Integer>();
+                var inventorySlots = new ArrayList<String>();
                 for (int slot = 0; slot < player.getInventory().size(); slot++) {
                     var stack = player.getInventory().getStack(slot);
+                    inventorySlots.add(Registries.ITEM.getId(stack.getItem()).getPath() + ":" + stack.getCount());
                     if (!stack.isEmpty()) inventory.merge(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
                 }
                 entry.put("inventory", inventory);
+                entry.put("inventorySlots", inventorySlots);
                 entry.put("timeOfDay", player.getServerWorld().getTimeOfDay());
                 var blocks = new TreeMap<String, Object>();
                 for (BlockPos pos : watched.get()) blocks.put(pos.getX()+","+pos.getY()+","+pos.getZ(),

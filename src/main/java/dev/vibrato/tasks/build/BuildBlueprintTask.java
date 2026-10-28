@@ -6,6 +6,7 @@ import dev.vibrato.tasks.InteractWithBlockTask;
 import dev.vibrato.tasks.construction.PlaceBlockTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
@@ -17,7 +18,10 @@ import net.minecraft.util.math.Direction;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Raises a {@link Blueprint} at an origin (the ground block under it). Gathers missing materials, then places each
@@ -44,6 +48,10 @@ public class BuildBlueprintTask extends Task {
     private int _currentIndex = -1;
     private boolean _done;
     private boolean _ready;
+    private boolean _initialized;
+    private int _supportRepairs;
+    private Map<BlockPos, Block> _plannedBlocks;
+    private Map<BlockPos, Block> _supportBlocks;
 
     /** @param origin ground block to build on, or null to pick a flat site automatically */
     public BuildBlueprintTask(Blueprint blueprint, BlockPos origin, Palette palette) {
@@ -73,14 +81,23 @@ public class BuildBlueprintTask extends Task {
 
     @Override
     protected void onStart(Vibrato mod) {
+        mod.getBehaviour().push();
+        mod.getBehaviour().avoidBlockBreaking(pos -> isCompletedBlueprintBlock(mod, pos)
+                || _supportBlocks != null && mod.getWorld() != null
+                && protectsCompleted(_supportBlocks, pos, mod.getWorld().getBlockState(pos).getBlock()));
+        if (_initialized && !_done) return;
+        _initialized = true;
         _origin = null;
         _siteTask = null;
         _oriented = null;
+        _plannedBlocks = null;
+        _supportBlocks = new HashMap<>();
         _gatherRounds = 0;
         _current = null;
         _currentIndex = -1;
         _done = false;
         _ready = false;
+        _supportRepairs = 0;
     }
 
     @Override
@@ -104,11 +121,24 @@ public class BuildBlueprintTask extends Task {
                 }
                 _origin = site.get();
             }
-            _oriented = withoutFluids(orient(mod, _blueprint));
+            _oriented = executionOrder(withoutFluids(orient(mod, _blueprint)));
             _attempts = new int[_oriented.placements().size()];
+            _plannedBlocks = new HashMap<>();
+            for (Blueprint.Placement p : _oriented.placements())
+                _plannedBlocks.put(_origin.add(p.dx(), p.dy(), p.dz()), blockOf(p.kind()));
         }
 
-        if (_current != null && _current.isActive() && !_current.isFinished(mod)) {
+        if (_current != null && _current.failureReason() == null && !_current.isFinished(mod)) {
+            if (_currentIndex >= 0 && _current instanceof PlaceBlockTask
+                    && missingSupportNeedsRepair(mod, _oriented.placements().get(_currentIndex))) {
+                if (++_supportRepairs > 3) {
+                    fail("Blueprint support repeatedly disappeared");
+                    return null;
+                }
+                _current = null;
+                _currentIndex = -1;
+                return null;
+            }
             return _current;
         }
         if (_current != null && _currentIndex >= 0 && !_current.isFinished(mod)) {
@@ -153,7 +183,9 @@ public class BuildBlueprintTask extends Task {
     }
 
     @Override
-    protected void onStop(Vibrato mod, Task interruptTask) {}
+    protected void onStop(Vibrato mod, Task interruptTask) {
+        mod.getBehaviour().pop();
+    }
 
     @Override
     protected boolean isEqual(Task other) {
@@ -164,6 +196,10 @@ public class BuildBlueprintTask extends Task {
     @Override
     protected String toDebugString() {
         return "Building " + _blueprint.name() + " with " + _palette;
+    }
+
+    static Blueprint executionOrder(Blueprint blueprint) {
+        return new Blueprint(blueprint.name(), blueprint.bottomUp());
     }
 
     private static Blueprint withoutFluids(Blueprint blueprint) {
@@ -177,7 +213,26 @@ public class BuildBlueprintTask extends Task {
             Item tool = placement.kind() == BlockKind.FARMLAND ? Items.WOODEN_HOE : Items.WOODEN_SHOVEL;
             return new InteractWithBlockTask(new ItemTarget(tool, 1), Direction.UP, pos, true);
         }
-        return new PlaceBlockTask(pos, blockOf(placement.kind()));
+        Set<BlockPos> footprint = _oriented.placements().stream()
+                .map(p -> _origin.add(p.dx(), p.dy(), p.dz())).collect(Collectors.toUnmodifiableSet());
+        return new PlaceBlockTask(pos, blockOf(placement.kind()), footprint, _supportBlocks);
+    }
+
+    private boolean isCompletedBlueprintBlock(Vibrato mod, BlockPos pos) {
+        return _plannedBlocks != null && mod.getWorld() != null
+                && protectsCompleted(_plannedBlocks, pos, mod.getWorld().getBlockState(pos).getBlock());
+    }
+
+    static <T> boolean protectsCompleted(Map<BlockPos, T> planned, BlockPos pos, T actual) {
+        T expected = planned.get(pos);
+        return expected != null && expected.equals(actual);
+    }
+
+    private boolean missingSupportNeedsRepair(Vibrato mod, Blueprint.Placement target) {
+        BlockPos pos = _origin.add(target.dx(), target.dy(), target.dz());
+        if (!mod.getChunkTracker().isChunkLoaded(pos)) return false;
+        for (Direction direction : Direction.values()) if (WorldHelper.isSolid(mod, pos.offset(direction))) return false;
+        return _oriented.placements().stream().anyMatch(p -> p.dy() < target.dy() && !isBuilt(mod, p));
     }
 
     private boolean isBuilt(Vibrato mod, Blueprint.Placement placement) {
@@ -195,7 +250,7 @@ public class BuildBlueprintTask extends Task {
         return count;
     }
 
-    /** Items still needed for unbuilt placements, in build order, minus what the inventory already holds. */
+    /** Desired inventory totals for materials still needed by unbuilt placements, in build order. */
     private Map<Item, Integer> missingItems(Vibrato mod) {
         Map<Item, Integer> need = new LinkedHashMap<>();
         for (int i = 0; i < _oriented.placements().size(); i++) {
@@ -215,10 +270,14 @@ public class BuildBlueprintTask extends Task {
         for (Map.Entry<Item, Integer> entry : need.entrySet()) {
             int have = mod.getItemStorage().getItemCount(entry.getKey());
             if (have < entry.getValue()) {
-                missing.put(entry.getKey(), entry.getValue() - have);
+                missing.put(entry.getKey(), desiredMaterialCount(entry.getValue(), have));
             }
         }
         return missing;
+    }
+
+    static int desiredMaterialCount(int needed, int held) {
+        return Math.max(needed, held);
     }
 
     private Item itemOf(BlockKind kind) {

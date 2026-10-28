@@ -262,6 +262,7 @@ public class MineAndCollectTask extends ResourceTask {
         private final Map<BlockPos, Long> _failedBlocks = new HashMap<>();
         private final MiningFailurePolicy<BlockPos> _logFailures = new MiningFailurePolicy<>();
         private final MiningApproachWatchdog<BlockPos> _approachWatchdog = new MiningApproachWatchdog<>();
+        private final TerrainApproachFailures _terrainFailures = new TerrainApproachFailures();
         private BlockPos _excavating;
         private static final long BLOCK_RETRY_NANOS = 30_000_000_000L;
         private final MovementProgressChecker _progressChecker = new MovementProgressChecker(1);
@@ -360,10 +361,16 @@ public class MineAndCollectTask extends ResourceTask {
             long now = System.nanoTime();
             _failedBlocks.entrySet().removeIf(entry -> now - entry.getValue() >= BLOCK_RETRY_NANOS);
             if (_failedBlocks.containsKey(pos)) return true;
-            if (!mod.getWorld().getBlockState(pos).isIn(BlockTags.LOGS)) return false;
             Vec3d player = mod.getPlayer().getPos();
+            if (isOrdinaryStone(mod, pos) && _terrainFailures.suppress(pos, player.x, player.y, player.z, now)) return true;
+            if (!mod.getWorld().getBlockState(pos).isIn(BlockTags.LOGS)) return false;
             return _logFailures.suppress(pos, player.x, player.y, player.z, now,
                     (a, b) -> connectedVerticalLogs(mod, a, b));
+        }
+
+        private boolean isOrdinaryStone(Vibrato mod, BlockPos pos) {
+            Block block = mod.getWorld().getBlockState(pos).getBlock();
+            return block == Blocks.STONE || block == Blocks.COBBLESTONE;
         }
 
         private boolean connectedVerticalLogs(Vibrato mod, BlockPos a, BlockPos b) {
@@ -393,6 +400,7 @@ public class MineAndCollectTask extends ResourceTask {
             if (_excavating != null && mod.getChunkTracker().isChunkLoaded(_excavating)
                     && WorldHelper.isAir(mod, _excavating)) {
                 _approachWatchdog.excavationCompleted(now);
+                _terrainFailures.clear();
                 _excavating = null;
             }
             if (mod.getControllerExtras().isBreakingBlock()) {
@@ -403,10 +411,15 @@ public class MineAndCollectTask extends ResourceTask {
             if (_miningPos != null) {
                 Vec3d player = mod.getPlayer().getPos();
                 boolean stalled = _approachWatchdog.stalled(_miningPos, now,
-                        (a, b) -> a.equals(b) || connectedVerticalLogs(mod, a, b),
+                        (a, b) -> a.equals(b) || connectedVerticalLogs(mod, a, b)
+                                || (isOrdinaryStone(mod, a) && isOrdinaryStone(mod, b) && TerrainApproachFailures.sameArea(a, b)),
                         anchor -> Math.sqrt(anchor.getSquaredDistance(player)));
                 if (stalled) {
                     Debug.logMessage("Mining approach made no progress; trying another target.");
+                    BlockPos anchor = _approachWatchdog.anchor();
+                    if (anchor != null && isOrdinaryStone(mod, anchor)) {
+                        _terrainFailures.reject(anchor, player.x, player.y, player.z, now);
+                    }
                     failApproach(mod, now, true);
                     _approachWatchdog.clear();
                 } else if (!_progressChecker.check(mod)) {

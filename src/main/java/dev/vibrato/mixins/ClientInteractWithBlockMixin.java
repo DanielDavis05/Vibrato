@@ -24,7 +24,7 @@ public final class ClientInteractWithBlockMixin {
     private void onClientBlockInteract(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
         //Debug.logMessage("(client) INTERACTED WITH: " + (hitResult != null? hitResult.getBlockPos() : "(nothing)"));
         if (hitResult != null) {
-            EventBus.publish(new BlockInteractEvent(hitResult, player.clientWorld));
+            EventBus.publish(new BlockInteractEvent(hitResult, player.clientWorld, hand));
         }
 
     }

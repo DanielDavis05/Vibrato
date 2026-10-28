@@ -20,9 +20,14 @@ class FocusedActivityProofTest {
         assertFalse(FocusedActivityProof.verify("organize_inventory", ParamValues.EMPTY, before, before, p, transferPackets()).confirmed());
         assertFalse(FocusedActivityProof.verify("organize_inventory", ParamValues.EMPTY, before, after, p,
                 Map.of("SERVERBOUND:minecraft:move_player_pos", 100L, "CLIENTBOUND:minecraft:keep_alive", 100L)).confirmed());
-        var verdict = FocusedActivityProof.verify("organize_inventory", ParamValues.EMPTY, before, after, p, transferPackets());
+        // A correctly predicted player-inventory swap need not produce an
+        // inbound slot/content correction packet.
+        var verdict = FocusedActivityProof.verify("organize_inventory", ParamValues.EMPTY, before, after, p,
+                Map.of("SERVERBOUND:minecraft:container_click", 1L));
         assertTrue(verdict.confirmed());
         assertEquals("inventory_organize", verdict.mechanic().get("id"));
+        assertEquals(before.slots(), verdict.mechanic().get("beforeSlots"));
+        assertEquals(after.slots(), verdict.mechanic().get("afterSlots"));
         assertEquals("client_action_and_task_outcome", verdict.mechanic().get("source"));
         assertFalse(verdict.mechanic().containsKey("serverConfirmed"));
     }

@@ -15,6 +15,14 @@ class SmeltFuelPlanTest {
         }
         assertEquals(0, plan.collectSmelts(1, 8, 1)); // Only actual acquired coal releases commitment.
     }
+    @Test void committedFuelTakesPriorityWhenCraftingConsumesSmeltInput() {
+        var plan = new SmeltFuelPlan();
+        assertEquals(1, plan.collectSmelts(1, 0, 0));
+        // The material count may now be zero: the parent must keep the fuel
+        // child alive until coal is physically acquired.
+        assertEquals(1, plan.committedSmelts(1, 0));
+        assertEquals(0, plan.committedSmelts(1, 1));
+    }
     @Test void coalRequestAndCompletionUseSmeltEnergyRatherThanItemCount() {
         assertEquals(1, CollectFuelTask.requiredCoal(1));
         assertEquals(1, CollectFuelTask.requiredCoal(7));

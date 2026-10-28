@@ -38,6 +38,7 @@ public abstract class DoStuffInContainerTask extends Task {
     private final TimerGame _justPlacedTimer = new TimerGame(3);
     private BlockPos _cachedContainerPosition = null;
     private Task _openTableTask;
+    private final ContainerAcquisition _containerAcquisition = new ContainerAcquisition();
 
     public DoStuffInContainerTask(Block[] containerBlocks, ItemTarget containerTarget) {
         _containerBlocks = containerBlocks;
@@ -116,9 +117,11 @@ public abstract class DoStuffInContainerTask extends Task {
             // Get if we don't have...
             if (!mod.getItemStorage().hasItem(_containerTarget)) {
                 setDebugState("Getting container item");
+                _containerAcquisition.select();
                 return TaskCatalogue.getItemTask(_containerTarget);
             }
 
+            _containerAcquisition.completedOrReplaced();
             setDebugState("Placing container...");
 
             _justPlacedTimer.reset();
@@ -128,6 +131,7 @@ public abstract class DoStuffInContainerTask extends Task {
 
         // This is insanely cursed.
         // TODO: Finish committing to optionals, this is ugly.
+        _containerAcquisition.completedOrReplaced();
         _cachedContainerPosition = nearest.get();
 
         // Walk to it and open it
@@ -150,6 +154,12 @@ public abstract class DoStuffInContainerTask extends Task {
         }
         return _openTableTask;
         //return new GetToBlockTask(nearest, true);
+    }
+
+    /** Preserve an already-selected container acquisition while its recipe
+     * consumes ingredients that may also be required by a parent operation. */
+    protected boolean isAcquiringContainer(Vibrato mod) {
+        return _containerAcquisition.needsCompletion(mod.getItemStorage().hasItem(_containerTarget));
     }
 
     public ItemTarget getContainerTarget() {

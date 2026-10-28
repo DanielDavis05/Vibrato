@@ -6,14 +6,18 @@ import dev.vibrato.tasks.DoToClosestBlockTask;
 import dev.vibrato.tasks.InteractWithBlockTask;
 import dev.vibrato.tasks.construction.DestroyBlockTask;
 import dev.vibrato.tasks.movement.IdleTask;
+import dev.vibrato.tasks.movement.GetWithinRangeOfBlockTask;
 import dev.vibrato.tasks.movement.TimeoutWanderTask;
+import dev.vibrato.tasks.resources.MineAndCollectTask;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.util.ItemTarget;
+import dev.vibrato.util.MiningRequirement;
 import dev.vibrato.util.helpers.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CropBlock;
+import net.minecraft.block.FarmlandBlock;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
@@ -42,6 +46,8 @@ public class FarmCropsTask extends Task {
     private final CropGrowth _growth;
     private final Item _seed;
     private final Block _cropBlock;
+    private final FarmSeedPlan _wheatSeeds = new FarmSeedPlan();
+    private final FarmFieldScope _field = new FarmFieldScope();
 
     public FarmCropsTask(CropGrowth growth, int rows) {
         _growth = growth;
@@ -63,40 +69,65 @@ public class FarmCropsTask extends Task {
 
     @Override
     protected Task onTick(Vibrato mod) {
-        if (mod.getItemStorage().getItemCount(_seed) < 1 && !hasPlantedCrops(mod)) {
+        establishNearbyField(mod);
+        int wheatHeld = _seed == Items.WHEAT_SEEDS ? mainSeedCount(mod) : 0;
+        // Do not infer an unloaded or distant field is empty. A committed seed
+        // collector may finish away from it; otherwise return and reload first.
+        if (_field.anchor() != null
+                && (!inField(mod, mod.getPlayer().getBlockPos())
+                    || !mod.getChunkTracker().isChunkLoaded(_field.anchor()))
+                && !_wheatSeeds.gathering(wheatHeld)) {
+            setDebugState("Returning to the planted field");
+            return new GetWithinRangeOfBlockTask(_field.anchor(), 8);
+        }
+        Optional<BlockPos> ripe = mod.getBlockTracker().getNearestTracking(
+                mod.getPlayer().getPos(), pos -> inField(mod, pos) && isMature(mod, pos), _cropBlock);
+        if (ripe.isPresent()) {
+            setDebugState("Harvesting grown " + _growth.itemId());
+            return new DoToClosestBlockTask(DestroyBlockTask::new, pos -> inField(mod, pos) && isMature(mod, pos), _cropBlock);
+        }
+
+        if (_seed == Items.WHEAT_SEEDS) {
+            // Generic wheat-seed collection chooses existing wheat before grass;
+            // an immature crop then stalls its own seed prerequisite. Gather
+            // only grass here, with a finite remaining field-size target.
+            int goal = _wheatSeeds.seedGoal(fieldSize(), nearbyPlantedCrops(mod), wheatHeld, false);
+            if (goal > 0) {
+                setDebugState("Collecting wheat seeds for the remaining field");
+                return new MineAndCollectTask(_seed, goal,
+                        new Block[]{Blocks.SHORT_GRASS, Blocks.TALL_GRASS}, MiningRequirement.HAND);
+            }
+        } else if (mod.getItemStorage().getItemCount(_seed) < 1
+                && (!hasPlantedCrops(mod) || nearbyFarmland(mod) < fieldSize())) {
             setDebugState("Collecting seeds");
             return TaskCatalogue.getItemTask(_seed, fieldSize());
         }
 
-        Optional<BlockPos> ripe = mod.getBlockTracker().getNearestTracking(
-                mod.getPlayer().getPos(), pos -> isMature(mod, pos), _cropBlock);
-        if (ripe.isPresent()) {
-            setDebugState("Harvesting grown " + _growth.itemId());
-            return new DoToClosestBlockTask(DestroyBlockTask::new, pos -> isMature(mod, pos), _cropBlock);
-        }
-
         Optional<BlockPos> emptyFarmland = mod.getBlockTracker().getNearestTracking(
-                mod.getPlayer().getPos(), pos -> isEmptyFarmland(mod, pos), Blocks.FARMLAND);
+                mod.getPlayer().getPos(), pos -> inField(mod, pos) && isEmptyFarmland(mod, pos), Blocks.FARMLAND);
         if (emptyFarmland.isPresent() && mod.getItemStorage().hasItem(_seed)) {
             setDebugState("Planting " + _growth.seedId());
             return new InteractWithBlockTask(new ItemTarget(_seed, 1), Direction.UP, emptyFarmland.get(), true);
         }
 
-        if (hasPlantedCrops(mod)) {
-            setDebugState("Waiting for crops to grow");
-            return new IdleTask();
-        }
-
-        if (mod.getBlockTracker().getKnownLocations(Blocks.FARMLAND).size() < fieldSize()) {
+        // Keep preparing a full field while seeds remain. Waiting on the first
+        // planted crop leaves the rest of the field empty for an entire growth cycle.
+        if (mod.getItemStorage().hasItem(_seed)
+                && nearbyFarmland(mod) < fieldSize()) {
             if (!mod.getItemStorage().hasItem(HOES)) {
                 setDebugState("Crafting a hoe");
                 return TaskCatalogue.getItemTask(Items.WOODEN_HOE, 1);
             }
             Optional<BlockPos> tillable = findTillable(mod);
             if (tillable.isPresent()) {
+                _field.establish(tillable.get());
                 setDebugState("Tilling farmland next to water");
                 return new InteractWithBlockTask(new ItemTarget(HOES, 1), tillable.get(), true);
             }
+        }
+        if (hasPlantedCrops(mod)) {
+            setDebugState("Waiting for crops to grow");
+            return new IdleTask();
         }
         setDebugState("Searching for a place to farm");
         return new TimeoutWanderTask();
@@ -123,13 +154,48 @@ public class FarmCropsTask extends Task {
         return "Farming " + _growth.itemId() + " in " + _rows + " rows";
     }
 
+    private long nearbyFarmland(Vibrato mod) {
+        return mod.getBlockTracker().getKnownLocations(Blocks.FARMLAND).stream()
+                .filter(pos -> inField(mod, pos))
+                .filter(pos -> mod.getWorld().getBlockState(pos).isOf(Blocks.FARMLAND))
+                .count();
+    }
+
+    private int mainSeedCount(Vibrato mod) {
+        return mod.getPlayer().getInventory().main.stream()
+                .filter(stack -> stack.isOf(_seed)).mapToInt(stack -> stack.getCount()).sum();
+    }
+
+    private boolean inField(Vibrato mod, BlockPos pos) {
+        return _field.contains(pos, mod.getPlayer().getBlockPos());
+    }
+
+    private void establishNearbyField(Vibrato mod) {
+        mod.getBlockTracker().getKnownLocations(Blocks.FARMLAND).stream()
+                .filter(pos -> pos.isWithinDistance(mod.getPlayer().getPos(), 12))
+                .filter(pos -> {
+                    BlockState state = mod.getWorld().getBlockState(pos);
+                    return state.isOf(Blocks.FARMLAND) && state.get(FarmlandBlock.MOISTURE) > 0;
+                })
+                .min(java.util.Comparator.comparingDouble(pos -> pos.getSquaredDistance(mod.getPlayer().getPos())))
+                .ifPresent(_field::establish);
+    }
+
+    private int nearbyPlantedCrops(Vibrato mod) {
+        return (int) mod.getBlockTracker().getKnownLocations(_cropBlock).stream()
+                .filter(pos -> inField(mod, pos))
+                .filter(pos -> mod.getWorld().getBlockState(pos).isOf(_cropBlock))
+                .count();
+    }
+
     private boolean isMature(Vibrato mod, BlockPos pos) {
         BlockState state = mod.getWorld().getBlockState(pos);
         return state.getBlock() instanceof CropBlock crop && crop.isMature(state);
     }
 
     private boolean hasPlantedCrops(Vibrato mod) {
-        return !mod.getBlockTracker().getKnownLocations(_cropBlock).isEmpty();
+        return mod.getBlockTracker().getKnownLocations(_cropBlock).stream()
+                .anyMatch(pos -> inField(mod, pos) && mod.getWorld().getBlockState(pos).isOf(_cropBlock));
     }
 
     private boolean isEmptyFarmland(Vibrato mod, BlockPos pos) {
@@ -145,6 +211,7 @@ public class FarmCropsTask extends Task {
                 for (int dz = -HYDRATION_RANGE; dz <= HYDRATION_RANGE; ++dz) {
                     BlockPos candidate = water.add(dx, 0, dz);
                     Block block = mod.getWorld().getBlockState(candidate).getBlock();
+                    if (!inField(mod, candidate)) continue;
                     if (!Arrays.asList(TILLABLE).contains(block) || !WorldHelper.isAir(mod, candidate.up())) {
                         continue;
                     }

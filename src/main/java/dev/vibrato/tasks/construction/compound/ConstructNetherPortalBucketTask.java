@@ -26,6 +26,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -76,6 +77,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     private final Task _collectLavaTask = TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
     private final TimerGame _refreshTimer = new TimerGame(11);
     private BlockPos _portalOrigin = null;
+    private int _stonePickaxeGoal;
 
     //private BlockPos _currentLavaTarget = null;
     private BlockPos _currentDestroyTarget = null;
@@ -121,6 +123,25 @@ public class ConstructNetherPortalBucketTask extends Task {
             _refreshTimer.reset();
             mod.getSlotHandler().refreshInventory();
         }
+
+        // Portal preparation can lead deep underground after earlier tools
+        // break. Commit to a real replacement before starting another long
+        // lava approach; keep stronger usable pickaxes instead of downgrading.
+        int threshold = mod.getClientBaritoneSettings().itemSaver.value
+                ? mod.getClientBaritoneSettings().itemSaverThreshold.value : 0;
+        boolean hasUsablePickaxe = mod.getPlayer().getInventory().main.stream()
+                .anyMatch(stack -> PortalToolPolicy.usable(stack, threshold));
+        boolean frameComplete = _portalOrigin != null && Arrays.stream(PORTAL_FRAME)
+                .allMatch(offset -> mod.getWorld().getBlockState(_portalOrigin.add(offset)).isOf(Blocks.OBSIDIAN));
+        if (PortalToolPolicy.needsTool(hasUsablePickaxe, frameComplete)) {
+            if (_stonePickaxeGoal == 0) {
+                _stonePickaxeGoal = mod.getItemStorage().getItemCountInventoryOnly(Items.STONE_PICKAXE) + 1;
+            }
+            setDebugState("Preparing a usable stone pickaxe");
+            _progressChecker.reset();
+            return TaskCatalogue.getItemTask(Items.STONE_PICKAXE, _stonePickaxeGoal);
+        }
+        _stonePickaxeGoal = 0;
 
         //If too far, reset.
         if (_portalOrigin != null && !_portalOrigin.isWithinDistance(mod.getPlayer().getPos(), 2000)) {

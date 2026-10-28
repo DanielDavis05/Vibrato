@@ -48,6 +48,8 @@ public class MobDefenseChain extends SingleTaskChain {
     private final KillAura _killAura = new KillAura();
     private Entity _targetEntity;
     private Entity _transitTarget;
+    private Entity _rangedThreatTarget;
+    private int _rangedThreatSeenTick = Integer.MIN_VALUE;
     private int _engagementStarted;
     private int _lastEngagementEnded = Integer.MIN_VALUE;
     private boolean _doingFunkyStuff = false;
@@ -101,7 +103,9 @@ public class MobDefenseChain extends SingleTaskChain {
             _wasPuttingOutFire = false;
         }
 
-        if (prioritizeEating(mod)) {
+        boolean criticalHealth = TransitCombatPolicy.criticalHealth(mod.getPlayer().getHealth());
+        boolean immediateHostile = criticalHealth && hasImmediateHostile(mod);
+        if (TransitCombatPolicy.yieldToEating(prioritizeEating(mod), criticalHealth, immediateHostile)) {
             return Float.NEGATIVE_INFINITY;
         }
 
@@ -143,13 +147,19 @@ public class MobDefenseChain extends SingleTaskChain {
 
         // Dodge all mobs cause we boutta die son
         boolean rangedDanger = hasVisibleRangedDanger(mod);
-        if (rangedDanger || isInDanger(mod)) {
+        if (rangedDanger || isInDanger(mod) || immediateHostile) {
             _doingFunkyStuff = true;
             // A passive interaction or livestock target must not suppress
             // escape from an unrelated hostile at critical health.
             boolean combatTargetIsHostile = _targetEntity != null
                     && mod.getEntityTracker().getHostiles().contains(_targetEntity);
-            if (rangedDanger || TransitCombatPolicy.shouldEscapeDanger(combatTargetIsHostile)) {
+            boolean transitCombat = _transitTarget != null && _transitTarget.equals(_targetEntity);
+            if (rangedDanger || immediateHostile || TransitCombatPolicy.shouldEscapeDanger(combatTargetIsHostile, transitCombat, criticalHealth)) {
+                // Do not immediately resume an opportunistic fight after escaping.
+                if (_transitTarget != null) {
+                    _transitTarget = null;
+                    _lastEngagementEnded = mod.getPlayer().age;
+                }
                 _runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
                 setTask(_runAwayTask);
                 return 70;
@@ -369,16 +379,39 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
     private boolean hasVisibleRangedDanger(Vibrato mod) {
-        if (!isVulnurable(mod)) return false;
         ClientPlayerEntity player = mod.getPlayer();
+        int now = player.age;
         for (Entity entity : mod.getEntityTracker().getHostiles()) {
-            if (!(entity instanceof SkeletonEntity)) continue;
+            if (!(entity instanceof SkeletonEntity skeleton)) continue;
+            boolean intendedCombat = entity.equals(_targetEntity) || entity.equals(_transitTarget);
+            if (!RangedThreatMemory.shouldDefend(intendedCombat, isVulnurable(mod))) {
+                if (entity.equals(_rangedThreatTarget)) _rangedThreatTarget = null;
+                continue;
+            }
             double distanceSquared = entity.squaredDistanceTo(player);
-            boolean visible = distanceSquared <= 144 && LookHelper.cleanLineOfSight(player,
-                    entity.getPos().add(0, entity.getHeight() / 2, 0), 12);
-            if (TransitCombatPolicy.rangedThreat(entity.isAlive(), EntityHelper.isAngryAtPlayer(mod, entity),
+            boolean visible = distanceSquared <= RangedThreatMemory.ACQUIRE_DISTANCE_SQ
+                    && LookHelper.cleanLineOfSight(player,
+                    entity.getPos().add(0, entity.getHeight() / 2, 0), 24);
+            if (RangedThreatMemory.observe(entity.isAlive(), skeleton.isAttacking() && EntityHelper.isAngryAtPlayer(mod, entity),
+                    mod.getBehaviour().shouldExcludeFromForcefield(entity), distanceSquared, visible)) {
+                _rangedThreatTarget = entity;
+                _rangedThreatSeenTick = now;
+                return true;
+            }
+            // Preserve the existing close-range defense when vulnerable, even if
+            // attack animation state has not arrived yet.
+            if (isVulnurable(mod) && TransitCombatPolicy.rangedThreat(entity.isAlive(),
+                    EntityHelper.isAngryAtPlayer(mod, entity),
                     mod.getBehaviour().shouldExcludeFromForcefield(entity), distanceSquared, visible)) return true;
         }
+        if (_rangedThreatTarget != null
+                && RangedThreatMemory.shouldDefend(_rangedThreatTarget.equals(_targetEntity)
+                        || _rangedThreatTarget.equals(_transitTarget), isVulnurable(mod))
+                && RangedThreatMemory.retain(_rangedThreatTarget.isAlive(),
+                mod.getBehaviour().shouldExcludeFromForcefield(_rangedThreatTarget),
+                _rangedThreatTarget.squaredDistanceTo(player), now, _rangedThreatSeenTick)) return true;
+        _rangedThreatTarget = null;
+        _rangedThreatSeenTick = Integer.MIN_VALUE;
         return false;
     }
 
@@ -403,12 +436,16 @@ public class MobDefenseChain extends SingleTaskChain {
         return false;
     }
 
+    private boolean hasImmediateHostile(Vibrato mod) {
+        var player = mod.getPlayer();
+        return mod.getEntityTracker().getHostiles().stream()
+                .anyMatch(entity -> entity.isAlive() && entity.isInRange(player, 4)
+                        && !mod.getBehaviour().shouldExcludeFromForcefield(entity)
+                        && EntityHelper.isAngryAtPlayer(mod, entity));
+    }
+
     private boolean isVulnurable(Vibrato mod) {
-        int armor = mod.getPlayer().getArmor();
-        float health = mod.getPlayer().getHealth();
-        if (armor <= 15 && health < 3) return true;
-        if (armor < 10 && health < 10) return true;
-        return armor < 5 && health < 18;
+        return TransitCombatPolicy.vulnerable(mod.getPlayer().getArmor(), mod.getPlayer().getHealth());
     }
 
     public void setTargetEntity(Entity entity) {

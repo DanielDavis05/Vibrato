@@ -1,6 +1,10 @@
 package dev.vibrato.tasks.movement;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.TaskCatalogue;
+import dev.vibrato.tasks.construction.compound.PortalToolPolicy;
+import dev.vibrato.util.helpers.ItemHelper;
+import net.minecraft.item.Items;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalBucketTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
 import dev.vibrato.tasks.resources.CollectFoodTask;
@@ -25,6 +29,9 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
 
     private final Dimension _target;
     private final NetherFoodPlan _foodPlan = new NetherFoodPlan();
+    private final NetherExpeditionPlan _expedition = new NetherExpeditionPlan();
+    private int _stonePickaxeGoal;
+    private int _stoneSwordGoal;
     private ClientPlayerEntity _foodPlayer;
     private Task _foodTask;
     // Cached to keep build properties alive if this task pauses/resumes.
@@ -44,6 +51,9 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
         if (_foodPlayer != mod.getPlayer()) {
             _foodPlayer = mod.getPlayer();
             _foodPlan.reset();
+            _expedition.reset();
+            _stonePickaxeGoal = 0;
+            _stoneSwordGoal = 0;
             _foodTask = null;
         }
         if (WorldHelper.getCurrentDimension() == _target) return null;
@@ -135,6 +145,40 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
             setDebugState("Stocking food before underground portal preparation");
             if (_foodTask == null) _foodTask = new CollectFoodTask(NetherFoodPlan.FOOD_UNITS);
             return _foodTask;
+        }
+        if (constructing) {
+            int threshold = mod.getClientBaritoneSettings().itemSaver.value
+                    ? mod.getClientBaritoneSettings().itemSaverThreshold.value : 0;
+            int usableTools = (int) mod.getPlayer().getInventory().main.stream()
+                    .filter(stack -> PortalToolPolicy.usable(stack, threshold)).count();
+            int logs = mod.getPlayer().getInventory().main.stream()
+                    .filter(stack -> java.util.Arrays.asList(ItemHelper.LOG).contains(stack.getItem()))
+                    .mapToInt(stack -> stack.getCount()).sum();
+            boolean usableWeapon = mod.getPlayer().getInventory().main.stream()
+                    .anyMatch(stack -> NetherWeaponPolicy.usable(stack, threshold));
+            switch (_expedition.update(logs, usableTools, usableWeapon)) {
+                case WOOD -> {
+                    setDebugState("Stocking expedition wood before portal preparation");
+                    return TaskCatalogue.getItemTask("log", NetherExpeditionPlan.LOGS);
+                }
+                case TOOLS -> {
+                    int physicalStone = mod.getPlayer().getInventory().main.stream()
+                            .filter(stack -> stack.isOf(Items.STONE_PICKAXE))
+                            .mapToInt(stack -> stack.getCount()).sum();
+                    _stonePickaxeGoal = NetherExpeditionPlan.stoneGoal(_stonePickaxeGoal, physicalStone, usableTools);
+                    setDebugState("Preparing spare expedition pickaxes");
+                    return TaskCatalogue.getItemTask(Items.STONE_PICKAXE, _stonePickaxeGoal);
+                }
+                case WEAPON -> {
+                    int physicalSwords = mod.getPlayer().getInventory().main.stream()
+                            .filter(stack -> stack.isOf(Items.STONE_SWORD))
+                            .mapToInt(stack -> stack.getCount()).sum();
+                    _stoneSwordGoal = NetherExpeditionPlan.weaponGoal(_stoneSwordGoal, physicalSwords, usableWeapon);
+                    setDebugState("Preparing an expedition sword");
+                    return TaskCatalogue.getItemTask(Items.STONE_SWORD, _stoneSwordGoal);
+                }
+                case COMPLETE -> { _stonePickaxeGoal = 0; _stoneSwordGoal = 0; }
+            }
         }
         setDebugState(constructing ? "Preparing and constructing Nether portal" : "Travelling to home base");
         return switch (mod.getModSettings().getOverworldToNetherBehaviour()) {

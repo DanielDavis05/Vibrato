@@ -1,6 +1,7 @@
 package dev.vibrato.chains;
 
 import dev.vibrato.director.DirectorTask;
+import dev.vibrato.tasks.ResourceTask;
 import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.tasksystem.Task;
 
@@ -8,7 +9,8 @@ import dev.vibrato.tasksystem.Task;
 final class AutonomousFoodPolicy {
     static final int TARGET_FOOD = 12;
     static boolean allowsRoot(Class<? extends Task> root) {
-        return root != null && (DirectorTask.class.isAssignableFrom(root) || IAllowsAutonomousFood.class.isAssignableFrom(root));
+        return root != null && (DirectorTask.class.isAssignableFrom(root) || ResourceTask.class.isAssignableFrom(root)
+                || IAllowsAutonomousFood.class.isAssignableFrom(root));
     }
     private static final int SEARCH_TICKS = 20 * 60;
     private static final int BACKOFF_TICKS = 20 * 60;

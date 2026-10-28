@@ -4,8 +4,8 @@ import dev.vibrato.Vibrato;
 import dev.vibrato.tasksystem.Task;
 
 /**
- * Stands in for a life activity whose parameters could not be turned into a task. It finishes on its first tick, so
- * the planner moves on instead of the client crashing.
+ * Stands in for a life activity whose parameters could not be turned into a task.
+ * The task reports a failure so the planner can recover without crediting a no-op.
  */
 public class UnsupportedLifeTask extends Task {
 
@@ -13,6 +13,7 @@ public class UnsupportedLifeTask extends Task {
 
     public UnsupportedLifeTask(String reason) {
         _reason = reason;
+        fail("Unsupported life activity: " + reason);
     }
 
     public boolean failed() {
@@ -34,7 +35,7 @@ public class UnsupportedLifeTask extends Task {
 
     @Override
     public boolean isFinished(Vibrato mod) {
-        return true;
+        return false;
     }
 
     @Override

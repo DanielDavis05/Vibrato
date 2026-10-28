@@ -30,5 +30,7 @@ final class MiningApproachWatchdog<P> {
         if (anchor != null) lastProgress = now;
     }
 
+    P anchor() { return anchor; }
+
     void clear() { anchor = null; }
 }

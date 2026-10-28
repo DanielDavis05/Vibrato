@@ -67,6 +67,8 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     private Vec3d _origin;
     private boolean _executingPlanB = false;
     private boolean _forceExplore;
+    private final WanderHorizontalProgress _horizontalProgress = new WanderHorizontalProgress();
+    private boolean _horizontalRecoveryExhausted;
     private Task _unstuckTask = null;
     private int _failCounter;
     private double _wanderDistanceExtension;
@@ -115,15 +117,18 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
         _completedAtStop = false;
         // Pauses can involve combat movement; do not count them as failed wander progress.
         _progressChecker.reset();
+        _horizontalProgress.reset(mod.getPlayer().getPos().x, mod.getPlayer().getPos().z, System.nanoTime() / 1e9);
         StorageHelper.closeScreen();
     }
 
     private void beginAttempt(Vibrato mod) {
         _timeCap.reset();
         _origin = mod.getPlayer().getPos();
+        _horizontalProgress.reset(_origin.x, _origin.z, System.nanoTime() / 1e9);
         _failCounter = 0;
         _executingPlanB = false;
         _unstuckTask = null;
+        _horizontalRecoveryExhausted = false;
     }
 
     @Override
@@ -151,6 +156,22 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
                 setDebugState("Taking a short search opportunity.");
                 return opportunity;
             }
+        }
+
+        Vec3d position = mod.getPlayer().getPos();
+        if (_horizontalProgress.stalled(position.x, position.z, System.nanoTime() / 1e9)) {
+            if (_executingPlanB) {
+                // Return control so the parent can re-evaluate its targets instead of
+                // endlessly digging and rebuilding the same pillar.
+                _horizontalRecoveryExhausted = true;
+                mod.getClientBaritone().getCustomGoalProcess().onLostControl();
+                return null;
+            }
+            Debug.logMessage("Wander made no horizontal progress; trying a different route.");
+            mod.getClientBaritone().getExploreProcess().onLostControl();
+            mod.getClientBaritone().getPathingBehavior().cancelEverything();
+            _executingPlanB = true;
+            _horizontalProgress.reset(position.x, position.z, System.nanoTime() / 1e9);
         }
 
         if (_executingPlanB) {
@@ -187,6 +208,10 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
                     // Cancel current plan B
                     mod.getClientBaritone().getCustomGoalProcess().onLostControl();
                 }
+                mod.getClientBaritone().getExploreProcess().onLostControl();
+                if (!_executingPlanB) {
+                    _horizontalProgress.reset(mod.getPlayer().getPos().x, mod.getPlayer().getPos().z, System.nanoTime() / 1e9);
+                }
                 _executingPlanB = true;
             }
         }
@@ -208,7 +233,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     }
 
     private Goal getRandomDirectionGoal(Vibrato mod) {
-        double distance = Float.isInfinite(_distanceToWander) ? _distanceToWander : _distanceToWander + _wanderDistanceExtension;
+        double distance = Float.isInfinite(_distanceToWander) ? DEFAULT_DISTANCE : _distanceToWander + _wanderDistanceExtension;
         return new GoalRunAway(distance, mod.getPlayer().getBlockPos());
     }
 
@@ -230,7 +255,7 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
     public boolean isFinished(Vibrato mod) {
         if (_attempt.needsStart() || _origin == null) return false;
 
-        if (_timeCap.elapsed()) return true;
+        if (_timeCap.elapsed() || _horizontalRecoveryExhausted) return true;
 
         if (Float.isInfinite(_distanceToWander)) return false;
 

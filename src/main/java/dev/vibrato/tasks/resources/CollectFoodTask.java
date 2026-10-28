@@ -1,6 +1,8 @@
 package dev.vibrato.tasks.resources;
 
 import dev.vibrato.Vibrato;
+import dev.vibrato.Debug;
+import dev.vibrato.tasks.entity.KillEntityTask;
 import dev.vibrato.TaskCatalogue;
 import dev.vibrato.tasks.CraftInInventoryTask;
 import dev.vibrato.tasks.container.CraftInTableTask;
@@ -32,6 +34,8 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Objects;
+import java.util.HashMap;
+import java.util.UUID;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -72,6 +76,10 @@ public class CollectFoodTask extends Task {
     private SmeltInFurnaceTask _smeltTask = null;
     private Task _currentResourceTask = null;
     private boolean _animalRescanPending;
+    private Entity _foodAnimal;
+    private final FoodPursuitProgress _animalProgress = new FoodPursuitProgress();
+    private final HashMap<UUID, Integer> _deferredAnimals = new HashMap<>();
+    private int _lastPlayerAge = -1;
 
     public CollectFoodTask(double unitsNeeded) {
         _unitsNeeded = unitsNeeded;
@@ -115,6 +123,8 @@ public class CollectFoodTask extends Task {
 
     @Override
     protected void onStart(Vibrato mod) {
+        // Interrupted task chains do not tick; never charge that time to pursuit.
+        _animalProgress.reset();
         mod.getBehaviour().push();
         // Protect ALL food
         mod.getBehaviour().addProtectedItems(ITEMS_TO_PICK_UP);
@@ -138,6 +148,11 @@ public class CollectFoodTask extends Task {
     @Override
     protected Task onTick(Vibrato mod) {
 
+        int age = mod.getPlayer().age;
+        if (_lastPlayerAge > age) _deferredAnimals.clear(); // respawn or world change
+        _lastPlayerAge = age;
+        _deferredAnimals.values().removeIf(until -> until <= age);
+
         // If we were previously smelting, keep on smelting.
         if (_smeltTask != null && _smeltTask.isActive() && !_smeltTask.isFinished(mod)) {
             // TODO: If we don't have cooking materials, cancel.
@@ -152,17 +167,43 @@ public class CollectFoodTask extends Task {
             _animalRescanPending = false;
         }
 
-        if (_checkNewOptionsTimer.elapsed()) {
-            // Try a new resource task
-            _checkNewOptionsTimer.reset();
-            // A newly selected equal task can be inactive while Task retains its
-            // previous equal child. Inspect the attached tree, not the candidate.
-            boolean stopAnimalAttempt = thisOrChildSatisfies(t -> t instanceof KillAndLootTask
-                    && t.isActive() && !t.isFinished(mod));
-            _currentResourceTask = null;
-            if (stopAnimalAttempt) {
+        // Only an active attack pursuit consumes the lease. Pickup, combat-chain
+        // interruptions and other work must not be mistaken for a failed chase.
+        boolean hunting = _foodAnimal != null && _foodAnimal.isAlive()
+                && thisOrChildSatisfies(t -> t instanceof KillEntityTask && t.isActive());
+        if (hunting) {
+            float health = _foodAnimal instanceof LivingEntity living ? living.getHealth() : 0;
+            if (_animalProgress.stalled(mod.getPlayer().age, _foodAnimal.squaredDistanceTo(mod.getPlayer()), health)) {
+                Debug.logMessage("Food animal deferred: " + _foodAnimal.getUuid() + " at "
+                        + _foodAnimal.getBlockPos() + " (no approach or damage progress)");
+                _deferredAnimals.put(_foodAnimal.getUuid(), mod.getPlayer().age + 1200);
+                _foodAnimal = null;
+                _currentResourceTask = null;
                 _animalRescanPending = true;
                 return null;
+            }
+        } else {
+            _animalProgress.reset();
+        }
+
+        if (_checkNewOptionsTimer.elapsed()) {
+            _checkNewOptionsTimer.reset();
+            // Keep the active animal child, including protected drop pickup, until
+            // it finishes or the actual pursuit makes no progress.
+            boolean animalAttempt = FoodPursuitProgress.retainOnRescan(
+                    _foodAnimal != null && _foodAnimal.isAlive(),
+                    thisOrChildSatisfies(t -> t instanceof KillAndLootTask
+                    && t.isActive() && !t.isFinished(mod)));
+            if (!animalAttempt && thisOrChildSatisfies(t -> t instanceof KillAndLootTask
+                    && t.isActive() && !t.isFinished(mod))) {
+                _currentResourceTask = null;
+                _foodAnimal = null;
+                _animalRescanPending = true;
+                return null;
+            }
+            if (!animalAttempt) {
+                _currentResourceTask = null;
+                _foodAnimal = null;
             }
         }
 
@@ -266,7 +307,10 @@ public class CollectFoodTask extends Task {
             Item bestRawFood = null;
             for (CookableFoodTarget cookable : COOKABLE_FOODS) {
                 if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
-                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), cookable.mobToKill);
+                Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+                        entity -> (!(entity instanceof LivingEntity living) || !living.isBaby())
+                                && _deferredAnimals.getOrDefault(entity.getUuid(), 0) <= mod.getPlayer().age,
+                        cookable.mobToKill);
                 if (nearest.isEmpty()) continue; // ?? This crashed once?
                 if (nearest.get() instanceof LivingEntity livingEntity) {
                     // Peta
@@ -371,7 +415,11 @@ public class CollectFoodTask extends Task {
         // ResourceTask targets are absolute inventory counts. Request one more
         // than we already hold rather than immediately satisfying every later kill.
         int held = mod.getItemStorage().getItemCountInventoryOnly(itemToGrab);
-        return new KillAndLootTask(entity.getClass(), new ItemTarget(itemToGrab, FoodAnimalTarget.nextCount(held)));
+        _foodAnimal = entity;
+        _animalProgress.reset();
+        Debug.logMessage("Food animal selected: " + entity.getUuid() + " at " + entity.getBlockPos());
+        return new KillAndLootTask(entity.getClass(), entity.getUuid(),
+                new ItemTarget(itemToGrab, FoodAnimalTarget.nextCount(held)));
     }
 
     /**

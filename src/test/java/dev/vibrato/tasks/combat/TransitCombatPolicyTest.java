@@ -5,8 +5,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TransitCombatPolicyTest {
     @Test void passiveInteractionDoesNotPreventEscapeFromHostiles() {
-        assertTrue(TransitCombatPolicy.shouldEscapeDanger(false));
-        assertFalse(TransitCombatPolicy.shouldEscapeDanger(true));
+        assertTrue(TransitCombatPolicy.shouldEscapeDanger(false, false, false));
+        assertFalse(TransitCombatPolicy.shouldEscapeDanger(true, false, false));
+        assertTrue(TransitCombatPolicy.shouldEscapeDanger(true, true, false)); // vulnerable transit combat must yield
+        assertTrue(TransitCombatPolicy.shouldEscapeDanger(true, false, true)); // explicit combat yields at critical health
+        assertFalse(TransitCombatPolicy.mayStart(199, 100)); // escape cooldown prevents immediate transit re-engagement
+    }
+
+    @Test void criticalHealthAlwaysOverridesArmorAndNearbyHostilesOverrideEating() {
+        assertTrue(TransitCombatPolicy.vulnerable(20, 2));
+        assertTrue(TransitCombatPolicy.vulnerable(20, 6));
+        assertFalse(TransitCombatPolicy.vulnerable(20, 7));
+        assertFalse(TransitCombatPolicy.yieldToEating(true, true, true));
+        assertTrue(TransitCombatPolicy.yieldToEating(true, true, false));
+        assertTrue(TransitCombatPolicy.yieldToEating(true, false, true));
     }
 
     @Test void visibleAngryRangedThreatWithinTwelveBlocksRequiresEscape() {

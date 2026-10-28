@@ -24,7 +24,7 @@ public class GetCloseToBlockTask extends Task {
 
     @Override
     protected void onStart(Vibrato mod) {
-        _currentRange = Integer.MAX_VALUE;
+        _currentRange = ApproachRange.initial(getCurrentDistance(mod));
     }
 
     @Override
@@ -33,7 +33,7 @@ public class GetCloseToBlockTask extends Task {
         // We have a strictly decreasing range, which means we will eventualy get
         // as close as we can.
         if (inRange(mod)) {
-            _currentRange = getCurrentDistance(mod) - 1;
+            _currentRange = ApproachRange.next(getCurrentDistance(mod));
         }
         return new GetWithinRangeOfBlockTask(_toApproach, _currentRange);
     }
@@ -48,7 +48,7 @@ public class GetCloseToBlockTask extends Task {
     }
 
     private boolean inRange(Vibrato mod) {
-        return mod.getPlayer().getBlockPos().getSquaredDistance(_toApproach) <= _currentRange * _currentRange;
+        return mod.getPlayer().getBlockPos().getSquaredDistance(_toApproach) <= (double) _currentRange * _currentRange;
     }
 
     @Override

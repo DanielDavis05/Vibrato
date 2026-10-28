@@ -48,7 +48,7 @@ final class FocusedActivityProof {
         boolean blockUse = packet(packets, "SERVERBOUND", "use_item_on");
         boolean entityUse = packet(packets, "SERVERBOUND", "interact");
         boolean outcome = switch (id) {
-            case "organize_inventory" -> click && sync && !before.slots().equals(after.slots());
+            case "organize_inventory" -> click && !before.slots().equals(after.slots());
             case "chest_store_items", "inventory_stash_items" -> click && sync && storageScreen(p)
                     && p.maximum.getOrDefault(params.getString("item"), 0) - after.count(params.getString("item")) >= params.getInt("count");
             case "place_chest_and_stash", "stash_valuables" -> click && sync && storageScreen(p)
@@ -88,6 +88,12 @@ final class FocusedActivityProof {
         evidence.put("id", mechanic); evidence.put("success", outcome); evidence.put("actionObserved", outcome);
         evidence.put("goalTaskFinished", true); evidence.put("source", "client_action_and_task_outcome");
         evidence.put("packetDeltas", packets);
+        if (id.equals("organize_inventory")) {
+            // These are client observations; independent admission must match
+            // them against goal-scoped authoritative server inventory samples.
+            evidence.put("beforeSlots", before.slots());
+            evidence.put("afterSlots", after.slots());
+        }
         return new Verdict(outcome, outcome ? "goal finished with mechanic-specific action and outcome" : "goal finished without sufficient mechanic-specific proof", evidence);
     }
 
