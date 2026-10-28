@@ -38,6 +38,9 @@ public class StoreInAnyContainerTask extends Task {
 
     private static final Block[] TO_SCAN = Stream.concat(Arrays.stream(new Block[]{Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.BARREL}), Arrays.stream(ItemHelper.itemsToBlocks(ItemHelper.SHULKER_BOXES))).toArray(Block[]::new);
 
+    private static final int MAX_CONTAINER_DEPTH_DIFFERENCE = 12;
+    private static final double MAX_CONTAINER_HORIZONTAL_SQ = 48 * 48;
+
     private final ContainerStoredTracker _storedItems = new ContainerStoredTracker(slot -> true);
 
     public StoreInAnyContainerTask(boolean getIfNotPresent, ItemTarget ...toStore) {
@@ -69,7 +72,15 @@ public class StoreInAnyContainerTask extends Task {
         // ItemTargets we haven't stored yet
         ItemTarget[] notStored = _storedItems.getUnstoredItemTargetsYouCanStore(mod, _toStore);
 
+        BlockPos playerPos = mod.getPlayer().getBlockPos();
         Predicate<BlockPos> validContainer = containerPos -> {
+
+            // Distant or buried containers (dungeons, mineshafts) are often unreachable and
+            // Baritone can search forever; place our own chest instead of chasing them.
+            if (Math.abs(containerPos.getY() - playerPos.getY()) > MAX_CONTAINER_DEPTH_DIFFERENCE
+                    || containerPos.getSquaredDistance(playerPos.getX(), containerPos.getY(), playerPos.getZ()) > MAX_CONTAINER_HORIZONTAL_SQ) {
+                return false;
+            }
 
             // If it's a chest and the block above can't be broken, we can't open this one.
             boolean isChest = WorldHelper.isChest(mod, containerPos);
