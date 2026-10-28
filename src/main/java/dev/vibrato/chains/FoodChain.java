@@ -2,9 +2,7 @@ package dev.vibrato.chains;
 
 import dev.vibrato.Vibrato;
 import dev.vibrato.Settings;
-import dev.vibrato.director.DirectorTask;
 import dev.vibrato.tasksystem.Task;
-import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.chains.FoodChain.FoodChainConfig;
 import dev.vibrato.tasks.resources.CollectFoodTask;
 import dev.vibrato.tasksystem.TaskRunner;
@@ -47,10 +45,6 @@ public class FoodChain extends SingleTaskChain {
         super(runner);
     }
 
-    static boolean allowsAutonomousForage(Class<? extends Task> root) {
-        return root != null && (DirectorTask.class.isAssignableFrom(root) || IAllowsAutonomousFood.class.isAssignableFrom(root));
-    }
-
     @Override
     public float getPriority(Vibrato mod) {
 
@@ -85,7 +79,7 @@ public class FoodChain extends SingleTaskChain {
         }
 
         Task safetyRoot = mod.getUserTaskChain().getCurrentTask();
-        if (safetyRoot != null && !allowsAutonomousForage(safetyRoot.getClass())) safetyRoot = null;
+        if (safetyRoot != null && !AutonomousFoodPolicy.allowsRoot(safetyRoot.getClass())) safetyRoot = null;
         if (safetyRoot != _foodRoot || mod.getPlayer() != _foodPlayer) {
             _autonomousFood.reset();
             _foodRoot = safetyRoot;

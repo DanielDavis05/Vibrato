@@ -10,16 +10,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AutonomousFoodPolicyTest {
     @Test void longJourneyRootsOptInWhileShortManualResourceGoalsDoNot() {
-        assertTrue(FoodChain.allowsAutonomousForage(DirectorTask.class));
-        assertTrue(FoodChain.allowsAutonomousForage(DefaultGoToDimensionTask.class));
-        assertTrue(FoodChain.allowsAutonomousForage(BeatMinecraft2Task.class));
-        assertTrue(FoodChain.allowsAutonomousForage(FocusedActivityTask.class));
-        assertFalse(FoodChain.allowsAutonomousForage(MineAndCollectTask.class));
-        assertFalse(FoodChain.allowsAutonomousForage(null));
+        assertTrue(AutonomousFoodPolicy.allowsRoot(DirectorTask.class));
+        assertTrue(AutonomousFoodPolicy.allowsRoot(DefaultGoToDimensionTask.class));
+        assertTrue(AutonomousFoodPolicy.allowsRoot(BeatMinecraft2Task.class));
+        assertTrue(AutonomousFoodPolicy.allowsRoot(FocusedActivityTask.class));
+        assertFalse(AutonomousFoodPolicy.allowsRoot(MineAndCollectTask.class));
+        assertFalse(AutonomousFoodPolicy.allowsRoot(null));
     }
 
     @Test void injuredHungryDimensionTravelerStartsBoundedForage() {
-        assertTrue(FoodChain.allowsAutonomousForage(DefaultGoToDimensionTask.class));
+        assertTrue(AutonomousFoodPolicy.allowsRoot(DefaultGoToDimensionTask.class));
         var policy = new AutonomousFoodPolicy();
         assertTrue(policy.shouldCollect(10, .25f, 0, false));
         for (int tick = 0; tick < 1200; tick++) policy.advance(true, false);

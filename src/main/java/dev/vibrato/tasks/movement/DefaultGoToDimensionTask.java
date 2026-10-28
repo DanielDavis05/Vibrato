@@ -3,6 +3,9 @@ package dev.vibrato.tasks.movement;
 import dev.vibrato.Vibrato;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalBucketTask;
 import dev.vibrato.tasks.construction.compound.ConstructNetherPortalObsidianTask;
+import dev.vibrato.tasks.resources.CollectFoodTask;
+import dev.vibrato.util.helpers.StorageHelper;
+import net.minecraft.client.network.ClientPlayerEntity;
 import dev.vibrato.tasksystem.Task;
 import dev.vibrato.tasksystem.IAllowsAutonomousFood;
 import dev.vibrato.util.Dimension;
@@ -21,6 +24,9 @@ import java.util.Optional;
 public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousFood {
 
     private final Dimension _target;
+    private final NetherFoodPlan _foodPlan = new NetherFoodPlan();
+    private ClientPlayerEntity _foodPlayer;
+    private Task _foodTask;
     // Cached to keep build properties alive if this task pauses/resumes.
     private final Task _cachedNetherBucketConstructionTask = new ConstructNetherPortalBucketTask();
 
@@ -35,6 +41,11 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
 
     @Override
     protected Task onTick(Vibrato mod) {
+        if (_foodPlayer != mod.getPlayer()) {
+            _foodPlayer = mod.getPlayer();
+            _foodPlan.reset();
+            _foodTask = null;
+        }
         if (WorldHelper.getCurrentDimension() == _target) return null;
 
         switch (_target) {
@@ -118,6 +129,12 @@ public class DefaultGoToDimensionTask extends Task implements IAllowsAutonomousF
         if (netherPortalIsClose(mod)) {
             setDebugState("Going to nether portal");
             return new EnterNetherPortalTask(Dimension.NETHER);
+        }
+        boolean constructing = mod.getModSettings().getOverworldToNetherBehaviour() == OVERWORLD_TO_NETHER_BEHAVIOUR.BUILD_PORTAL_VANILLA;
+        if (_foodPlan.shouldCollect(constructing, StorageHelper.calculateInventoryFoodScore(mod))) {
+            setDebugState("Stocking food before underground portal preparation");
+            if (_foodTask == null) _foodTask = new CollectFoodTask(NetherFoodPlan.FOOD_UNITS);
+            return _foodTask;
         }
         return switch (mod.getModSettings().getOverworldToNetherBehaviour()) {
             case BUILD_PORTAL_VANILLA -> _cachedNetherBucketConstructionTask;
