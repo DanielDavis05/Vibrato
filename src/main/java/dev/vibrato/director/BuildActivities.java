@@ -31,12 +31,15 @@ public final class BuildActivities {
     private static final String[] PALETTES = Arrays.stream(Palette.values())
             .map(palette -> palette.name().toLowerCase(Locale.ROOT)).toArray(String[]::new);
 
+    /** Builders start without materials, so the budget has to cover gathering them first. */
+    private static final int GATHER_MINUTES = 10;
+
     private BuildActivities() {}
 
     public static void register(ActivityRegistry registry) {
         add(registry, "build_hut", FeatureArea.BUILD, facts(), facts("shelter:built"),
                 List.of(ParamSpec.ints("width", 3, 6), ParamSpec.ints("depth", 3, 6), ParamSpec.choice("palette", PALETTES)),
-                values -> minutes(4 + values.getInt("width") * values.getInt("depth") / 4),
+                values -> minutes(GATHER_MINUTES + values.getInt("width") * values.getInt("depth") / 4),
                 (mod, values) -> new BuildShelterTask(palette(values), values.getInt("width"), values.getInt("depth")));
 
         add(registry, "build_house", FeatureArea.BUILD, facts(), facts("shelter:built"),
@@ -58,7 +61,7 @@ public final class BuildActivities {
 
         add(registry, "build_wall", FeatureArea.BUILD, facts(), facts(),
                 List.of(ParamSpec.ints("length", 4, 32), ParamSpec.ints("height", 2, 6), ParamSpec.choice("palette", PALETTES)),
-                values -> minutes(3 + values.getInt("length") / 4),
+                values -> minutes(GATHER_MINUTES + values.getInt("length") / 4),
                 (mod, values) -> new BuildBlueprintTask(
                         Blueprints.wall(values.getInt("length"), values.getInt("height")), null, palette(values)));
 
