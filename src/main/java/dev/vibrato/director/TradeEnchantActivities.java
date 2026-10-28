@@ -28,7 +28,7 @@ public final class TradeEnchantActivities {
     private static final Fact VILLAGE = Fact.of("village:found");
 
     /** Gear activities may have to mine iron and craft the tool before they can use it. */
-    private static final int IRON_GEAR_MINUTES = 15;
+    private static final int IRON_GEAR_MINUTES = 25;
 
     private TradeEnchantActivities() {}
 
