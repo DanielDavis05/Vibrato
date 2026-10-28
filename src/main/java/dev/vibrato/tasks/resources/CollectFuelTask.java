@@ -17,6 +17,10 @@ public class CollectFuelTask extends Task {
         _targetFuel = targetFuel;
     }
 
+    public static int requiredCoal(double smelts) {
+        return (int) Math.ceil(Math.max(0, smelts) / 8);
+    }
+
     @Override
     protected void onStart(Vibrato mod) {
         // Nothing
@@ -29,7 +33,7 @@ public class CollectFuelTask extends Task {
             case OVERWORLD -> {
                 // Just collect coal for now.
                 setDebugState("Collecting coal.");
-                return TaskCatalogue.getItemTask(Items.COAL, (int) Math.ceil(_targetFuel / 8));
+                return TaskCatalogue.getItemTask(Items.COAL, requiredCoal(_targetFuel));
             }
             case END -> {
                 setDebugState("Going to overworld, since, well, no more fuel can be found here.");
@@ -60,7 +64,7 @@ public class CollectFuelTask extends Task {
 
     @Override
     public boolean isFinished(Vibrato mod) {
-        return mod.getItemStorage().getItemCountInventoryOnly(Items.COAL) >= _targetFuel;
+        return mod.getItemStorage().getItemCountInventoryOnly(Items.COAL) >= requiredCoal(_targetFuel);
     }
 
     @Override

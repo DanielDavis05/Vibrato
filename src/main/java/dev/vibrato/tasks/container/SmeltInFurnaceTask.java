@@ -125,6 +125,7 @@ public class SmeltInFurnaceTask extends ResourceTask {
         private boolean _ignoreMaterials;
 
         private FurnaceCache _furnaceCache = new FurnaceCache();
+        private final SmeltFuelPlan _fuelPlan = new SmeltFuelPlan();
 
         private final ItemTarget _allMaterials;
 
@@ -180,10 +181,15 @@ public class SmeltInFurnaceTask extends ResourceTask {
                 return getMaterialTask(_target.getMaterial());
             }
 
-            // We don't have enough fuel...
-            if (StorageHelper.calculateInventoryFuelCount(mod) < fuelNeeded) {
+            // Wood can temporarily leave fuel accounting while crafting a table
+            // or pickaxe. Finish a selected coal acquisition instead of repeatedly
+            // aborting it when those same planks return to main inventory.
+            int coalInMain = mod.getPlayer().getInventory().main.stream()
+                    .filter(stack -> stack.isOf(Items.COAL)).mapToInt(ItemStack::getCount).sum();
+            double collectFuel = _fuelPlan.collectSmelts(fuelNeeded, StorageHelper.calculateInventoryFuelCount(mod), coalInMain);
+            if (collectFuel > 0) {
                 setDebugState("Getting Fuel");
-                return new CollectFuelTask(fuelNeeded);
+                return new CollectFuelTask(collectFuel);
             }
 
             // Make sure our materials are accessible in our inventory
