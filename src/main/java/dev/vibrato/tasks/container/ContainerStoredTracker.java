@@ -8,6 +8,9 @@ import dev.vibrato.util.ItemTarget;
 import dev.vibrato.util.slots.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.ShulkerBoxScreenHandler;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,6 +32,9 @@ public class ContainerStoredTracker {
 
     public void startTracking() {
         _slotClickChangedSubscription = EventBus.subscribe(SlotClickChangedEvent.class, evt -> {
+            var player = MinecraftClient.getInstance().player;
+            // Acquisition can open crafting/furnace UIs. Their inputs are not storage deposits.
+            if (player == null || !isStorageHandler(player.currentScreenHandler.getClass())) return;
             Slot slot = evt.slot;
             if (!slot.isSlotInPlayerInventory() && _acceptDeposit.test(slot)) {
                 ItemStack before = evt.before;
@@ -45,6 +51,12 @@ public class ContainerStoredTracker {
                 }
             }
         });
+    }
+
+    /** Typed identity is stable when Fabric remaps Minecraft class names in production. */
+    static boolean isStorageHandler(Class<?> handler) {
+        return GenericContainerScreenHandler.class.isAssignableFrom(handler)
+                || ShulkerBoxScreenHandler.class.isAssignableFrom(handler);
     }
 
     public void stopTracking() {
