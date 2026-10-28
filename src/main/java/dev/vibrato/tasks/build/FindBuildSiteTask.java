@@ -74,7 +74,9 @@ public class FindBuildSiteTask extends Task {
                 int top = mod.getWorld().getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, minX + x, minZ + z);
                 BlockPos ground = new BlockPos(minX + x, top - 1, minZ + z);
                 heights[x][z] = ground.getY();
-                liquid[x][z] = !mod.getWorld().getBlockState(ground).getFluidState().isEmpty();
+                // Unloaded chunks report the world floor, which would otherwise score as a perfectly flat site.
+                boolean noGround = top <= mod.getWorld().getBottomY() + 1;
+                liquid[x][z] = noGround || !mod.getWorld().getBlockState(ground).getFluidState().isEmpty();
             }
         }
         return SiteScorer.best(heights, liquid, _width, _depth)
