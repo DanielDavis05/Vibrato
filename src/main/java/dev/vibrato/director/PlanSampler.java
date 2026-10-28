@@ -48,6 +48,22 @@ public final class PlanSampler {
         return new Plan(steps);
     }
 
+    /** One explicitly requested goal, preceded only by its real prerequisite providers. */
+    public Plan sampleGoal(long seed, String goalId, Persona persona, Set<Fact> startFacts, CoverageTracker coverage) {
+        Activity goal = registry.get(goalId);
+        if (goal == null) throw new IllegalArgumentException("Unknown activity: " + goalId);
+        if (coverage.isOnCooldown(goalId)) throw new IllegalStateException("Goal is on cooldown: " + goalId);
+        RandomGenerator rng = RandomGeneratorFactory.of(ALGORITHM).create(seed);
+        Set<Fact> facts = new HashSet<>(startFacts);
+        List<PlannedStep> steps = new ArrayList<>();
+        if (!satisfy(goal, 0, steps, facts, rng, persona, coverage))
+            throw new IllegalStateException("Unresolved prerequisites for " + goalId + ": " + sortedFacts(goal.requires()));
+        if (steps.stream().anyMatch(step -> step.activity().id().equals(goalId)))
+            throw new IllegalStateException("Goal depends on itself: " + goalId);
+        steps.add(new PlannedStep(goal, sampleParams(goal, rng)));
+        return new Plan(steps);
+    }
+
     /** Facts gained from running an activity. A {@code dim:} fact replaces the previous dimension. */
     static void applyEffects(Set<Fact> facts, Activity activity) {
         Set<Fact> provides = activity.provides();
