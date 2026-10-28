@@ -111,6 +111,11 @@ public final class ScriptRunner {
                 Map<String, Object> heartbeat = new LinkedHashMap<>();
                 heartbeat.put("seconds", elapsed());
                 heartbeat.put("clientTicks", clientTicks);
+                heartbeat.put("scriptPhase", ready ? "executing" : "waiting_for_world");
+                heartbeat.putAll(state.settleEvidence(System.getProperty("vibrato.assignedTask"),
+                        Double.parseDouble(System.getProperty("vibrato.settleSeconds", "0")), commands, taskOutcomes,
+                        !mod.getUserTaskChain().isActive() && !mod.getClientBaritone().getPathingBehavior().isPathing()
+                                && mod.getClientBaritone().getPathingBehavior().getInProgress().isEmpty()));
                 heartbeat.put("worldReady", ready);
                 heartbeat.put("worldReadySeconds", !ready || firstReadyNanos == 0 ? 0 : (now - firstReadyNanos) / 1e9);
                 heartbeat.put("position", List.of(client.player.getX(), client.player.getY(), client.player.getZ()));

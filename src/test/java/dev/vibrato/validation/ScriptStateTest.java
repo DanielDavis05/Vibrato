@@ -2,6 +2,7 @@ package dev.vibrato.validation;
 
 import org.junit.jupiter.api.Test;
 import java.util.List;
+import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ScriptStateTest {
@@ -37,6 +38,29 @@ class ScriptStateTest {
         assertNull(state.tick(1, gate.ready(true, true), false));
         assertFalse(gate.ready(false, true));
         assertTrue(state.tick(1, gate.ready(true, true), false).timedOut());
+    }
+
+    @Test void settleProofRequiresCompletedAssignmentIdleBarrierAndPendingFinalExit() {
+        var state = new ScriptState(ScriptPlan.parse(List.of("0 @get dirt 1", "0 wait-idle 90", "180 exit")));
+        var command = Map.<String,Object>of("action", "@get dirt 1", "status", "completed", "seconds", 1);
+        var barrier = Map.<String,Object>of("action", "wait-idle 90", "status", "idle");
+        var commands = List.of(command, barrier);
+        var outcomes = List.of(Map.<String,Object>of("seconds", 2, "status", "completed"));
+        assertTrue(state.settleEvidence("@get dirt 1", 180, commands, outcomes, true).isEmpty());
+        state.tick(0, true, false);
+        state.tick(0, true, true);
+        state.tick(120, true, true);
+        assertEquals(60.0, state.settleEvidence("@get dirt 1", 180, commands, outcomes, true).get("settleRemainingSeconds"));
+        assertTrue(state.settleEvidence("director", 180, commands, outcomes, true).isEmpty());
+        assertTrue(state.settleEvidence("@get dirt 1", 120, commands, outcomes, true).isEmpty());
+        assertTrue(state.settleEvidence("@get dirt 1", 180, commands, outcomes, false).isEmpty());
+        assertTrue(state.settleEvidence("@get dirt 1", 180, commands, List.of(), true).isEmpty());
+        assertTrue(state.settleEvidence("@get dirt 1", 180, commands,
+                List.of(Map.of("seconds", 2, "status", "cancelled")), true).isEmpty());
+        assertTrue(state.settleEvidence("@get dirt 1", 180,
+                List.of(command, Map.of("action", "wait-idle 90", "status", "timeout")), outcomes, true).isEmpty());
+        state.tick(60, true, true);
+        assertTrue(state.settleEvidence("@get dirt 1", 180, commands, outcomes, true).isEmpty());
     }
 
     @Test void idleWinsAtDeadlineAndOvershootCounts() {
