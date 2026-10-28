@@ -33,6 +33,7 @@ public class VibratoCommands {
                 new GamerCommand(),
                 new NetherCommand(),
                 new ConductorScenarioCommand(),
+                new ActivityCommand(),
                 new PunkCommand(),
                 new SetGammaCommand(),
                 new ListCommand(),

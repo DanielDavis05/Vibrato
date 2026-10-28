@@ -126,7 +126,8 @@ public class NavSafetyChain extends TaskChain {
                 !mod.getMLGBucketChain().getTasks().isEmpty(),
                 MinecraftClient.getInstance().currentScreen instanceof DeathScreen,
                 MinecraftClient.getInstance().currentScreen instanceof HandledScreen<?>,
-                task instanceof DirectorTask director && director.currentStepStandsStill());
+                task instanceof DirectorTask director && director.currentStepStandsStill()
+                        || task instanceof dev.vibrato.director.FocusedActivityTask focused && focused.currentStepStandsStill());
 
         if (_action == null) {
             if (suppressed) {
