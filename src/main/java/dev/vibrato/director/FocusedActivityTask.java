@@ -85,7 +85,8 @@ public class FocusedActivityTask extends Task implements StepAbandonable {
         if (!supportedIds().contains(goal)) { reject("activity has no completion proof adapter: " + goal); return; }
         if (!packetEvidenceEnabled()) { reject("focused activity requires -Dvibrato.packetCoverage=true"); return; }
         try {
-            plan = new PlanSampler(registry).sampleGoal(seed, goal, persona, observeFacts(mod), new CoverageTracker()).steps();
+            Plan sampled = new PlanSampler(registry).sampleGoal(seed, goal, persona, observeFacts(mod), new CoverageTracker());
+            plan = FocusedActivityParameters.constrain(sampled, goal, seed).steps();
         } catch (RuntimeException error) { reject("planning failed: " + error.getMessage()); }
     }
 
@@ -259,6 +260,7 @@ public class FocusedActivityTask extends Task implements StepAbandonable {
     private void report(String status, String reason) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("schemaVersion", 1); result.put("activity", goal); result.put("seed", seed);
+        result.put("parameterProfile", "focused_small_v1");
         result.put("status", status); result.put("source", "focused_activity_task"); result.put("wall", System.currentTimeMillis() / 1000.0);
         result.put("startedWall", startedWall); result.put("startClientSeconds", startClientSeconds);
         result.put("goalStartedWall", goalStartedWall); result.put("goalFinishedWall", goalFinishedWall);
