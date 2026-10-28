@@ -27,6 +27,9 @@ public final class TradeEnchantActivities {
 
     private static final Fact VILLAGE = Fact.of("village:found");
 
+    /** Gear activities may have to mine iron and craft the tool before they can use it. */
+    private static final int IRON_GEAR_MINUTES = 15;
+
     private TradeEnchantActivities() {}
 
     public static void register(ActivityRegistry registry) {
@@ -61,7 +64,7 @@ public final class TradeEnchantActivities {
                                 "iron_helmet", "iron_boots", "bow", "book"),
                         ParamSpec.ints("minLevel", 1, 30)),
                 v -> new EnchantItemTask(item(v.getString("item")), v.getInt("minLevel")),
-                v -> Duration.ofMinutes(8)));
+                v -> Duration.ofMinutes(IRON_GEAR_MINUTES)));
 
         registry.register(spec("get_lapis", FeatureArea.ENCHANT, Set.of(), Set.of(Fact.has("lapis_lazuli")),
                 List.of(ParamSpec.ints("count", 3, 32)),
@@ -89,13 +92,13 @@ public final class TradeEnchantActivities {
                         ParamSpec.choice("name", "Excalibur", "Gandalf's Staff", "Dirt Pick", "Lucky Blade",
                                 "Miner's Friend", "Bear Crusher", "Bow of Dawn", "Sentinel")),
                 v -> new RenameInAnvilTask(item(v.getString("item")), v.getString("name")),
-                v -> Duration.ofMinutes(4)));
+                v -> Duration.ofMinutes(IRON_GEAR_MINUTES)));
 
         registry.register(spec("grindstone_disenchant", FeatureArea.GEAR, Set.of(), Set.of(),
                 List.of(ParamSpec.choice("item", "iron_pickaxe", "iron_sword", "iron_axe", "iron_chestplate",
                         "iron_helmet", "iron_boots", "bow")),
                 v -> new GrindstoneTask(item(v.getString("item"))),
-                v -> Duration.ofMinutes(4)));
+                v -> Duration.ofMinutes(IRON_GEAR_MINUTES)));
 
         registry.register(spec("collect_xp_levels", FeatureArea.LEVEL, Set.of(WorldFacts.BASIC_PICKAXE), Set.of(),
                 List.of(ParamSpec.ints("level", 5, 30)),
