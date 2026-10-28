@@ -48,6 +48,8 @@ public final class CoreActivities {
     private static final String[] STORED_ITEMS = {
             "cobblestone", "dirt", "sand", "gravel", "coal", "iron_ingot", "gold_ingot", "diamond", "redstone", "string"
     };
+    private static final int SMELT_BASE_MINUTES = 4;
+    private static final int ORE_SMELT_BASE_MINUTES = 12;
     private static final List<ParamSpec> SMELT_COUNT = List.of(ParamSpec.ints("count", 1, 64));
 
     private CoreActivities() {}
@@ -130,16 +132,16 @@ public final class CoreActivities {
 
     private static void registerSmelt(ActivityRegistry registry) {
         registry.register(new CoreActivity("smelt_iron_ingot", FeatureArea.SMELT, Set.of(), Set.of(Fact.has("iron_ingot")),
-                SMELT_COUNT, CoreActivities::smeltBudget,
+                SMELT_COUNT, values -> smeltBudget(values, ORE_SMELT_BASE_MINUTES),
                 (mod, values) -> smelt(values, Items.IRON_INGOT, "raw_iron", Items.IRON_ORE)));
         registry.register(new CoreActivity("smelt_gold_ingot", FeatureArea.SMELT, Set.of(), Set.of(Fact.has("gold_ingot")),
-                SMELT_COUNT, CoreActivities::smeltBudget,
+                SMELT_COUNT, values -> smeltBudget(values, ORE_SMELT_BASE_MINUTES),
                 (mod, values) -> smelt(values, Items.GOLD_INGOT, "raw_gold")));
         registry.register(new CoreActivity("smelt_glass", FeatureArea.SMELT, Set.of(), Set.of(Fact.has("glass")),
-                SMELT_COUNT, CoreActivities::smeltBudget,
+                SMELT_COUNT, values -> smeltBudget(values, SMELT_BASE_MINUTES),
                 (mod, values) -> smelt(values, Items.GLASS, "sand")));
         registry.register(new CoreActivity("smelt_charcoal", FeatureArea.SMELT, Set.of(), Set.of(Fact.has("charcoal")),
-                SMELT_COUNT, CoreActivities::smeltBudget,
+                SMELT_COUNT, values -> smeltBudget(values, SMELT_BASE_MINUTES),
                 (mod, values) -> smelt(values, Items.CHARCOAL, "log")));
     }
 
@@ -266,8 +268,9 @@ public final class CoreActivities {
                 (mod, values) -> new SleepThroughNightTask()));
     }
 
-    private static Duration smeltBudget(ParamValues values) {
-        return Duration.ofMinutes(Math.min(15, 4 + values.getInt("count") / 8));
+    /** Ore smelts must first gather tools, find and mine the ore, so they need far more than sand or logs. */
+    private static Duration smeltBudget(ParamValues values, int baseMinutes) {
+        return Duration.ofMinutes(Math.min(15, baseMinutes + values.getInt("count") / 8));
     }
 
     private static Task smelt(ParamValues values, Item product, String material, Item... optionalMaterials) {
