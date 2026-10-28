@@ -263,7 +263,7 @@ public class FocusedActivityTask extends Task implements StepAbandonable, IAllow
     private void report(String status, String reason) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("schemaVersion", 1); result.put("activity", goal); result.put("seed", seed);
-        result.put("parameterProfile", "focused_small_v1");
+        result.put("parameterProfile", "focused_small_v2");
         result.put("status", status); result.put("source", "focused_activity_task"); result.put("wall", System.currentTimeMillis() / 1000.0);
         result.put("startedWall", startedWall); result.put("startClientSeconds", startClientSeconds);
         result.put("goalStartedWall", goalStartedWall); result.put("goalFinishedWall", goalFinishedWall);

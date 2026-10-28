@@ -16,7 +16,7 @@ final class FocusedActivityParameters {
         SplittableRandom rng = new SplittableRandom(seed ^ activity.id().hashCode());
         switch (activity.id()) {
             case "chest_store_items", "inventory_stash_items" -> {
-                values.put("item", List.of("dirt", "cobblestone", "sand", "gravel").get(rng.nextInt(4)));
+                values.put("item", "dirt");
                 values.put("count", rng.nextInt(4, 9));
             }
             case "stash_valuables" -> values.put("min_items", 4);

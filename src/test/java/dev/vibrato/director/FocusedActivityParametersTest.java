@@ -15,7 +15,7 @@ class FocusedActivityParametersTest {
         assertEquals(fixed, FocusedActivityParameters.constrain(goal, original, 424242));
         for (long seed = 0; seed < 100; seed++) {
             var values = FocusedActivityParameters.constrain(goal, original, seed);
-            assertTrue(Set.of("dirt", "cobblestone", "sand", "gravel").contains(values.getString("item")));
+            assertEquals("dirt", values.getString("item"));
             assertTrue(values.getInt("count") >= 4 && values.getInt("count") <= 8);
         }
         assertEquals("diamond", original.getString("item"));
