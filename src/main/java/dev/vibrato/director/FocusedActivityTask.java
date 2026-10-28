@@ -20,6 +20,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.screen.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -187,7 +188,7 @@ public class FocusedActivityTask extends Task implements StepAbandonable {
 
     protected void collectProgress(Vibrato mod) {
         progress.inventory(inventory(mod));
-        progress.screens.add(mod.getPlayer().currentScreenHandler.getClass().getSimpleName());
+        progress.screens.add(screenKind(mod.getPlayer().currentScreenHandler.getClass()));
         progress.bobberSeen |= mod.getPlayer().fishHook != null;
         progress.placementChildSeen |= child.thisOrChildSatisfies(task -> task instanceof PlaceBlockTask);
         if (mod.getPlayer().getVehicle() instanceof BoatEntity boat) {
@@ -196,6 +197,18 @@ public class FocusedActivityTask extends Task implements StepAbandonable {
             lastBoatPosition = boat.getPos();
         } else lastBoatPosition = null;
         if (travelTarget != null) progress.distanceToTravelTarget = mod.getPlayer().getPos().distanceTo(travelTarget.toCenterPos());
+    }
+
+    /** Class identities survive Fabric remapping; runtime class-name strings do not. */
+    static String screenKind(Class<?> type) {
+        if (AbstractFurnaceScreenHandler.class.isAssignableFrom(type)) return "FurnaceScreenHandler";
+        if (MerchantScreenHandler.class.isAssignableFrom(type)) return "MerchantScreenHandler";
+        if (EnchantmentScreenHandler.class.isAssignableFrom(type)) return "EnchantmentScreenHandler";
+        if (AnvilScreenHandler.class.isAssignableFrom(type)) return "AnvilScreenHandler";
+        if (GrindstoneScreenHandler.class.isAssignableFrom(type)) return "GrindstoneScreenHandler";
+        if (GenericContainerScreenHandler.class.isAssignableFrom(type)) return "GenericContainerScreenHandler";
+        if (ShulkerBoxScreenHandler.class.isAssignableFrom(type)) return "ShulkerBoxScreenHandler";
+        return "other";
     }
 
     protected Map<String, Long> packetCounts() {

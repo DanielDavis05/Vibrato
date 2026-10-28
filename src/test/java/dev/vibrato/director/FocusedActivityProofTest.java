@@ -3,6 +3,7 @@ package dev.vibrato.director;
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import dev.vibrato.packetcoverage.PacketCoverage;
+import net.minecraft.screen.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FocusedActivityProofTest {
@@ -82,5 +83,17 @@ class FocusedActivityProofTest {
                 new PacketCoverage.Entry("PLAY", "SERVERBOUND", "minecraft:use_item", "activity.fish.goal", "FocusedActivityTask", "none", 2)), List.of());
         assertEquals(Map.of("SERVERBOUND:minecraft:use_item", 2L),
                 FocusedActivityTask.scopedPackets(snapshot, "activity.fish.goal", "FocusedActivityTask"));
+    }
+    @Test void screenEvidenceUsesTypedIdentityThatSurvivesProductionRemapping() {
+        assertEquals("FurnaceScreenHandler", FocusedActivityTask.screenKind(FurnaceScreenHandler.class));
+        assertEquals("FurnaceScreenHandler", FocusedActivityTask.screenKind(BlastFurnaceScreenHandler.class));
+        assertEquals("FurnaceScreenHandler", FocusedActivityTask.screenKind(SmokerScreenHandler.class));
+        assertEquals("MerchantScreenHandler", FocusedActivityTask.screenKind(MerchantScreenHandler.class));
+        assertEquals("EnchantmentScreenHandler", FocusedActivityTask.screenKind(EnchantmentScreenHandler.class));
+        assertEquals("AnvilScreenHandler", FocusedActivityTask.screenKind(AnvilScreenHandler.class));
+        assertEquals("GrindstoneScreenHandler", FocusedActivityTask.screenKind(GrindstoneScreenHandler.class));
+        assertEquals("GenericContainerScreenHandler", FocusedActivityTask.screenKind(GenericContainerScreenHandler.class));
+        assertEquals("ShulkerBoxScreenHandler", FocusedActivityTask.screenKind(ShulkerBoxScreenHandler.class));
+        assertEquals("other", FocusedActivityTask.screenKind(PlayerScreenHandler.class));
     }
 }
