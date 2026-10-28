@@ -10,6 +10,9 @@ public class MovementProgressChecker {
     private final IProgressChecker<Vec3d> _distanceChecker;
     private final IProgressChecker<Double> _mineChecker;
 
+    private static final double PATH_CALCULATION_GRACE_SECONDS = 15;
+
+    private final PathCalculationGrace _calculationGrace = new PathCalculationGrace(PATH_CALCULATION_GRACE_SECONDS);
     private BlockPos _lastBreakingBlock = null;
 
     public MovementProgressChecker(double distanceTimeout, double minDistance, double mineTimeout, double minMineProgress, int attempts) {
@@ -31,10 +34,14 @@ public class MovementProgressChecker {
 
     public boolean check(Vibrato mod) {
 
-        // Path calculation can legitimately keep the player still before movement starts.
+        // Path calculation can legitimately keep the player still before movement starts, but a
+        // search that keeps failing restarts indefinitely, so the excuse is bounded.
         var pathing = mod.getClientBaritone().getPathingBehavior();
-        if (!pathing.isPathing() && pathing.getInProgress().isPresent()) {
-            reset();
+        if (!pathing.isPathing() && pathing.getInProgress().isPresent()
+                && _calculationGrace.excuses(mod.getPlayer().getPos(), System.nanoTime())) {
+            _distanceChecker.reset();
+            _mineChecker.reset();
+            _lastBreakingBlock = null;
             return true;
         }
 
@@ -64,6 +71,7 @@ public class MovementProgressChecker {
     }
 
     public void reset() {
+        _calculationGrace.reset();
         _distanceChecker.reset();
         _mineChecker.reset();
         _lastBreakingBlock = null;
